@@ -3,7 +3,7 @@ from scipy.special import exp1 # pylint: disable-msg=E0611
 from scipy.optimize import newton
 # import Numdifftools as nd
 
-def theis_solution(p0, q, k, h, porosity, density, v, C, r, t):
+def theis_solution(p0, q, k, h, phi, rho, nu, C, r, t):
     """
     Calculate and return the pressure for the given input.
 
@@ -11,29 +11,29 @@ def theis_solution(p0, q, k, h, porosity, density, v, C, r, t):
             q - Mass flowrate (constant, -ve for production)
             k - Permeability
             h - Thickness
-            porosity - Porosity
-            density - Density
-            v - Kinematic viscosity
+            phi - Porosity
+            rho - Density
+            nu - Kinematic viscosity
             C - Compressibility
             r - Radius of the well
             t - Time
     
     Output: p - pressure
     """
-    D = (k/v)/(porosity*density*C) #
-    p = p0 + (q/(r*np.pi*k*(h/v)))*exp1((r**2)/4*D*t) # Double check exponential integral is correct.
+    D = (k/nu)/(phi*rho*C) #
+    p = p0 + (q/(r*np.pi*k*(h/nu)))*exp1((r**2)/4*D*t) # Double check exponential integral is correct.
     return p
     
 
-def find_model_parameters(data, porosity, k):
+def find_model_parameters(data, phi, k):
     """
-    Find the model parameters porosity and permeability.
+    Find the model parameters phi and permeability.
 
     Inputs: data - Known data for a geothermal well-test
-            porosity - Porosity
+            phi - Porosity
             k - Permeability
     
-    Output: porosity - Porosity
+    Output: phi - Porosity
             k - Permeability
     """
     pass
@@ -52,3 +52,5 @@ def chi_squared(data, approximation):
     sd = np.std(data) # Standard deviation of known data
     return sum((data-approximation)/sd)**2
 
+# Use forward model to determine approximation data.
+# Perform non-linear optimisation to get variable parameters phi and permeability.
