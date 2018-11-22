@@ -1,11 +1,11 @@
 import numpy as np
 from scipy.special import exp1 # pylint: disable-msg=E0611
-from scipy.optimize import curve_fit
+# from scipy.optimize import curve_fit
 from scipy.optimize import leastsq
 
 def theis_solution(p0, qm, k, h, phi, rho, nu, C, r, t):
     """
-    Calculate and return the pressure for the given input.
+    Calculate and return the pressure for the given input using the analytical Theis solution.
 
     Inputs: p0 - Initial pressure
             qm - Mass flowrate (constant, -ve for production)
@@ -16,22 +16,26 @@ def theis_solution(p0, qm, k, h, phi, rho, nu, C, r, t):
             nu - Kinematic viscosity
             C - Compressibility
             r - Radius of the well
-            t - Time
+            t - 1D array of measurement times
     
-    Output: p - pressure at a given well radius and time
+    Output: p(t) - pressure at a given well radius
     """
-    # D = (k/nu)/(phi*rho*C) 
     D = k/(nu*phi*rho*C)
-    p = p0 + (qm/(r*np.pi*k*(h/nu)))*exp1((r**2)/(4*D*t)) # Double check exponential integral is correct.
-    # p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*t)) # Double check exponential integral is correct.
-    # if t[0] == 0:
-        # p[0] = 0
+    # u = np.divide(r**2,4*D*t, out=np.zeros_like(t), where = t != 0)
+    with np.errstate(divide="ignore", invalid="ignore"): # Hides 'RuntimeWarning: invalid value encountered in divide' if t[0] == 0.
+        p = p0 + (qm/(r*np.pi*k*(h/nu)))*exp1((r**2)/(4*D*t)) # Double check exponential integral is correct
+        # p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*t)) # Double check exponential integral is correct
+    if t[0] <= 1e-7: # Check if initial reading is at time 0
+        p[0] = p0
     return p
     
 # def theis_function(t, phi, k):
 #     pass
 
 def theis_residual(parameters, p0, qm, h, rho, nu, C, r, t, data):
+    """
+    Calculate the residual of the Theis solution (difference between observed data and estimated data)
+    """
     phi, k = parameters
     return data - theis_solution(p0, qm, k, h, phi, rho, nu, C, r, t)
 
@@ -64,20 +68,34 @@ def generate_data(phi, k, n, time, p0, qm, h, rho, nu, C, r, noise = False, sd =
 #     return sum(((data-approximation)/sd)**2)
 
 
-def find_model_parameters(data, p0, qm, h, rho, nu, C, r, t, phi=0.1, k=10e-13):
+def find_model_parameters(data, p0, qm, h, rho, nu, C, r, t, phi=0.1, k=10e-13, curve_fit=False):
     """
     Find the model parameters porosity and permeability.
 
     Inputs: data - Observed data for a geothermal well-test
+            p0 - Initial pressure
+            qm - Mass flowrate (constant, -ve for production)
+            k - Permeability
+            h - Thickness
+            phi - Porosity
+            rho - Density
+            nu - Kinematic viscosity
+            C - Compressibility
+            r - Radius of the well
+            t - 1D array of measurement times
             phi - Intial guess of porosity (default is arbitrary - from AWTAS page 11)
             k - Initial guess of permeability (default is arbitrary - from AWTAS page 11)
     
     Output: phi - Estimated value of porosity
             k - Estimated value of permeability
     """
-    initial_parameters = np.array([phi, k])
-    optimal_parameters, flag = leastsq(theis_residual, initial_parameters, args=(p0, qm, h, rho, nu, C, r, t, data))
-    phi, k = optimal_parameters
+    if curve_fit:
+        # was going to possibly use scipy.optimize.curve_fit if no initial parameters were given
+        pass
+    else:
+        initial_parameters = np.array([phi, k])
+        optimal_parameters, flag = leastsq(theis_residual, initial_parameters, args=(p0, qm, h, rho, nu, C, r, t, data))
+        phi, k = optimal_parameters
     return phi, k
 
 # Use forward model to determine approximation data.
