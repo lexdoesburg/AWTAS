@@ -23,7 +23,7 @@ print(p)
 
 # Test if generating data and synthetic data works
 data = generate_data(phi, k, 100, time, p0, qm, h, rho, nu, C, r)
-noisey_data = generate_data(phi, k, 100, time, p0, qm, h, rho, nu, C, r, noise=True)
+noisey_data = generate_data(phi, k, 100, time, p0, qm, h, rho, nu, C, r, noise=True, sd=1e-3)
 print(data)
 print(noisey_data)
 
@@ -36,8 +36,18 @@ print(noisey_data)
 # plt.show()
 
 # Test if non-linear optimisation working
-phi, k = find_model_parameters(data, p0, qm, h, rho, nu, C, r, t, phi=0.0002, k=2.3e-14)
+phi, k = find_model_parameters(noisey_data, p0, qm, h, rho, nu, C, r, t, phi=0.0002, k=2.3e-14)
 print(phi)
 print(k)
 
-# Test how well the parameters fit
+# Test how well the parameters fit the data
+approximated_data = generate_data(phi, k, 100, time, p0, qm, h, rho, nu, C, r)
+
+plt.plot(t, noisey_data,"k-",label="Synthetic Data (Theis Solution W/Noise)")
+plt.plot(t, approximated_data,"r-",label="Approximated Curve")
+plt.title("Observed Data vs Fitted Curve")
+plt.xlabel("Time (s)")
+plt.ylabel("Pressure (Pa)")
+plt.legend(loc="best")
+
+plt.show()
