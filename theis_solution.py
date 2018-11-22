@@ -29,8 +29,6 @@ def theis_solution(p0, qm, k, h, phi, rho, nu, C, r, t):
         p[0] = p0
     return p
     
-# def theis_function(t, phi, k):
-#     pass
 
 def theis_residual(parameters, p0, qm, h, rho, nu, C, r, t, data):
     """
@@ -43,11 +41,10 @@ def generate_data(phi, k, n, time, p0, qm, h, rho, nu, C, r, noise = False, sd =
     """
     Generate approximated data using the Theis solution for a guess of porosity and permeability.
     """
-    t = np.linspace(1, time, num=n)
-    # t = np.linspace(0, time, num=n) # this is the line we want
+    t = np.linspace(0, time, num=n)
     p = theis_solution(p0, qm, k, h, phi, rho, nu, C, r, t)
     if noise:
-        np.random.seed(0)
+        np.random.seed(0) # Set random seed to 0 for consistancy in testing
         p += p*sd*np.random.randn(p.shape[0])
     return p
 
@@ -68,7 +65,11 @@ def generate_data(phi, k, n, time, p0, qm, h, rho, nu, C, r, noise = False, sd =
 #     return sum(((data-approximation)/sd)**2)
 
 
-def find_model_parameters(data, p0, qm, h, rho, nu, C, r, t, phi=0.1, k=10e-13, curve_fit=False):
+# def theis_function(t, phi, k):
+#     pass
+
+
+def find_model_parameters(data, p0, qm, h, rho, nu, C, r, t, phi=0.1, k=1e-14, curve_fit=False):
     """
     Find the model parameters porosity and permeability.
 
@@ -89,6 +90,15 @@ def find_model_parameters(data, p0, qm, h, rho, nu, C, r, t, phi=0.1, k=10e-13, 
     Output: phi - Estimated value of porosity
             k - Estimated value of permeability
     """
+
+    """
+    NOTES:
+        - A suitable range for porosity is 0.01 - 0.2, permeability is 1e-16—1e-12
+        - Leastsq is highly sensitive to permeability (with porosity = 0.1): Doesn't find optimal permeability for 1e-15—1e-16 and for 1e-9 and upwards.
+            - Also sensitive to porosity (with k = 1e-14): Doesn't find either parameter for porosity > 0.125 and any value < 0.1
+            - Actual value of porosity = 0.1, permeability = 1e-12. (with permeability guess of 1e-13, porosity guess can be less accurate).
+    """
+
     if curve_fit:
         # was going to possibly use scipy.optimize.curve_fit if no initial parameters were given
         pass
