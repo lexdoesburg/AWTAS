@@ -1,0 +1,1 @@
+Need to download PyQT for GUI. - Nvm comes installed in anaconda
