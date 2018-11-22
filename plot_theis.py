@@ -18,10 +18,14 @@ p = theis_solution(p0, qm, k, h, phi, rho, nu, C, r, t)
 # noise_sd = 0.005
 # p += p * noise_sd * np.random.randn(p.shape[0])
 
-f, ax1 = plt.subplots(nrows=1, ncols=1)
+f, ax = plt.subplots(nrows=1, ncols=2)
 
-ax1.plot(np.log(t/3600), p/1e5)
-ax1.set_xlabel("Log Time (hours)")
-ax1.set_ylabel("Pressure (bar)")
+ax[0].plot(np.log(t/3600), p/1e5)
+ax[0].set_xlabel("Log Time (hours)")
+ax[0].set_ylabel("Pressure (bar)")
+
+ax[1].plot(t/3600, p/1e5)
+ax[1].set_xlabel("Time (hours)")
+ax[1].set_ylabel("Pressure (bar)")
 
 plt.show()
