@@ -37,7 +37,7 @@ def theis_residual(parameters, p0, qm, h, rho, nu, C, r, t, data):
     phi, k = parameters
     return data - theis_solution(p0, qm, k, h, phi, rho, nu, C, r, t)
 
-def generate_data(phi, k, n, time, p0, qm, h, rho, nu, C, r, noise = False, sd = 2.5e-4):
+def generate_data(phi, k, n, time, p0, qm, h, rho, nu, C, r, noise = False, sd = 2.5e-4, save_file=False):
     """
     Generate approximated data using the Theis solution for a guess of porosity and permeability.
     """
@@ -46,8 +46,11 @@ def generate_data(phi, k, n, time, p0, qm, h, rho, nu, C, r, noise = False, sd =
     if noise:
         np.random.seed(0) # Set random seed to 0 for consistancy in testing
         p += p*sd*np.random.randn(p.shape[0])
-    return p
 
+    if save_file:
+        generate_datafile("testdata.txt", t, p)
+    return p
+        
 
 # def chi_squared(x, data, time, p0, qm, h, rho, nu, C, r):
 #     """
@@ -110,3 +113,19 @@ def find_model_parameters(data, p0, qm, h, rho, nu, C, r, t, phi=0.1, k=1e-14, c
 
 # Use forward model to determine approximation data.
 # Perform non-linear optimisation to get variable parameters phi and permeability.
+
+def generate_datafile(filename, time, measurement):
+    with open(filename, 'w') as file:
+        file.write('Log Time(s),Pressure(Pa)\n')
+        for i in range(len(time)):
+            if time[i] >= 1e-7:
+                file.write('{},{}\n'.format(np.log(time[i]), measurement[i]))
+            else:
+                file.write('{},{}\n'.format(0, measurement[i]))
+
+
+def read_data(filename):
+    x_data, y_data = np.genfromtxt(filename, delimiter=',', skip_header=1).T
+    # print(x_data)
+    # print(y_data)
+    return x_data, y_data
