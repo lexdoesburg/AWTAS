@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 p0 = 3.6e6 # Pa
 h = 100 # m
 r = 0.05 # m
-qm = 0.005 # m^3/s
+qm = -0.005 # m^3/s
 k = 1e-12 # m^2
 phi = 0.1
 rho = 813.37 # Water at 240 degrees celsius
@@ -35,7 +35,7 @@ print(p-data)
 # Test if non-linear optimisation working
 # phi = input("Enter porosity: ")
 # k = input("Enter permeability: ")
-phi, k = find_model_parameters(p, p0, qm, h, rho, nu, C, r, t, phi=0.01, k=1e-13)
+phi, k = find_model_parameters(noisey_data, p0, qm, h, rho, nu, C, r, t, phi=0.01, k=1e-13)
 print("Porosity = {}".format(phi))
 print("Permeability = {}".format(k))
 print(phi)
@@ -45,12 +45,13 @@ approximated_data = generate_data(phi, k, 100, time, p0, qm, h, rho, nu, C, r)
 
 plt.plot(t, data,"k-",label="Synthetic Data (Theis Solution W/Noise)")
 
-# plt.plot(t, noisey_data,"k-",label="Synthetic Data (Theis Solution W/Noise)")
+plt.plot(t, noisey_data,"kx",label="Synthetic Data (Theis Solution W/Noise)")
 plt.plot(t, approximated_data,"r-",label="Approximated Curve")
-# plt.plot(t, p, "g-", label="Theis Analytic Solution")
+plt.plot(t, p, "g-", label="Theis Analytic Solution")
 plt.title("Observed Data vs Fitted Curve")
 plt.xlabel("Time (s)")
 plt.ylabel("Pressure (Pa)")
 plt.legend(loc="best")
-
 plt.show()
+
+# new_data = generate_data(phi, k, 100, time, p0, qm, h, rho, nu, C, r,noise=True,save_file=True)
