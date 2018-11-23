@@ -14,29 +14,29 @@ import theis_solution as ts
 # import for testing performance
 import time
  
-class App(QMainWindow):
+class App(QWidget):
  
     def __init__(self):
         super().__init__()
         self.left = 0
         self.top = 30
-        self.title = 'PyQt5 matplotlib example - pythonspot.com'
+        self.title = 'AWTAS'
         self.width = 640
         self.height = 400
-        self.initUI()
+        self.init_UI()
  
-    def initUI(self):
+    def init_UI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
  
-        m = PlotCanvas(self, width=5, height=4)
-        m.move(0,0)
+        plot_canvas = PlotCanvas(self, width=5, height=4)
+        plot_canvas.move(0,0)
  
         load_data_button = QPushButton('Load Data', self)
         load_data_button.setToolTip('This s an example button')
         load_data_button.move(500,0)
         load_data_button.resize(140,100)
-        load_data_button.clicked.connect(lambda: self.plot_data(m))
+        load_data_button.clicked.connect(lambda: self.plot_data(plot_canvas))
 
         fit_data_button = QPushButton('Fit Data', self)
         fit_data_button.setToolTip('This s an example button')
@@ -64,7 +64,7 @@ class App(QMainWindow):
 
             end = time.time()
             print('Time elapsed = {}'.format(end - start))
-            
+
             return x_data, y_data
     
 
@@ -77,7 +77,7 @@ class PlotCanvas(FigureCanvas):
  
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
+        self.axes = fig.add_subplot(1, 1, 1)
  
         FigureCanvas.__init__(self, fig)
         self.setParent(parent)
@@ -90,7 +90,7 @@ class PlotCanvas(FigureCanvas):
  
  
     def plot_observed_data(self, x_data, y_data):
-        ax = self.figure.add_subplot(111)
+        ax = self.figure.add_subplot(1, 1 , 1)
         ax.semilogx(x_data, y_data, 'kx', label='Observed Data')
         # ax.plot(x_data, y_data, 'kx', label='Observed Data')
         self.draw()
