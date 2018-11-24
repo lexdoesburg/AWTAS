@@ -6,7 +6,7 @@ from scipy.optimize import leastsq
 from datetime import datetime
 
 class Model():
-    def __init__(self, p0, qm, k, h, phi, rho, nu, C, r, t, data=None):
+    def __init__(self, p0, qm, h, rho, nu, C, r, t, data=None):
         self.p0 = p0 # Initial pressure
         self.qm = qm # Mass flowrate (constant, -ve for production)
         self.h = h # Thickness
@@ -15,7 +15,7 @@ class Model():
         self.C = C # Compressibility
         self.r = r # Radius
         self.t = t # 1D array of measurement times
-        self.data = data # Observed data measurements
+        self.data = data # Observed pressure/time measurements
 
     def model(self, phi, k):
         pass
@@ -37,10 +37,11 @@ class Model():
             phi, k = optimal_parameters
         return phi, k
 
-    def generate_data(self, phi, k, noise = False, sd = 2.5e-4, save_file=False, filename="datafile_{}.txt".format(datetime.now().strftime("%d-%M-%Y_%H:%M"))):
+    def generate_data(self, phi, k, noise = False, sd = 2.5e-4, save_file=False, filename="example_datafile.txt"):
         """
         Generate approximated data using the Theis solution for a guess of porosity and permeability.
         """
+        # filename="datafile_{}.txt".format(datetime.now().strftime("%d-%M-%Y_%H:%M") # Argument
         p = self.model(phi, k)
         if noise:
             np.random.seed(0) # Set random seed to 0 for consistancy in testing
@@ -48,14 +49,15 @@ class Model():
 
         if save_file:
             self.__generate_datafile(filename, p)
-        return p
+        self.data = p
+        return self.data
     
     def __generate_datafile(self, filename, measurement):
         with open(filename, 'w') as file:
-            file.write('Log Time(s),Pressure(Pa)\n')
+            file.write('Time(s),Pressure(Pa)\n')
             for i in range(len(self.t)):
                 if self.t[i] >= 1e-7:
-                    file.write('{},{}\n'.format(np.log(self.t[i]), measurement[i]))
+                    file.write('{},{}\n'.format(self.t[i], measurement[i]))
                 else:
                     file.write('{},{}\n'.format(0, measurement[i]))
 
