@@ -119,7 +119,7 @@ def generate_datafile(filename, time, measurement):
         file.write('Log Time(s),Pressure(Pa)\n')
         for i in range(len(time)):
             if time[i] >= 1e-7:
-                file.write('{},{}\n'.format(np.log(time[i]), measurement[i]))
+                file.write('{},{}\n'.format(time[i], measurement[i]))
             else:
                 file.write('{},{}\n'.format(0, measurement[i]))
 

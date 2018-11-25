@@ -58,4 +58,5 @@ print('Time elapsed = {}'.format(end - start))
 plt.show()
 
 # 
-# new_data = generate_data(phi, k, 100, time, p0, qm, h, rho, nu, C, r,noise=True,save_file=True)
+new_data = generate_data(phi, k, 100, time, p0, qm, h, rho, nu, C, r,noise=True,save_file=True)
+print('New data file created')
