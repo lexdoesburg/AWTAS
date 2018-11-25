@@ -25,6 +25,9 @@ class AWTAS_App(QWidget):
         self.figure = plt.figure()
         self.plotting_canvas = FigureCanvas(self.figure)
         self.plot_toolbar = NavigationToolbar(self.plotting_canvas, self)
+
+        self.data = None
+
         self.init_UI()
  
 
