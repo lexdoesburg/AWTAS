@@ -1,11 +1,10 @@
-# import numpy as np
-from numpy import genfromtext
+import numpy as np
 
 class Data():
-    def __init__(self, filename=None, time=None, observed=None, parameters=None):
+    def __init__(self, filename=None, time=None, observation=None, parameters=None):
         self.filename = filename
         self.time = time # list of time data
-        self.observed = observed # list of pressure data
+        self.observation = observation # list of pressure data
         self.approximation = None
         # self.p0 = None
         # self.qm = None
@@ -23,7 +22,7 @@ class Data():
     
     def read_file(self):
         if self.filename:
-            self.time, self.observed = genfromtxt(self.filename, delimiter=',', skip_header=1).T
+            self.time, self.observation = np.genfromtxt(self.filename, delimiter=',', skip_header=1).T
     
     def set_known_parameters(self, parameters):
         """
@@ -45,8 +44,8 @@ class Data():
     def set_time(self, time):
         self.time = time
     
-    def set_pressure(self, pressure):
-        self.pressure = pressure
+    def set_observation(self, observation):
+        self.observation = observation
     
     def set_approximation(self, approximation):
         self.approximation = approximation
