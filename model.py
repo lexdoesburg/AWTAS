@@ -28,7 +28,7 @@ class Model():
         Calculate the residual of the model (difference between observed data and estimated data)
         """
         phi, k = parameters
-        return self.data.observed() - self.model(phi, k)
+        return self.data.observation - self.model(phi, k)
 
     def find_model_parameters(self, phi=0.1, k=1e-14, curve_fit=False):
         if curve_fit:
@@ -42,13 +42,14 @@ class Model():
         self.data.set_approximation(self.model(phi, k)) # Store the approximated data in the data structure
         return phi, k
 
-    def generate_data(self, phi, k, time, noise = False, sd = 2.5e-4, save_file=False, filename="example_datafile.txt"):
+    def generate_data(self, phi, k, time, parameters, noise = False, sd = 2.5e-4, save_file=False, filename="example_datafile.txt"):
         """
         Generate approximated data using the Theis solution for a guess of porosity and permeability.
         """
         # filename="datafile_{}.txt".format(datetime.now().strftime("%d-%M-%Y_%H:%M") # Argument
         self.data = data_class.Data()
         self.data.set_time(time)
+        self.data.set_known_parameters(parameters)
         p = self.model(phi, k)
         if noise:
             np.random.seed(0) # Set random seed to 0 for consistency in testing
@@ -56,7 +57,7 @@ class Model():
 
         if save_file:
             self.__generate_datafile(filename, p)
-        self.data.set_pressure(p)
+        self.data.set_observation(p)
         return self.data
     
     def __generate_datafile(self, filename, measurement):
