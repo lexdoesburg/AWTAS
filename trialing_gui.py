@@ -8,7 +8,9 @@ from PyQt5.QtCore import pyqtSlot
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
- 
+
+import numpy as np
+
 import theis_solution as ts
 
 # import for testing performance
@@ -91,7 +93,10 @@ class PlotCanvas(FigureCanvas):
  
     def plot_observed_data(self, x_data, y_data):
         ax = self.figure.add_subplot(1, 1 , 1)
-        ax.semilogx(x_data, y_data, 'kx', label='Observed Data')
+        ax.semilogx(np.log(x_data), y_data, 'kx', label='Observed Data')
+        ax.set_xlabel('Log Time (s)')
+        ax.set_ylabel('Pressure (Pa)')
+        ax.legend(loc='best')
         # ax.plot(x_data, y_data, 'kx', label='Observed Data')
         self.draw()
  
