@@ -1,6 +1,7 @@
 import sys
 
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QGridLayout, QAction, qApp, QMenuBar, QMenu, QMessageBox, QLineEdit, QLabel, QInputDialog, QComboBox, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QGridLayout, QAction, qApp, QMenuBar, QMenu, QMessageBox, QLineEdit, QLabel, QInputDialog, QComboBox, QDoubleSpinBox
+from PyQt5.QtWidgets import QFrame, QVBoxLayout
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon
 
@@ -228,6 +229,34 @@ class PlottingCanvas(FigureCanvas):
         self.fitted_lines = self.axes.semilogx(np.log(data.time), data.approximation, 'r-', label='Fitted Approximation')
         self.axes.legend(loc='lower left')
         self.draw()
+
+class ParametersWidget(QFrame):
+    def __init__(self, parameter_names, default_values=None):
+        super().__init__()
+        self.parameter_names = parameter_names
+        if default_values:
+            self.default_values = default_values
+        else:
+            self.default_values = [None]*len(self.parameter_names)
+        self.init_UI()
+    
+    def init_UI(self):
+        # self.frameStyle()
+        layout = QGridLayout()
+        layout.setVerticalSpacing(10)
+        row = 0
+        for parameter, default_value in zip(self.parameter_names, self.default_values):
+            label = QLabel(parameter)
+            input_box = QLineEdit()
+            if default_value:
+                input_box.setText(str(default_value))
+            layout.addWidget(label, row, 0)
+            layout.addWidget(input_box, row, 1)
+            row += 1
+
+
+
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
