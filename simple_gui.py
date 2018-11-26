@@ -1,8 +1,8 @@
 import sys
 
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QGridLayout, QAction, qApp, QMenuBar, QMenu, QMessageBox, QLineEdit, QLabel, QInputDialog, QComboBox, QDoubleSpinBox
-from PyQt5.QtWidgets import QFrame, QVBoxLayout
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QFrame, QVBoxLayout, QCheckBox
+from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtGui import QIcon
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -148,6 +148,8 @@ class AWTAS_App(QWidget):
             self.model = model.Theis_Solution(self.data)
             self.model.find_model_parameters()
             self.plotting_canvas.plot_fit(self.data)
+            parameters_label = QLabel('Porosity: {:.6f}\tPermeability: {:.6E}'.format(self.data.phi, self.data.k))
+            self.layout.addWidget(parameters_label, 2, 0)
             # self.axes.semilogx(np.log(self.data.time), self.data.approximation, 'r-', label='Fitted Approximation')
             # self.plotting_canvas.draw()
             
@@ -177,7 +179,30 @@ class AWTAS_App(QWidget):
         if self.parameters_imported and self.data_imported:
             self.fit_button.setEnabled(True)
 
+    @pyqtSlot()
+    def check_box(self, frame):
+        if self.params_checkbox.isChecked:
+            frame.show()
+        else:
+            frame.hide()
+
     def parameters_layout(self):
+        phi_label = QLabel('Porosity: ')
+        k_label = QLabel('Permeability: ')
+        phi_input = QLineEdit()
+        k_input = QLineEdit()
+        frame_layout = QGridLayout()
+        frame_layout.addWidget(phi_label, 0, 0)
+        frame_layout.addWidget(phi_input, 0, 1)
+        frame_layout.addWidget(k_label, 1, 0)
+        frame_layout.addWidget(k_input, 1, 1)
+
+        frame = QFrame()
+        frame.hide()
+        frame.setLayout(frame_layout)
+        self.params_checkbox = QCheckBox('Enter Porosity and Permeability Estimates')
+        self.params_checkbox.stateChanged.connect(lambda: self.check_box(frame))
+
         p0_label = QLabel('Initial Pressure')
         self.p0_input = QLineEdit()
         self.p0_input.setText('3.6e6')
@@ -205,21 +230,24 @@ class AWTAS_App(QWidget):
         input_button.clicked.connect(self.save_parameters)
 
         layout = QGridLayout()
-        layout.addWidget(p0_label, 0, 0)
-        layout.addWidget(self.p0_input, 0, 1)
-        layout.addWidget(qm_label, 1, 0)
-        layout.addWidget(self.qm_input, 1, 1)
-        layout.addWidget(h_label, 2, 0)
-        layout.addWidget(self.h_input, 2, 1)
-        layout.addWidget(rho_label, 3, 0)
-        layout.addWidget(self.rho_input, 3, 1)
-        layout.addWidget(nu_label, 4, 0)
-        layout.addWidget(self.nu_input, 4, 1)
-        layout.addWidget(C_label, 5, 0)
-        layout.addWidget(self.C_input, 5, 1)
-        layout.addWidget(r_label, 6, 0)
-        layout.addWidget(self.r_input, 6, 1)
-        layout.addWidget(input_button, 7, 1)
+        layout.addWidget(self.params_checkbox, 0, 0)
+        layout.addWidget(frame, 1, 0)
+        # layout.addLayout(k_widget, 1, 1)
+        layout.addWidget(p0_label, 2, 0)
+        layout.addWidget(self.p0_input, 2, 1)
+        layout.addWidget(qm_label, 3, 0)
+        layout.addWidget(self.qm_input, 3, 1)
+        layout.addWidget(h_label, 4, 0)
+        layout.addWidget(self.h_input, 4, 1)
+        layout.addWidget(rho_label, 5, 0)
+        layout.addWidget(self.rho_input, 5, 1)
+        layout.addWidget(nu_label, 6, 0)
+        layout.addWidget(self.nu_input, 6, 1)
+        layout.addWidget(C_label, 7, 0)
+        layout.addWidget(self.C_input, 7, 1)
+        layout.addWidget(r_label, 8, 0)
+        layout.addWidget(self.r_input, 8, 1)
+        layout.addWidget(input_button, 9, 1)
 
         # layout = QGridLayout()
         # layout.setVerticalSpacing(1)
