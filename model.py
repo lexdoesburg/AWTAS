@@ -36,7 +36,7 @@ class Model():
             pass
         else:
             initial_parameters = np.array([phi, k])
-            optimal_parameters, flag = leastsq(self.residual_function, initial_parameters)
+            optimal_parameters, flag = leastsq(self.residual_function, initial_parameters) # if flag is 1 - found a good soln
             phi, k = optimal_parameters
         self.data.set_unknown_parameters(phi, k) # Store phi and k in data structure
         self.data.set_approximation(self.model(phi, k)) # Store the approximated data in the data structure
