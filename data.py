@@ -20,9 +20,10 @@ class Data():
         if filename:
             self.read_file()
     
-    def read_file(self):
-        if self.filename:
-            self.time, self.observation = np.genfromtxt(self.filename, delimiter=',', skip_header=1).T
+    def read_file(self, filename=None):
+        if filename:
+            self.filename = filename
+        self.time, self.observation = np.genfromtxt(self.filename, delimiter=',', skip_header=1).T
     
     def set_known_parameters(self, parameters):
         """
