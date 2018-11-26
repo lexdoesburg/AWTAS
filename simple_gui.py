@@ -32,9 +32,14 @@ class AWTAS_App(QWidget):
         self.plotting_canvas = PlottingCanvas()
         self.plot_toolbar = NavigationToolbar(self.plotting_canvas, self)
 
-
-        self.data = None
+        self.data = data_class.Data()
         self.model = None
+
+        self.data_imported = False
+        self.parameters_imported = False
+
+        # self.parameter_names = ['Initial Pressure', 'Mass Flowrate', 'Thickness', 'Density', 'Kinematic Viscosity', 'Compressibility', 'Radius']
+        # self.default_values = [3.6e6, -0.005, 100, 813.37, 0.0001111, 0.001303, 0.05]
 
         self.init_UI()
  
@@ -64,33 +69,42 @@ class AWTAS_App(QWidget):
         # ----------------------------------
 
         # Import data button
-        import_data_button = QPushButton('Import Data', self)
-        import_data_button.setToolTip('Import pressure measurements and time data.')
-        import_data_button.clicked.connect(self.plot_data)
+        self.import_data_button = QPushButton('Import Data', self)
+        self.import_data_button.setToolTip('Import pressure measurements and time data.')
+        self.import_data_button.clicked.connect(self.plot_data)
 
         # Fit model button
-        fit_button = QPushButton('Fit Curve', self)
-        fit_button.setToolTip('Fit the permeability and porosity to match the data')
-        fit_button.clicked.connect(self.fit_data)
+        self.fit_button = QPushButton('Fit Curve', self)
+        self.fit_button.setToolTip('Fit the permeability and porosity to match the data')
+        self.fit_button.clicked.connect(self.fit_data)
+        self.fit_button.setEnabled(False)
 
         # Model Dropdown menu
-        models_label = QLabel(self)
-        models_label.setText("Select Model: ")
-        models_dropdown = QComboBox(self)
-        # models_dropdown.addItem("Select Model")
-        models_dropdown.addItem("Theis Solution")
-        # models_dropdown.activated[str].connect(self.select_model)
+        # models_label = QLabel(self)
+        # models_label.setText("Select Model: ")
+        # self.models_dropdown = QComboBox(self)
+        # # models_dropdown.addItem("Select Model")
+        # self.models_dropdown.addItem("Theis Solution")
+        # # models_dropdown.activated[str].connect(self.select_model)
 
         # Define the layout
-        layout = QGridLayout()
-        layout.addWidget(self.plotting_canvas, 1, 0)
-        layout.addWidget(self.plot_toolbar, 0, 0)
-        layout.addWidget(models_label, 0, 1)
-        layout.addWidget(models_dropdown, 0, 2)
-        layout.addWidget(import_data_button, 2, 1)
-        layout.addWidget(fit_button, 2, 2)
-        layout.addLayout(self.parameters_layout(), 1, 1)
-        self.setLayout(layout)
+        self.layout = QGridLayout()
+        self.layout.addWidget(self.plotting_canvas, 1, 0)
+        self.layout.addWidget(self.plot_toolbar, 0, 0)
+        # self.layout.addWidget(models_label, 0, 1)
+        # self.layout.addWidget(self.models_dropdown, 0, 2)
+        self.layout.addWidget(self.import_data_button, 0, 1)
+        self.layout.addWidget(self.fit_button, 2, 1)
+        # layout.addLayout(self.parameters_layout(parameter_names=self.parameter_names, default_values=self.default_values), 1, 1)
+        self.layout.addLayout(self.parameters_layout(), 1, 1)
+        # Prioritise the canvas to stretch
+        self.layout.setColumnStretch(0, 1)
+        print('First row stretch: {} Second row stretch: {} Third row stretch: {}'.format(self.layout.rowStretch(0), self.layout.rowStretch(1), self.layout.rowStretch(2)))
+        print('First column stretch: {} Second column stretch: {}'.format(self.layout.columnStretch(0), self.layout.columnStretch(1)))
+        # Make the canvas at least 500x500 pixels
+        self.layout.setColumnMinimumWidth(0, 500)
+        self.layout.setRowMinimumHeight(1, 500)
+        self.setLayout(self.layout)
 
         self.show()
 
@@ -124,6 +138,9 @@ class AWTAS_App(QWidget):
             print('Drawing')
             # self.plotting_canvas.draw()
             # self.figure.tight_layout()
+        self.data_imported = True
+        if self.parameters_imported and self.data_imported:
+            self.fit_button.setEnabled(True)
 
     @pyqtSlot()
     def fit_data(self):
@@ -156,6 +173,9 @@ class AWTAS_App(QWidget):
         parameters.append(float(self.C_input.text()))
         parameters.append(float(self.r_input.text()))
         self.data.set_known_parameters(parameters)
+        self.parameters_imported = True
+        if self.parameters_imported and self.data_imported:
+            self.fit_button.setEnabled(True)
 
     def parameters_layout(self):
         p0_label = QLabel('Initial Pressure')
@@ -200,6 +220,22 @@ class AWTAS_App(QWidget):
         layout.addWidget(r_label, 6, 0)
         layout.addWidget(self.r_input, 6, 1)
         layout.addWidget(input_button, 7, 1)
+
+        # layout = QGridLayout()
+        # layout.setVerticalSpacing(1)
+        # row = 0
+        # for parameter, default_value in zip(parameter_names, default_values):
+        #     label = QLabel(parameter)
+        #     input_box = QLineEdit()
+        #     if default_value:
+        #         input_box.setText(str(default_value))
+        #     layout.addWidget(label, row, 0)
+        #     layout.addWidget(input_box, row, 1)
+        #     row += 1
+        # input_button = QPushButton('Save Parameters', self)
+        # input_button.setToolTip('Import the above entered parameters')
+        # input_button.clicked.connect(self.save_parameters)
+        # layout.addWidget(input_button, row, 0)
         return layout
 
 class PlottingCanvas(FigureCanvas):
