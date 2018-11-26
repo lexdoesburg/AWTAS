@@ -218,14 +218,15 @@ class PlottingCanvas(FigureCanvas):
         self.axes.semilogx(np.log(data.time), data.observation, 'kx', label='Observed Data')
         self.axes.set_xlabel('Log Time (s)')
         self.axes.set_ylabel('Pressure (Pa)')
-        self.axes.legend(loc='best')
+        self.axes.legend(loc='lower left')
+        self.figure.tight_layout(pad = 2)
         self.draw()
     
     def plot_fit(self, data):
         if self.fitted_lines:
             self.axes.lines.remove(self.fitted_lines[0])
         self.fitted_lines = self.axes.semilogx(np.log(data.time), data.approximation, 'r-', label='Fitted Approximation')
-        self.axes.legend(loc='best')
+        self.axes.legend(loc='lower left')
         self.draw()
 
 if __name__ == '__main__':
