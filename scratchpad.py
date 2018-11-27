@@ -1,4 +1,5 @@
+import model
 
-parameter_names = [1,2,3]
-default_values = [None]*len(parameter_names)
-print(default_values)
+ts = model.Theis_Solution()
+cs = ts.chi_squared()
+print(cs)
