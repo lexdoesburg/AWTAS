@@ -1,22 +1,19 @@
 import numpy as np
-
+ 
 class Data():
+    """
+    This is a class which defines the problem data structure (eventually extended for use in all model types).
+    """
     def __init__(self, filename=None, time=None, observation=None, parameters=None):
-        self.filename = filename
-        self.time = time # list of time data
-        self.observation = observation # list of pressure data
-        self.approximation = None
-        # self.p0 = None
-        # self.qm = None
-        # self.h = None
-        # self.rho = None
-        # self.nu = None
-        # self.C = None
-        # self.r = None
-        self.parameters = parameters #list of the parameters
-        self.phi = None
-        self.k = None
+        self.filename = filename # the filename of where the data was imported from
+        self.time = time # array of time data
+        self.observation = observation # array of observed pressure data
+        self.approximation = None # array of approximated pressure data
+        self.parameters = parameters # list of the well parameters
+        self.phi = None # estimated porosity (float)
+        self.k = None # estimated permeability (float)
         
+        # If a filename is given read the data in
         if filename:
             self.read_file()
     
@@ -50,4 +47,15 @@ class Data():
     
     def set_approximation(self, approximation):
         self.approximation = approximation
+    
+    def generate_datafile(self, filename):
+        with open(filename, 'w') as file:
+            file.write('Time, Pressure Observation, Parameters\n')
+            j = len(self.parameters)
+            for i in range(len(self.time)):
+                if j > 0:
+                    file.write('{}, {}, {}\n'.format(self.time[i], self.observation[i], self.parameters[i]))
+                else:
+                    file.write('{}, {}\n'.format(self.time[i], self.observation[i]))
+                j -= 1
 
