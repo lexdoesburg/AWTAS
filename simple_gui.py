@@ -179,29 +179,29 @@ class AWTAS_App(QWidget):
         if self.parameters_imported and self.data_imported:
             self.fit_button.setEnabled(True)
 
-    @pyqtSlot()
-    def check_box(self, frame):
-        if self.params_checkbox.isChecked:
-            frame.show()
-        else:
-            frame.hide()
+    # @pyqtSlot()
+    # def check_box(self, frame):
+    #     if self.params_checkbox.isChecked:
+    #         frame.show()
+    #     else:
+    #         frame.hide()
 
     def parameters_layout(self):
-        phi_label = QLabel('Porosity: ')
-        k_label = QLabel('Permeability: ')
-        phi_input = QLineEdit()
-        k_input = QLineEdit()
-        frame_layout = QGridLayout()
-        frame_layout.addWidget(phi_label, 0, 0)
-        frame_layout.addWidget(phi_input, 0, 1)
-        frame_layout.addWidget(k_label, 1, 0)
-        frame_layout.addWidget(k_input, 1, 1)
+        # phi_label = QLabel('Porosity: ')
+        # k_label = QLabel('Permeability: ')
+        # phi_input = QLineEdit()
+        # k_input = QLineEdit()
+        # frame_layout = QGridLayout()
+        # frame_layout.addWidget(phi_label, 0, 0)
+        # frame_layout.addWidget(phi_input, 0, 1)
+        # frame_layout.addWidget(k_label, 1, 0)
+        # frame_layout.addWidget(k_input, 1, 1)
 
-        frame = QFrame()
-        frame.hide()
-        frame.setLayout(frame_layout)
-        self.params_checkbox = QCheckBox('Enter Porosity and Permeability Estimates')
-        self.params_checkbox.stateChanged.connect(lambda: self.check_box(frame))
+        # frame = QFrame()
+        # frame.hide()
+        # frame.setLayout(frame_layout)
+        # self.params_checkbox = QCheckBox('Enter Porosity and Permeability Estimates')
+        # self.params_checkbox.stateChanged.connect(lambda: self.check_box(frame))
 
         p0_label = QLabel('Initial Pressure')
         self.p0_input = QLineEdit()
@@ -230,8 +230,8 @@ class AWTAS_App(QWidget):
         input_button.clicked.connect(self.save_parameters)
 
         layout = QGridLayout()
-        layout.addWidget(self.params_checkbox, 0, 0)
-        layout.addWidget(frame, 1, 0)
+        # layout.addWidget(self.params_checkbox, 0, 0)
+        # layout.addWidget(frame, 1, 0)
         # layout.addLayout(k_widget, 1, 1)
         layout.addWidget(p0_label, 2, 0)
         layout.addWidget(self.p0_input, 2, 1)
