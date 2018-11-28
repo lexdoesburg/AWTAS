@@ -11,7 +11,7 @@ phi = 0.1
 rho = 813.37 # Water at 240 degrees celsius
 nu = 0.0001111 # Water at 240 degrees celsius
 C = 0.001303 # Water at 240 degrees celsius
-t = np.linspace(1, 43200, num=100)
+t = np.linspace(0, 43200, num=100)
 
 p = theis_solution(p0, qm, k, h, phi, rho, nu, C, r, t)
 
@@ -20,7 +20,7 @@ p = theis_solution(p0, qm, k, h, phi, rho, nu, C, r, t)
 
 f, ax = plt.subplots(nrows=1, ncols=2)
 
-ax[0].plot(np.log(t/3600), p/1e5)
+ax[0].semilogx(np.log(t/3600), p/1e5)
 ax[0].set_xlabel("Log Time (hours)")
 ax[0].set_ylabel("Pressure (bar)")
 
