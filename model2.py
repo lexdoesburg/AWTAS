@@ -10,6 +10,7 @@ class Model():
         """
         Initialise the model
         """
+        self.function_calls = 0
         self.data = data # Data structure containing observed pressure measurements, time of measurements and well parameters
 
     def model(self, parameters):
@@ -23,14 +24,24 @@ class Model():
         Calculate the residual of the model (difference between observed data and estimated data)
         """
         # phi, k = parameters
-        return self.data.observation - self.model(parameters)
+        self.function_calls += 1
+        print('--------\nCalled residual function {} time(s)\n--------'.format(self.function_calls))
+        print('Parameters = {}'.format(parameters))
+        model_data = self.model(parameters)
+        if len(self.data.observation) != len(model_data):
+            print('Model finished early - return large residual of 100000\n--------')
+            return [100000]*len(self.data.observation)
+        else:
+            print('Current chi_squared = {}\nCurrent sum of residuals = {}\n--------'.format(self.__chi_squared(), np.sum(self.data.observation - model_data)))
+
+        return self.data.observation - model_data
 
     def __chi_squared(self):
         sd = np.std(self.data.observation)
         chi_squared = np.sum((self.data.observation-self.data.approximation)/sd)**2
         return chi_squared
 
-    def find_model_parameters(self, phi=None, k=None, curve_fit=False):
+    def find_model_parameters(self, phi=None, k=None, curve_fit=False, initial_parameters=None):
         """
         Find the model parameters porosity and permeability.
 
@@ -55,34 +66,42 @@ class Model():
         else:
             calls = 0
             # broken = False
-            estimates = np.ndarray(shape=(3,25))
-            i = 0
-            for k in [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]:
-                for phi in [0.2, 0.15, 0.1, 0.05, 0.01]:
-                    initial_parameters = np.array([phi, k])
-                    optimal_parameters, flag = leastsq(self.residual_function, initial_parameters) # if flag is 1 - found a good soln
-                    self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
-                    chi_squared = self.__chi_squared()
-                    estimates[:, i] = optimal_parameters[0], optimal_parameters[1], chi_squared
-                    print('Phi: {} k: {} Chi squared: {}'.format(phi, k, chi_squared))
-                    i += 1
+            # estimates = np.ndarray(shape=(3,25))
+            # i = 0
+            # for k in [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]:
+            #     for phi in [0.2, 0.15, 0.1, 0.05, 0.01]:
+                    # initial_parameters = np.array([phi, k])
+            for p0 in np.linspace(100, 105, 3):
+                for x0 in np.linspace(0.225, 0.25, 3):
+                    # initial_parameters = np.array([p0, x0, 0.08, 2.8e-15])
                     calls += 1
+                    print('---Calling Optimisation Function {}---'.format(calls))
+                    initial_parameters = np.array([p0, x0])
+                    optimal_parameters, flag = leastsq(self.residual_function, initial_parameters) # if flag is 1 - found a good soln
+                    print('Current Optimal Parameters = {}'.format(optimal_parameters))
+                    # self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
+                    # chi_squared = self.__chi_squared()
+                    # estimates[:, i] = optimal_parameters[0], optimal_parameters[1], chi_squared
+                    # print('Phi: {} k: {} Chi squared: {}'.format(phi, k, chi_squared))
+                    # i += 1
                 #     if chi_squared <= 20:
                 #         broken = True
                 #         break
                 # if broken:
                 #     break
-            index = np.argmin(estimates[2])
-            print('index = {} chi squared = {}'.format(index, estimates[2, index]))
-            print('Function called: {} times'.format(calls))
+            # index = np.argmin(estimates[2])
+            # print('index = {} chi squared = {}'.format(index, estimates[2, index]))
+            # print('Function called: {} times'.format(calls))
 
-            parameters = estimates[:2, index]
-            phi, k = parameters
-            print('Phi {}, k {}'.format(parameters[0], parameters[1]))
+            # parameters = estimates[:2, index]
+            # phi, k = parameters
+            # print('Phi {}, k {}'.format(parameters[0], parameters[1]))
             # phi, k = optimal_parameters
-        self.data.set_unknown_parameters(phi, k) # Store phi and k in data structure
-        self.data.set_approximation(self.model(parameters)) # Store the approximated data in the data structure
-        return parameters
+        # self.data.set_unknown_parameters(phi, k) # Store phi and k in data structure
+        self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
+        print('Function calls = {}'.format(self.function_calls))
+        self.function_calls = 0
+        return optimal_parameters
 
     def generate_data(self, phi, k, time, parameters, noise = False, sd = 2.5e-4, save_file=False, filename="example_datafile.txt"):
         """
@@ -133,7 +152,7 @@ class Theis_Solution(Model):
             p[0] = p0
         return p
 
-
+import os
 from t2data import *
 from t2listing import *
 import csv
@@ -142,11 +161,15 @@ class SKG9D(Model):
     def model(self, parameters):
         """
         """
+        # Parameter space
+
         # Parameters to determine
         p0 = parameters[0]*1.e5 # Initial reservoir pressure (Pa)
         x0 = parameters[1]		# initial steam mass fraction
         porosity = .082		# initial porosity
         permeability = 2.76e-15	# initial permeability (m2)
+        # porosity = parameters[2]
+        # permeability = parameters[3]
 
         # write values in the AUTOUGH2 dat file
         dat = t2data('SKG9D.DAT')
@@ -160,7 +183,7 @@ class SKG9D(Model):
 
         # time vector indicated when result must be returned
         t_data = []
-        with open('SKG9D_press.csv', 'rb') as csvfile:
+        with open('SKG9D_press.csv', 'r') as csvfile:
             reader=csv.reader(csvfile, delimiter=',')
             for row in reader:								
                 t_data.append(float(row[0]))
@@ -181,8 +204,65 @@ class SKG9D(Model):
             list_t = list_t[:-2]
             list_h = list_h[:-2]
             list_p = list_p[:-2]
-
+        self.data.set_approximation(list_p)
         return list_p
 
+    def transf0(self, theta):
+        """transform parameter vector to a new base adapted for automated calibration
 
+        Args:
+            theta (list): parameter vector in original base
+        """
+        xlim = [90., 125.]	# initial pressure range
+        ylim = [0.05, .5]	# inital steam fraction range
+        return [(theta[0]-xlim[0])/(xlim[1]-xlim[0]), (theta[1]-ylim[0])/(ylim[1]-ylim[0])]
+	
+    def transf1(self, X):
+        """transform parameter vector to their original base
 
+        Args:
+            X (list): parameter vector in adapted base
+        """
+        xlim = [90., 125.]	# initial pressure range
+        ylim = [0.05, .5]	# inital steam fraction range
+        return [X[0]*(xlim[1]-xlim[0])+xlim[0], X[1]*(ylim[1]-ylim[0])+ylim[0]]
+
+    def wellbore_obj(self, X):
+        """Returns the objective function associated to the wellbore model
+
+        Args:
+            X (list): parameter vector in a base adapted for automated calibration
+        """
+        
+        # runs the AUTOUGH2 model
+        list_t, list_h, list_p = self.model(self.transf1(X))
+        
+        # load production data
+        t_data = []						# initiate time vector
+        h_data = []						# initiate enthalpy vector
+        with open('SKG9D_enth.csv', 'r') as csvfile:	# open enthalpy production history csv file
+            reader=csv.reader(csvfile, delimiter=',')	# open reader
+            for row in reader:						# go through each row
+                t_data.append(float(row[0]))			# save time
+                h_data.append(float(row[1]))			# save enthalpy
+        p_data = []						# initiate pressure vector
+        with open('SKG9D_press.csv', 'r') as csvfile:	# open pressure production history csv file
+            reader=csv.reader(csvfile, delimiter=',')	# open reader
+            for row in reader:						# go through each row								
+                p_data.append(float(row[1]))			# save pressure
+        
+        # calculate the objective function
+        obj = 0.	# initiate
+        w = .046	# enthalpy weight
+        for i in range(len(list_t)):	# runs through time list
+            obj += ((list_h[i]-h_data[i])*w)**2		# add weighted sqared enthalpy difference
+        for i in range(len(list_p)):	# runs through time list
+            obj += (list_p[i]-p_data[i])**2			# add sqared pressure difference
+        
+        # add penalty for models not running to the end
+        n_diff = len(t_data)-len(list_t)	# numbre of time dots not reached by the model
+        obj += n_diff*800.					# penalty
+        
+        # reduce objective function value for practical reasons
+        obj = obj*1.e-5
+        return obj
