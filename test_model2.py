@@ -33,7 +33,8 @@ initial_parameters = np.array([102., .2, 0.082, 2.76e-15])
 # print('---------\nFinding Parameters Time elapsed = {}'.format(end - start))
 # print('---------\n---------\n{}\n---------\n---------\n'.format(parameters))
 
-initial_parameters = np.array([102.50286809, 0.22538374])
+# initial_parameters = np.array([102.50286809, 0.22538374])
+initial_parameters = np.array([103.07, 0.2332])
 p = new_model.model(initial_parameters)
 # t[0] = 0
 # print(t)
