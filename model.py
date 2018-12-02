@@ -11,6 +11,7 @@ class Model():
         Initialise the model
         """
         self.data = data # Data structure containing observed pressure measurements, time of measurements and well parameters
+        self.calls = 0
 
     def model(self, phi, k):
         """
@@ -23,6 +24,7 @@ class Model():
         Calculate the residual of the model (difference between observed data and estimated data)
         """
         phi, k = parameters
+        self.calls += 1
         return self.data.observation - self.model(phi, k)
 
     def __chi_squared(self):
@@ -81,6 +83,8 @@ class Model():
             # phi, k = optimal_parameters
         self.data.set_unknown_parameters(phi, k) # Store phi and k in data structure
         self.data.set_approximation(self.model(phi, k)) # Store the approximated data in the data structure
+        print('Calls = ', self.calls)
+        self.calls = 0
         return phi, k
 
     def generate_data(self, phi, k, time, parameters, noise = False, sd = 2.5e-4, save_file=False, filename="example_datafile.txt"):
@@ -129,4 +133,14 @@ class Theis_Solution(Model):
             # p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*t)) # TODO: Double check exponential integral is correct
         if self.data.time[0] <= 1e-7: # Check if initial reading is at time 0
             p[0] = p0
+        return p
+
+# import theis_solution_fortran as ts
+
+class Theis_Solution_Fortran(Model):
+    def model(self, parameters):
+        p0, qm, h, rho, nu, C, r = self.data.parameters
+        phi, k = parameters
+        # p = ts.theis_solution(phi, k, p0, qm, h, rho, nu, C, r)
+        p = None
         return p
