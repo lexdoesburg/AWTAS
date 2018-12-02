@@ -204,10 +204,10 @@ class SKG9D(Model):
         [(th, h), (tp, p)] = lst.history([('g', ('  A 1', 'WEL 1'), 'Enthalpy'), ('e', '  A 1', 'Pressure')])
         th = np.array(th)*(1/24.)*(1/3600.)	# convert time from seconds to days
         p = np.array(p)*1.e-5				# convert pressure from Pa to bars
-        h = np.array(h)*1.e-3				# convert enthalpy from J/kg to kJ/kg
+        # h = np.array(h)*1.e-3				# convert enthalpy from J/kg to kJ/kg
         list_index = [(np.abs(th-t)).argmin() for t in t_data if t<=th[-1]]	# index list when result must be returned
-        list_t = th[list_index]
-        list_h = h[list_index]
+        # list_t = th[list_index]
+        # list_h = h[list_index]
         list_p = p[list_index]
         end_listing = time.time()
         listing_time = end_listing-start_listing
@@ -215,8 +215,8 @@ class SKG9D(Model):
         start_deletion = time.time()
         # Delete negative pressures
         while list_p[-1] < 0.:
-            list_t = list_t[:-2]
-            list_h = list_h[:-2]
+            # list_t = list_t[:-2]
+            # list_h = list_h[:-2]
             list_p = list_p[:-2]
         self.data.set_approximation(list_p)
         end_deletion = time.time()
