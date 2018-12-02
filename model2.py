@@ -4,6 +4,7 @@ from scipy.special import exp1
 from scipy.optimize import leastsq
 
 import data as data_class
+import time
 
 class Model():
     def __init__(self, data=None):
@@ -171,23 +172,33 @@ class SKG9D(Model):
         # porosity = parameters[2]
         # permeability = parameters[3]
 
+        start_datfile = time.time()
         # write values in the AUTOUGH2 dat file
         dat = t2data('SKG9D.DAT')
         dat.grid.rocktype['IGNIM'].porosity = porosity
         dat.grid.rocktype['IGNIM'].permeability = [permeability, permeability, permeability]
         dat.parameter['default_incons'] = [p0, x0]
         dat.write('SKG9D_1.DAT')
+        end_datfile = time.time()
+        datfile_time = end_datfile-start_datfile
 
+        start_simulator = time.time()
         # run AUTOUGH2
         dat.run(simulator='AUTOUGH2_5.exe', silent = True)
+        end_simulator = time.time()
+        simulator_time = end_simulator-start_simulator
 
+        start_csv = time.time()
         # time vector indicated when result must be returned
         t_data = []
         with open('SKG9D_press.csv', 'r') as csvfile:
             reader=csv.reader(csvfile, delimiter=',')
             for row in reader:								
                 t_data.append(float(row[0]))
+        end_csv = time.time()
+        csv_time = end_csv-start_csv
 
+        start_listing = time.time()
         # read LISTING file
         lst = t2listing('SKG9D_1.LISTING', skip_tables = ['connection'])
         [(th, h), (tp, p)] = lst.history([('g', ('  A 1', 'WEL 1'), 'Enthalpy'), ('e', '  A 1', 'Pressure')])
@@ -198,13 +209,25 @@ class SKG9D(Model):
         list_t = th[list_index]
         list_h = h[list_index]
         list_p = p[list_index]
+        end_listing = time.time()
+        listing_time = end_listing-start_listing
 
+        start_deletion = time.time()
         # Delete negative pressures
         while list_p[-1] < 0.:
             list_t = list_t[:-2]
             list_h = list_h[:-2]
             list_p = list_p[:-2]
         self.data.set_approximation(list_p)
+        end_deletion = time.time()
+        deletion_time = end_deletion-start_deletion
+
+        print('AUTOUGH Model Time:')
+        print('    Datfile time = {}'.format(datfile_time))
+        print('    Simulation time = {}'.format(simulator_time))
+        print('    Csv time = {}'.format(csv_time))
+        print('    Listing time = {}'.format(listing_time))
+        print('    Deletion time = {}'.format(deletion_time))
         return list_p
 
     def transf0(self, theta):
