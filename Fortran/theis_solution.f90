@@ -7,7 +7,7 @@ module theis_solution
     contains
 
 ! -----------------------------------------------------------------------------
-    subroutine AnalyticalTheis(k, phi, P0, Q0, h, rho, nu, C, r, time, p, nObservations)
+    subroutine AnalyticalTheis(k, phi, P0, Q0, h, rho, nu, C, r, nObservations, time, p)
         ! use utility_functions
         ! use variable_types
         ! implicit none
