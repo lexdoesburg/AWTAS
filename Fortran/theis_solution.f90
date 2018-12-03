@@ -7,7 +7,7 @@
 !     contains
 
 ! -----------------------------------------------------------------------------
-    subroutine AnalyticalTheis(k, phi, P0, qm, h, rho, nu, C, r, time, p, nObservations)
+    subroutine AnalyticalTheis(k, phi, P0, Q0, h, rho, nu, C, r, time, p, nObservations)
         use utility_functions
         use variable_types
         implicit none
@@ -41,12 +41,13 @@
         real(DP),intent(in) :: nu
         real(DP),intent(in) :: C
         real(DP),intent(in) :: r
-        real(DP),intent(in) :: nObservations
+        integer,intent(in) :: nObservations
         real(DP),intent(in),dimension(nObservations) :: time
-        real(DP),intent(out) :: p
+        real(DP),intent(out),dimension(nObservations) :: p
         integer :: i
+        real(DP) :: pressure
+        real(DP) :: t
         ! real(DP) :: AnalyticalTheis(TotalNData) !
-
     ! !   Local Variables:
     ! !   Fixed parameters:	           
     !     real(DP) :: nu,rho,h,C 
