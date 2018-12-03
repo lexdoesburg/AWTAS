@@ -1,16 +1,16 @@
-! module theis_solution
+module theis_solution
 
-!     use utility_functions
-!     use variable_types
-!     implicit none
+    use utility_functions
+    use variable_types
+    implicit none
 
-!     contains
+    contains
 
 ! -----------------------------------------------------------------------------
     subroutine AnalyticalTheis(k, phi, P0, Q0, h, rho, nu, C, r, time, p, nObservations)
-        use utility_functions
-        use variable_types
-        implicit none
+        ! use utility_functions
+        ! use variable_types
+        ! implicit none
     !   This uses the Theis curve to calculate pressure at each (r,t) using the 
     !   given variables.  Analytic solution due to Mike O'Sullivan.
 
@@ -139,4 +139,4 @@
     end subroutine AnalyticalTheis
 ! -----------------------------------------------------------------------------
 
-! end module theis_solution
+end module theis_solution
