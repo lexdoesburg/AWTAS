@@ -1,124 +1,141 @@
-module theis_solution
+! module theis_solution
 
-    use utility_functions
-    use variable_types
-    implicit none
+!     use utility_functions
+!     use variable_types
+!     implicit none
 
-    contains
+!     contains
 
 ! -----------------------------------------------------------------------------
-    function AnalyticalTheis(variable)
-  
-!   This uses the Theis curve to calculate pressure at each (r,t) using the 
-!   given variables.  Analytic solution due to Mike O'Sullivan.
+    subroutine AnalyticalTheis(k, phi, P0, qm, h, rho, nu, C, r, time, p, nObservations)
+        use utility_functions
+        use variable_types
+        implicit none
+    !   This uses the Theis curve to calculate pressure at each (r,t) using the 
+    !   given variables.  Analytic solution due to Mike O'Sullivan.
 
-!   FixedParameter values for this model:
-!   1: layer elevation (not used)
-!   2: B   (layer thickness)
-!   3: action well radius (not used)
-!   4: nu (viscosity)
-!   5: rho (fluid density)
-!   6: C   (compressibility)
+    !   FixedParameter values for this model:
+    !   1: layer elevation (not used)
+    !   2: h   (layer thickness)
+    !   3: action well radius (not used)
+    !   4: nu (viscosity)
+    !   5: rho (fluid density)
+    !   6: C   (compressibility)
 
-!   Reservoir conditions for this model:
-!   1: Pressure
+    !   Reservoir conditions for this model:
+    !   1: Pressure
 
-!   Variables for this model:
-!   1: k (permeability)
-!   2: phi (porosity)
+    !   Variables for this model:
+    !   1: k (permeability)
+    !   2: phi (porosity)
 
-    use problem_data
+        ! use problem_data
 
-!   Argument Variables:
-    real(DP),intent(in) :: variable(:) !
-    real(DP) :: AnalyticalTheis(TotalNData) !
+    !   Argument Variables:
+        real(DP),intent(in) :: k !
+        real(DP),intent(in) :: phi
+        real(DP),intent(in) :: P0 !
+        real(DP),intent(in) :: Q0 !qm
+        real(DP),intent(in) :: h !
+        real(DP),intent(in) :: rho
+        real(DP),intent(in) :: nu
+        real(DP),intent(in) :: C
+        real(DP),intent(in) :: r
+        real(DP),intent(in) :: nObservations
+        real(DP),intent(in),dimension(nObservations) :: time
+        real(DP),intent(out) :: p
+        integer :: i
+        ! real(DP) :: AnalyticalTheis(TotalNData) !
 
-!   Local Variables:
-!   Fixed parameters:	           
-    real(DP) :: nu,rho,B,C 
-!   Reservoir conditions:
-	real(DP) :: P0 ! initial pressure
-!   Variable parameters:
-    real(DP) :: k,phi ! permeability and porosity
-!   Local variables:
-    real(DP) :: CC,D,x ! Intermediate quantities
-    real(DP) :: r,t,pressure,flow,Q0
-    integer(I4B) :: ObsPointNo,i,ObsPointOffset,DataNo
-	real(DP) :: DataOffset
+    ! !   Local Variables:
+    ! !   Fixed parameters:	           
+    !     real(DP) :: nu,rho,h,C 
+    ! !   Reservoir conditions:
+    !     real(DP) :: P0 ! initial pressure
+    ! !   Variable parameters:
+    !     real(DP) :: k,phi ! permeability and porosity
+    !   Local variables:
+        real(DP) :: CC,D,x ! Intermediate quantities
+        ! real(DP) :: r,t,pressure,flow,Q0
+        ! integer(I4B) :: ObsPointNo,i,ObsPointOffset,DataNo
+        ! real(DP) :: DataOffset
 
-!   Unpack fixed parameters: 
-    ! Uses problem_data
-    B=FixedParameter(2) 
-    nu=FixedParameter(4)
-    rho=FixedParameter(5)
-    C=FixedParameter(6)
-!   Unpack reservoir conditions:
-    P0=ReservoirCondition(1)
-!   Unpack variable parameters:
-    k=variable(1)
-    phi=variable(2)
-      
-!   Get pumping rate (only one constant-rate pump):
-    ! Uses problem_data
-    Q0=PumpSchemeParams(1,1)
-    
-    CC=Q0*nu/(4.0_dp*pi_d*B*k)
-    D=k/(nu*phi*rho*C)
-
-!   Loop over ObsPoints:
-    do ObsPointNo=1,NObsPoints
-    
-        ObsPointOffset=ObsPoint(ObsPointNo)%DataIndex-1
-        r=ObsPoint(ObsPointNo)%Position%x(1)
-	    DataOffset=ObsPoint(ObsPointNo)%DataOffset
-      
-        select case (ObsPoint(ObsPointNo)%Property)
-      
-        case(0)  ! Flow:
+    ! !   Unpack fixed parameters: 
+    !     ! Uses problem_data
+    !     h=FixedParameter(2) 
+    !     nu=FixedParameter(4)
+    !     rho=FixedParameter(5)
+    !     C=FixedParameter(6)
+    ! !   Unpack reservoir conditions:
+    !     P0=ReservoirCondition(1)
+    ! !   Unpack variable parameters:
+    !     k=variable(1)
+    !     phi=variable(2)
         
-!            Loop over datapoints:
-            do i=1,ObsPoint(ObsPointNo)%NData
-      
-                DataNo=ObsPointOffset+i
-                t=TestData(DataNo)%time
+    ! !   Get pumping rate (only one constant-rate pump):
+    !     ! Uses problem_data
+    !     Q0=PumpSchemeParams(1,1)
         
-                if (t >= small_D) then        
-                    x=0.25_dp*r**2.0_dp/(D*t)          
-                    flow=Q0*dexp(-x)
-                else  ! t<=0
-                    flow=0.0_DP
-                end if
+        CC=Q0*nu/(4.0_dp*pi_d*h*k)
+        D=k/(nu*phi*rho*C)
+
+    !   Loop over ObsPoints:
+        ! do ObsPointNo=1,NObsPoints
+        
+            ! ObsPointOffset=ObsPoint(ObsPointNo)%DataIndex-1
+            ! r=ObsPoint(ObsPointNo)%Position%x(1)
+            ! DataOffset=ObsPoint(ObsPointNo)%DataOffset
+        
+    !         select case (ObsPoint(ObsPointNo)%Property)
+        
+    !         case(0)  ! Flow:
             
-                AnalyticalTheis(DataNo)=flow-DataOffset
-
-            end do  ! Datapoint loop
- 
-            case(1)  ! Pressure:
-
-!           Loop over datapoints:
-            do i=1,ObsPoint(ObsPointNo)%NData
-      
-                DataNo=ObsPointOffset+i
-                t=TestData(DataNo)%time
+    ! !            Loop over datapoints:
+    !             do i=1,ObsPoint(ObsPointNo)%NData
         
-                if (t >= small_D) then        
-                    x=0.25_dp*r**2.0_dp/(D*t)          
-                    pressure=P0+CC*E1(x)
-                else  ! t<=0
-                    pressure=P0
-                end if
+    !                 DataNo=ObsPointOffset+i
+    !                 t=TestData(DataNo)%time
             
-                AnalyticalTheis(DataNo)=pressure-DataOffset
+    !                 if (t >= small_D) then        
+    !                     x=0.25_dp*r**2.0_dp/(D*t)          
+    !                     flow=Q0*dexp(-x)
+    !                 else  ! t<=0
+    !                     flow=0.0_DP
+    !                 end if
+                
+    !                 AnalyticalTheis(DataNo)=flow-DataOffset
 
-            end do  ! Datapoint loop
+    !             end do  ! Datapoint loop
+    
+    !             case(1)  ! Pressure:
 
-        end select          
-      
-    end do  ! ObsPoint loop      
+    !           Loop over datapoints:
+
+                do i=1,nObservations
+        
+                    ! DataNo=ObsPointOffset+i
+                    ! t=TestData(DataNo)%time
+                    t = time(i)
+            
+                    if (t >= small_D) then   ! Small D in variable types     
+                        x=0.25_dp*r**2.0_dp/(D*t)          
+                        pressure=P0+CC*E1(x)
+                    else  ! t<=0
+                        pressure=P0
+                    end if
+                
+                    ! p(DataNo)=pressure-DataOffset
+                    p(i)=pressure
+
+                end do  ! Datapoint loop
+
+            ! end select          
+        
+        ! end do  ! ObsPoint loop      
+        
+        ! return
     
-    return
-    
-    end function AnalyticalTheis
+    end subroutine AnalyticalTheis
 ! -----------------------------------------------------------------------------
 
-end module theis_solution
+! end module theis_solution
