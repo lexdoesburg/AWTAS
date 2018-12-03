@@ -30,24 +30,25 @@ module theis_solution
     use problem_data
 
 !   Argument Variables:
-    real(DP),intent(in) :: variable(:)
-    real(DP) :: AnalyticalTheis(TotalNData)
+    real(DP),intent(in) :: variable(:) !
+    real(DP) :: AnalyticalTheis(TotalNData) !
 
 !   Local Variables:
 !   Fixed parameters:	           
     real(DP) :: nu,rho,B,C 
 !   Reservoir conditions:
-	real(DP) :: P0
+	real(DP) :: P0 ! initial pressure
 !   Variable parameters:
-    real(DP) :: k,phi 
+    real(DP) :: k,phi ! permeability and porosity
 !   Local variables:
     real(DP) :: CC,D,x ! Intermediate quantities
     real(DP) :: r,t,pressure,flow,Q0
     integer(I4B) :: ObsPointNo,i,ObsPointOffset,DataNo
 	real(DP) :: DataOffset
 
-!   Unpack fixed parameters:
-    B=FixedParameter(2)
+!   Unpack fixed parameters: 
+    ! Uses problem_data
+    B=FixedParameter(2) 
     nu=FixedParameter(4)
     rho=FixedParameter(5)
     C=FixedParameter(6)
@@ -58,6 +59,7 @@ module theis_solution
     phi=variable(2)
       
 !   Get pumping rate (only one constant-rate pump):
+    ! Uses problem_data
     Q0=PumpSchemeParams(1,1)
     
     CC=Q0*nu/(4.0_dp*pi_d*B*k)
