@@ -12,10 +12,10 @@ module problem_data
 
   type pump_type
     integer(I4B) :: Scheme, NData
-	real(DP) :: Enthalpy
-	logical(LGT) :: StepFlows
-	logical(LGT) :: OnDeliverability
-	real(DP)     :: ProdIndex,CutoffPressure
+		real(DP) :: Enthalpy
+		logical(LGT) :: StepFlows
+		logical(LGT) :: OnDeliverability
+		real(DP)     :: ProdIndex,CutoffPressure
   end type pump_type
 
   type pump_data_type
@@ -25,15 +25,15 @@ module problem_data
   type ObsPoint_type
     integer(I4B) :: Property, NData
     real(DP)     :: Error, Weight
-	real(DP)     :: DataOffset
+		real(DP)     :: DataOffset
     integer(I4B) :: DataIndex
     type(ThreeVector) :: Position
-	logical(LGT) :: IsPumpObsPoint  ! For pumps on deliverability
-	integer(I4B) :: PumpNo          ! Index of corresponding pump on deliv.
+		logical(LGT) :: IsPumpObsPoint  ! For pumps on deliverability
+		integer(I4B) :: PumpNo          ! Index of corresponding pump on deliv.
   end type ObsPoint_type
 
   type datapoint
-     real(DP) :: time,value,ModelledValue,error,weight
+    real(DP) :: time,value,ModelledValue,error,weight
   end type datapoint
   
   integer(I4B) :: NPumps, NObsPoints 
