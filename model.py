@@ -13,26 +13,30 @@ class Model():
         self.data = data # Data structure containing observed pressure measurements, time of measurements and well parameters
         self.calls = 0
 
-    def model(self, phi, k):
+    def model(self, variables):
         """
         Model function.
+
+        Input: variables (list or np.array): List or numpy array of variable parameters for the model.
+
+        Output: modelled pressures at reading times.
         """
         raise NotImplementedError('Model function has not been implemented.')
 
-    def residual_function(self, parameters):
+    def residual_function(self, variables):
         """
         Calculate the residual of the model (difference between observed data and estimated data)
         """
-        phi, k = parameters
+        # phi, k = parameters
         self.calls += 1
-        return self.data.observation - self.model(phi, k)
+        return self.data.observation - self.model(variables)
 
     def __chi_squared(self):
         sd = np.std(self.data.observation)
         chi_squared = np.sum((self.data.observation-self.data.approximation)/sd)**2
         return chi_squared
 
-    def find_model_parameters(self, phi=None, k=None, curve_fit=False):
+    def find_model_parameters(self, variables=None, curve_fit=False):
         """
         Find the model parameters porosity and permeability.
 
@@ -51,43 +55,44 @@ class Model():
         - Look at using either curve_fit or least_squares instead.
         """
 
-        if curve_fit:
-            # was going to possibly use scipy.optimize.curve_fit if no initial parameters were given
-            pass
-        else:
-            calls = 0
-            # broken = False
-            estimates = np.ndarray(shape=(3,25))
-            i = 0
-            for k in [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]:
-                for phi in [0.2, 0.15, 0.1, 0.05, 0.01]:
-                    initial_parameters = np.array([phi, k])
-                    optimal_parameters, flag = leastsq(self.residual_function, initial_parameters) # if flag is 1 - found a good soln
-                    self.data.set_approximation(self.model(optimal_parameters[0], optimal_parameters[1])) # Store the approximated data in the data structure
-                    chi_squared = self.__chi_squared()
-                    estimates[:, i] = optimal_parameters[0], optimal_parameters[1], chi_squared
-                    print('Phi: {} k: {} Chi squared: {}'.format(phi, k, chi_squared))
-                    i += 1
-                    calls += 1
-                #     if chi_squared <= 20:
-                #         broken = True
-                #         break
-                # if broken:
-                #     break
-            index = np.argmin(estimates[2])
-            print('index = {} chi squared = {}'.format(index, estimates[2, index]))
-            print('Function called: {} times'.format(calls))
+        # if curve_fit:
+        #     # was going to possibly use scipy.optimize.curve_fit if no initial parameters were given
+        #     pass
+        # else:
+        calls = 0
+        # broken = False
+        estimates = np.ndarray(shape=(3,25))
+        i = 0
+        for k in [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]:
+            for phi in [0.2, 0.15, 0.1, 0.05, 0.01]:
+                initial_parameters = np.array([phi, k])
+                optimal_parameters, flag = leastsq(self.residual_function, initial_parameters) # if flag is 1 - found a good soln
+                self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
+                chi_squared = self.__chi_squared()
+                estimates[:, i] = optimal_parameters[0], optimal_parameters[1], chi_squared
+                # estimates[:, i] = optimal_parameters, chi_squared
+                # print('Phi: {} k: {} Chi squared: {}'.format(phi, k, chi_squared))
+                i += 1
+                calls += 1
+            #     if chi_squared <= 20:
+            #         broken = True
+            #         break
+            # if broken:
+            #     break
+        index = np.argmin(estimates[2])
+        print('index = {} chi squared = {}'.format(index, estimates[2, index]))
+        print('Function called: {} times'.format(calls))
 
-            phi, k = estimates[:2, index]
-            print('Phi {}, k {}'.format(phi, k))
-            # phi, k = optimal_parameters
+        optimal_parameters = estimates[:2, index]
+        # print('Phi {}, k {}'.format(phi, k))
+        # phi, k = optimal_parameters
         self.data.set_unknown_parameters(phi, k) # Store phi and k in data structure
-        self.data.set_approximation(self.model(phi, k)) # Store the approximated data in the data structure
+        self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
         print('Calls = ', self.calls)
         self.calls = 0
-        return phi, k
+        return optimal_parameters
 
-    def generate_data(self, phi, k, time, parameters, noise = False, sd = 2.5e-4, save_file=False, filename="example_datafile.txt"):
+    def generate_data(self, variables, parameters, time, noise = False, sd = 2.5e-4, save_file=False, filename="{}_testdata.dat".format('theis_soln')):
         """
         Generate approximated data using the Theis solution for a guess of porosity and permeability.
         """
@@ -95,7 +100,7 @@ class Model():
         self.data = data_class.Data()
         self.data.set_time(time)
         self.data.set_known_parameters(parameters)
-        p = self.model(phi, k)
+        p = self.model(variables)
         if noise:
             np.random.seed(0) # Set random seed to 0 for consistency in testing
             p += p*sd*np.random.randn(p.shape[0])
@@ -116,7 +121,7 @@ class Model():
 
 
 class Theis_Solution(Model):
-    def model(self, phi, k):
+    def model(self, variables):
         """
         Calculate and return the pressure for the given input using the analytical Theis solution.
 
@@ -126,6 +131,7 @@ class Theis_Solution(Model):
         
         Output: p(t) - pressure at a given time (or time array).
         """
+        phi, k = variables
         p0, qm, h, rho, nu, C, r = self.data.parameters # Unpack the well parameters
         D = k/(nu*phi*rho*C)
         with np.errstate(divide="ignore", invalid="ignore"): # Hides 'RuntimeWarning: invalid value encountered in divide' if t[0] == 0.
