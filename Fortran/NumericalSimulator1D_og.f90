@@ -8,7 +8,6 @@ module NumericalSimulator1D
 
     ! nb: M is the number of grid blocks.
 
-    ! ------This data could be passed from python
     integer(I4B)              :: M
     real(DP), allocatable     :: DR(:),PER(:),POR(:),V(:)     
     real(DP), allocatable     :: P(:),T(:),SV(:),X(:)
@@ -35,8 +34,8 @@ module NumericalSimulator1D
 
 ! ------------------------------------------------------------------------------------
 
-    subroutine NumericalSolution1D(CR,COND,RHOR,AAA,InitialPressure,InitialX,&
-        updatemodelprogress,LayerThickness,nObservations,1DradialSolution)
+    function NumericalSolution1D(CR,COND,RHOR,AAA,&
+        InitialPressure,InitialX,updatemodelprogress,LayerThickness)
 
     !   Fast numerical simulator to calculate 1D radial solution.
     !   Simulator originally written by Mike O'Sullivan 1999.
@@ -50,16 +49,14 @@ module NumericalSimulator1D
     !   Argument Variables:
         real(DP),intent(in) :: CR,COND,RHOR,AAA
         real(DP),intent(in) :: InitialPressure,InitialX,LayerThickness
-        integer(I4B),intent(in) :: nObservations
-        real(DP),intent(out),dimension(nObservations) :: 1DradialSolution
-        ! real(DP) :: NumericalSolution1D(TotalNData)
+        real(DP) :: NumericalSolution1D(TotalNData)
     !   Local variables:
         real(DP)    :: P0(M),T0(M)
         integer(I4B):: I,IT,J
         real(DP)    :: dt,HIN,QMM,RMAX,time
-        real(DP)    :: TestEndTime ! from problem_data
-        integer(I4B):: NTimeSteps, FlowIndex ! from problem_data
-        logical(LGT):: ResetTimeStepSize, StepFlows ! from problem_data
+        real(DP)    :: TestEndTime
+        integer(I4B):: NTimeSteps, FlowIndex
+        logical(LGT):: ResetTimeStepSize, StepFlows
         integer(I4B):: UpdateCounter
         real(DP)    :: PRECH,HRECH
         integer(I4B), parameter :: UpdateInterval=20 ! #iterations before updating progress
@@ -69,22 +66,20 @@ module NumericalSimulator1D
 
         external updatemodelprogress
 
-        NumModelRuns=NumModelRuns+1 ! from ModelProgress
+        NumModelRuns=NumModelRuns+1
 
-        !------- Uses global variables from problem_data
         TestEndTime=maxval(TestData(:)%time) ! Last observation time
 
-        call AssignInitialConditions(InitialPressure,InitialX) ! assigns the global variables
-        call GetPumpingData(TestEndTime,StepFlows,.false.) ! this should be fine - may need to update getpumpingdata
+        call AssignInitialConditions(InitialPressure,InitialX)
+        call GetPumpingData(TestEndTime,StepFlows,.false.)
 
     !   Initialise result:
-        !------- Uses global variables from problem_data
         NumericalSolution1D=TestData%ModelledValue
 
         IGOOD=0     ! 'ok' parameter passed from thermo subroutines
 
     !   Read in initial conditions and decide on the phase conditions:
-        call INIT1(M,POLD,XOLD,TOLD,SVOLD,IPHOLD) ! ns1droutines
+        call INIT1(M,POLD,XOLD,TOLD,SVOLD,IPHOLD)
         P0=POLD
         T0=TOLD
         ModFlowRateOld=FLO(1)
@@ -105,11 +100,11 @@ module NumericalSimulator1D
 
     !     Calculate the accumulation terms BMOLD(I),BEOLD(I) at the old time:
         call INIT2(M,POLD,XOLD,TOLD,SVOLD,IPHOLD,&
-                    BMOLD,BEOLD,POR,RHOR,CR,P0,T0,COMP,COMT,AAA) !ns1droutines
+                    BMOLD,BEOLD,POR,RHOR,CR,P0,T0,COMP,COMT,AAA)
 
         time=time+dt
     !     Calculate the mass flow rate and enthalpy (injection only) for the given time:
-        call GetFlows(time,FlowIndex,QQMM,HIN,.true.,ResetTimeStepSize) ! uses problem data
+        call GetFlows(time,FlowIndex,QQMM,HIN,.true.,ResetTimeStepSize)
 
     !     Start of Newton iterations:
     10    IT=0
@@ -198,7 +193,7 @@ module NumericalSimulator1D
 
         return
         
-    end subroutine NumericalSolution1D 
+    end function NumericalSolution1D 
 
     ! ------------------------------------------------------------------------------------
 
