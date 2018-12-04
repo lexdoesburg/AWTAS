@@ -1,5 +1,7 @@
-Initial Pressure (Bar): 100.0
-Initial Steam Mass Fraction: 0.2
-Porosity: 0.075
-Permeability: 2e-15
-Time for simulation: 2107.065778598334
+Initial Pressure (Bar): 90.0009281439781
+Initial Steam Mass Fraction: 0.3
+Porosity: 0.01
+Permeability: 1e-14
+Time for simulation: 19396.76868514649
+Function Calls: 3120
+Observed Fit: Actually bad (SKG9D_fit.png)

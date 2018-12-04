@@ -3,7 +3,7 @@ from scipy.special import exp1
 # from scipy.optimize import curve_fit
 from scipy.optimize import leastsq
 
-import data as data_class
+import data2 as data_class
 import time
 
 class Model():

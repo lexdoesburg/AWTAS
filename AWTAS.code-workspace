@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "AUTOUGH_Model"
 		}
 	],
 	"settings": {

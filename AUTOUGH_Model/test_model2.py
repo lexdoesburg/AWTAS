@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import time as time_module
 
 import model2 as model
-import data as data_class
+import data2 as data_class
 
 
 # Import data from text file
@@ -24,27 +24,27 @@ print(len(data.observation))
 # r0 = new_model.wellbore_obj(X0)
 # print(r0)
 
-initial_parameters = None
-# Find solution using model
-start = time_module.clock()
-parameters = new_model.find_model_parameters(initial_parameters=initial_parameters)
-end = time_module.clock()
-print('---------\nFinding Parameters Time elapsed = {}'.format(end - start))
-print('---------\n---------\n{}\n---------\n---------\n'.format(parameters))
+# initial_parameters = None
+# # Find solution using model
+# start = time_module.clock()
+# parameters = new_model.find_model_parameters(initial_parameters=initial_parameters)
+# end = time_module.clock()
+# print('---------\nFinding Parameters Time elapsed = {}'.format(end - start))
+# print('---------\n---------\n{}\n---------\n---------\n'.format(parameters))
 
-with open('simulation_parameters.txt', 'w') as file:
-    file.write('Initial Pressure (Bar): {}\n'.format(parameters[0]))
-    file.write('Initial Steam Mass Fraction: {}\n'.format(parameters[1]))
-    file.write('Porosity: {}\n'.format(parameters[2]))
-    file.write('Permeability: {}\n'.format(parameters[3]))
-    file.write('Time for simulation: {}\n'.format(end-start))
+# with open('simulation_parameters.txt', 'w') as file:
+#     file.write('Initial Pressure (Bar): {}\n'.format(parameters[0]))
+#     file.write('Initial Steam Mass Fraction: {}\n'.format(parameters[1]))
+#     file.write('Porosity: {}\n'.format(parameters[2]))
+#     file.write('Permeability: {}\n'.format(parameters[3]))
+#     file.write('Time for simulation: {}\n'.format(end-start))
 
 # initial_parameters = np.array([102.50286809, 0.22538374])
-# initial_parameters = np.array([103.07, 0.2332,0.082,2.76e-15])
-# p = new_model.model(initial_parameters)
-# t[0] = 0
-# print(t)
-# print(p)
+initial_parameters = np.array([103.07, 0.2332,0.082,2.76e-15])
+p = new_model.model(initial_parameters)
+t[0] = 0
+print(t)
+print(p)
 
 start = time_module.time()
 # plt.semilogx(np.log(data.time), new_model.data.approximation,"rx",label="Model Data")
