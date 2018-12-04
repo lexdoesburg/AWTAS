@@ -1,0 +1,5 @@
+Initial Pressure (Bar): 100.0
+Initial Steam Mass Fraction: 0.2
+Porosity: 0.075
+Permeability: 2e-15
+Time for simulation: 2107.065778598334

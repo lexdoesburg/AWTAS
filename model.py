@@ -141,6 +141,26 @@ class Theis_Solution_Fortran(Model):
     def model(self, parameters):
         p0, qm, h, rho, nu, C, r = self.data.parameters
         phi, k = parameters
-        # p = ts.theis_solution(phi, k, p0, qm, h, rho, nu, C, r)
-        p = None
+        # num_observations = len(self.data.time)
+        # p = ts.theis_solution(k, phi, p0, qm, h, rho, nu, C, r, num_observations, self.data.time)
+        # return p
+        pass
+
+# import NumericalSimulator1D as radial_1D
+
+class Radial_1D(Model):
+    def model(self, parameters):
+        # Unpack the parameters which we are trying to find
+
+        # Get relevant data from data structure
+        
+        # Run the model to get result
+        # p = radial_1D.NumericalSolution1D(inputs)
+        # return p
+        pass
+
+class Test_Model(Model):
+    def model(self, parameters):
+        phi,k,p0,x0 = parameters
+        p = np.cos((phi/(k*p0**2)*x0*self.data.time))
         return p
