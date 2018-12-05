@@ -75,15 +75,19 @@ class Data():
     def set_approximation(self, approximation):
         self.approximation = approximation
     
-    def generate_datafile(self, filename):
+    def generate_datafile(self, filename, variables=None):
         with open(filename, 'w') as file:
             # Write known well parameters first:
             file.write('Initial Pressure,Mass Flowrate,Thickness,Density,Kinematic Viscosity,Compressibility,Radius\n')
             for parameter in self.parameters:
-                if parameter != self.parameters[-1]:
+                if parameter is not self.parameters[-1]:
                     file.write('{},'.format(parameter)) # Comma-separated values
                 else:
-                    file.write('{}\n\n'.format(parameter)) # Add a blank line separation.
+                    file.write('{}\n'.format(parameter)) # Add a blank line separation.
+                    if variables:
+                        file.write('-------- Actual Porosity = {} --- Actual Permeability = {} --------\n'.format(variables[0], variables[1]))
+                    else:
+                        file.write('\n')
             # Write the time of observation and observed pressure readings:
             file.write('Time (s),Pressure Observation (Pa)\n')
             # j = len(self.parameters)

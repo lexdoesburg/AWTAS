@@ -85,10 +85,10 @@ class Model():
             #     break
         index = np.argmin(estimates[2])
         print('index = {} chi squared = {}'.format(index, estimates[2, index]))
-        print('Optimal phi: {} Optimal k: {}'.format(optimal_parameters[0], optimal_parameters[1]))
         print('Function called: {} times'.format(calls))
 
         optimal_parameters = estimates[:2, index]
+        print('Optimal phi: {} Optimal k: {}'.format(optimal_parameters[0], optimal_parameters[1]))
         # print('Phi {}, k {}'.format(phi, k))
         phi, k = optimal_parameters
         self.data.set_unknown_parameters(phi, k) # Store phi and k in data structure
@@ -111,7 +111,7 @@ class Model():
             p += p*sd*np.random.randn(p.shape[0])
         self.data.set_observation(p)
         if save_file:
-            self.data.generate_datafile(filename)
+            self.data.generate_datafile(filename, variables=variables)
         # return self.data
     
     # def __generate_datafile(self, filename, measurement):
@@ -139,8 +139,8 @@ class Theis_Solution(Model):
         p0, qm, h, rho, nu, C, r = self.data.parameters # Unpack the well parameters
         D = k/(nu*phi*rho*C)
         with np.errstate(divide="ignore", invalid="ignore"): # Hides 'RuntimeWarning: invalid value encountered in divide' if t[0] == 0.
-            # p = p0 + (qm/(r*np.pi*k*(h/nu)))*exp1((r**2)/(4*D*self.data.time)) # TODO: Double check exponential integral is correct
-            p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*self.data.time)) # TODO: Double check exponential integral is correct
+            # p = p0 + (qm/(r*np.pi*k*(h/nu)))*exp1((r**2)/(4*D*self.data.time)) 
+            p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*self.data.time)) # Same as fortran output
         if self.data.time[0] <= 1e-7: # Check if initial reading is at time 0
             p[0] = p0
         return p
