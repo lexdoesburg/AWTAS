@@ -117,6 +117,28 @@ test3_variables = [phi, k]
 theis_test_3 = setup_model('theis', parameters, test3_variables, time, test_num=3, sd=1e-10)
 # -----------------------------------------------------------------------------------
 
+# -----------------------------------------------------------------------------------
+# Test Case 1: Parameters from page 11 AWTAS
+p0 = 3.6e6 # Pa
+h = 100 # m
+r = 0.05 # m
+qm = -0.005 # m^3/s
+k = 1e-12 # m^2
+phi = 0.1
+rho = 813.37 # Water at 240 degrees celsius
+nu = 0.0001111 # Water at 240 degrees celsius
+C = 0.001303 # Water at 240 degrees celsius
+t = 0.5 # days
+t = t * 24 * 60 * 60
+print(t)
+time = np.linspace(0, t, num=100)
+parameters = [p0, qm, h, rho, nu, C, r]
+test4_variables = [phi, k]
+
+# Build model
+theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=4, sd=3e-5)
+# -----------------------------------------------------------------------------------
+
 # # -----------------------------------------------------------------------------------
 # print_optimal_parameters(theis_test_1, test1_variables, 1)
 # plot_solution(theis_test_1)
@@ -127,6 +149,9 @@ theis_test_3 = setup_model('theis', parameters, test3_variables, time, test_num=
 # print_optimal_parameters(theis_test_3, test3_variables, 3)
 # plot_solution(theis_test_3)
 
+# print_optimal_parameters(theis_test_4, test4_variables, 3)
+# plot_solution(theis_test_4)
+
 optimal_parameters = theis_test_1.find_model_parameters()
 plot_solution(theis_test_1)
 
@@ -135,6 +160,9 @@ plot_solution(theis_test_2)
 
 optimal_parameters = theis_test_3.find_model_parameters()
 plot_solution(theis_test_3)
+
+optimal_parameters = theis_test_4.find_model_parameters()
+plot_solution(theis_test_4)
 # # -----------------------------------------------------------------------------------
 
 # # ----------------------------------------------------------------------------------
