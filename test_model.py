@@ -118,47 +118,56 @@ theis_test_3 = setup_model('theis', parameters, test3_variables, time, test_num=
 # -----------------------------------------------------------------------------------
 
 # # -----------------------------------------------------------------------------------
-print_optimal_parameters(theis_test_1, test1_variables, 1)
+# print_optimal_parameters(theis_test_1, test1_variables, 1)
+# plot_solution(theis_test_1)
+
+# print_optimal_parameters(theis_test_2, test2_variables, 2)
+# plot_solution(theis_test_2)
+
+# print_optimal_parameters(theis_test_3, test3_variables, 3)
+# plot_solution(theis_test_3)
+
+optimal_parameters = theis_test_1.find_model_parameters()
 plot_solution(theis_test_1)
 
-print_optimal_parameters(theis_test_2, test2_variables, 2)
+optimal_parameters = theis_test_2.find_model_parameters()
 plot_solution(theis_test_2)
 
-print_optimal_parameters(theis_test_3, test3_variables, 3)
+optimal_parameters = theis_test_3.find_model_parameters()
 plot_solution(theis_test_3)
 # # -----------------------------------------------------------------------------------
 
-# ----------------------------------------------------------------------------------
-# Test difficult function
-p1 = 3.6e6 # Pa
-h = 100 # m
-r = 0.05 # m
-qm = -0.005 # m^3/s
-k = 1e-12 # m^2
-phi = 0.1
-rho = 813.37 # Water at 240 degrees celsius
-nu = 0.0001111 # Water at 240 degrees celsius
-C = 0.001303 # Water at 240 degrees celsius
-parameters = [p1, qm, h, rho, nu, C, r]
+# # ----------------------------------------------------------------------------------
+# # Test difficult function
+# p1 = 3.6e6 # Pa
+# h = 100 # m
+# r = 0.05 # m
+# qm = -0.005 # m^3/s
+# k = 1e-12 # m^2
+# phi = 0.1
+# rho = 813.37 # Water at 240 degrees celsius
+# nu = 0.0001111 # Water at 240 degrees celsius
+# C = 0.001303 # Water at 240 degrees celsius
+# parameters = [p1, qm, h, rho, nu, C, r]
 
-phi = 0.05
-k = 1.79e-13
-p0 = 3.1256e6
-x0 = 0.17
-variables = [phi, k, p0, x0]
+# phi = 0.05
+# k = 1.79e-13
+# p0 = 3.1256e6
+# x0 = 0.17
+# variables = [phi, k, p0, x0]
 
-t = 54000 # seconds
-time = np.linspace(0, t, num=100)
-# data = data_class.Data()
-# data.set_time(time)
+# t = 54000 # seconds
+# time = np.linspace(0, t, num=100)
+# # data = data_class.Data()
+# # data.set_time(time)
 
-# Build the model and data
-test_model = model.Test_Model()
-test_model.generate_data(variables, parameters, time,noise=True,sd=5e-8)
-parameters = test_model.find_model_parameters()
-print(parameters)
-plot_solution(test_model, dual_plot=True)
-# ----------------------------------------------------------------------------------
+# # Build the model and data
+# test_model = model.Test_Model()
+# test_model.generate_data(variables, parameters, time,noise=True,sd=5e-8)
+# parameters = test_model.find_model_parameters()
+# print(parameters)
+# plot_solution(test_model, dual_plot=True)
+# # ----------------------------------------------------------------------------------
 
 
 

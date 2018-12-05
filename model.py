@@ -67,11 +67,14 @@ class Model():
         for k in [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]:
             for phi in [0.2, 0.15, 0.1, 0.05, 0.01]:
                 initial_parameters = np.array([phi, k])
-                optimal_parameters, flag = leastsq(self.residual_function, initial_parameters) # if flag is 1 - found a good soln
+                optimal_parameters, flag = leastsq(self.residual_function, initial_parameters) # if flag is 1 - found a good soln                
+                # optimal_parameters, cov_x, infodict, mesg, flag = leastsq(self.residual_function, initial_parameters, full_output=1) # if flag is 1 - found a good soln
                 self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
                 chi_squared = self.__chi_squared()
-                estimates[:, i] = optimal_parameters[0], optimal_parameters[1], chi_squared
-                # estimates[:, i] = optimal_parameters, chi_squared
+                # print('Nfev = ', infodict['nfev'])
+                # print('Chi squared: {} Function evaluated at output: {}'.format(chi_squared, np.sum(infodict['fvec'])))
+                estimates[:, i] = optimal_parameters[0], optimal_parameters[1], chi_squared                
+                # estimates[:, i] = optimal_parameters[0], optimal_parameters[1], abs(np.sum(infodict['fvec']))
                 # print('Phi: {} k: {} Chi squared: {}'.format(phi, k, chi_squared))
                 i += 1
                 calls += 1
