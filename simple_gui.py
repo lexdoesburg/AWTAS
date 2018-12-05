@@ -115,7 +115,7 @@ class AWTAS_App(QWidget):
 
     @pyqtSlot()
     def plot_data(self):
-        filename, _ = QFileDialog.getOpenFileName(self, 'Load data file', "", '*.txt')
+        filename, _ = QFileDialog.getOpenFileName(self, 'Load data file', "", '*.dat;*.txt')
         if filename:
             start = time.time()
             if self.data:
