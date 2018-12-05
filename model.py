@@ -135,8 +135,8 @@ class Theis_Solution(Model):
         p0, qm, h, rho, nu, C, r = self.data.parameters # Unpack the well parameters
         D = k/(nu*phi*rho*C)
         with np.errstate(divide="ignore", invalid="ignore"): # Hides 'RuntimeWarning: invalid value encountered in divide' if t[0] == 0.
-            p = p0 + (qm/(r*np.pi*k*(h/nu)))*exp1((r**2)/(4*D*self.data.time)) # TODO: Double check exponential integral is correct
-            # p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*t)) # TODO: Double check exponential integral is correct
+            # p = p0 + (qm/(r*np.pi*k*(h/nu)))*exp1((r**2)/(4*D*self.data.time)) # TODO: Double check exponential integral is correct
+            p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*self.data.time)) # TODO: Double check exponential integral is correct
         if self.data.time[0] <= 1e-7: # Check if initial reading is at time 0
             p[0] = p0
         return p
@@ -168,5 +168,49 @@ class Radial_1D(Model):
 class Test_Model(Model):
     def model(self, parameters):
         phi,k,p0,x0 = parameters
-        p = np.cos((phi/(k*p0**2)*x0*self.data.time))
+        p1, qm, h, rho, nu, C, r = self.data.parameters
+        G = qm*h*2.34/(nu*C)
+        H = phi*k/h*rho
+        I = x0/C + k*r
+        p = p0 + G*H*I*self.data.time
         return p
+    
+    def find_model_parameters(self, variables=None, curve_fit=False):
+        calls = 0
+        estimates = np.ndarray(shape=(5,625))
+        i = 0
+        for p0 in np.linspace(1e6,4e6,5):
+            for x0 in np.linspace(0.05,0.3,5):
+                for k in [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]:
+                    for phi in [0.2, 0.15, 0.1, 0.05, 0.01]:
+                        initial_parameters = np.array([phi, k, p0, x0])
+                        optimal_parameters, flag = leastsq(self.residual_function, initial_parameters) # if flag is 1 - found a good soln
+                        self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
+                        chi_squared = abs(self.__chi_squared())
+                        estimates[:, i] = optimal_parameters[0], optimal_parameters[1], optimal_parameters[2], optimal_parameters[3], chi_squared
+                        # estimates[:, i] = optimal_parameters, chi_squared
+                        # print('Phi: {} k: {} Chi squared: {}'.format(phi, k, chi_squared))
+                        i += 1
+                        calls += 1
+            #     if chi_squared <= 20:
+            #         broken = True
+            #         break
+            # if broken:
+            #     break
+        index = np.argmin(estimates[4])
+        print('index = {} chi squared = {}'.format(index, estimates[4, index]))
+        print('Function called: {} times'.format(calls))
+
+        optimal_parameters = estimates[:4, index]
+        # print('Phi {}, k {}'.format(phi, k))
+        # phi, k = optimal_parameters
+        self.data.set_unknown_parameters(phi, k) # Store phi and k in data structure
+        self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
+        print('Calls = ', self.calls)
+        self.calls = 0
+        return optimal_parameters
+    
+    def __chi_squared(self):
+        sd = np.std(self.data.observation)
+        chi_squared = np.sum((self.data.observation-self.data.approximation)/sd)**2
+        return chi_squared
