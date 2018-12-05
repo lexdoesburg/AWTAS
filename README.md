@@ -1,4 +1,4 @@
-#External Packages Used: (All included in Anaconda)
+# External Packages Used: (All included in Anaconda)
 * Numpy (model, data, testing)
 * Matplotlib (testing, gui)
 * Scipy (model)
