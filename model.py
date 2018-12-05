@@ -109,20 +109,19 @@ class Model():
         if noise:
             np.random.seed(0) # Set random seed to 0 for consistency in testing
             p += p*sd*np.random.randn(p.shape[0])
-
-        if save_file:
-            self.__generate_datafile(filename, p)
         self.data.set_observation(p)
-        return self.data
+        if save_file:
+            self.data.generate_datafile(filename)
+        # return self.data
     
-    def __generate_datafile(self, filename, measurement):
-        with open(filename, 'w') as file:
-            file.write('Time(s),Pressure(Pa)\n')
-            for i in range(len(self.data.time)):
-                if self.data.time[i] >= 1e-7:
-                    file.write('{},{}\n'.format(self.data.time[i], measurement[i]))
-                else:
-                    file.write('{},{}\n'.format(0, measurement[i]))
+    # def __generate_datafile(self, filename, measurement):
+    #     with open(filename, 'w') as file:
+    #         file.write('Time(s),Pressure(Pa)\n')
+    #         for i in range(len(self.data.time)):
+    #             if self.data.time[i] >= 1e-7:
+    #                 file.write('{},{}\n'.format(self.data.time[i], measurement[i]))
+    #             else:
+    #                 file.write('{},{}\n'.format(0, measurement[i]))
 
 
 class Theis_Solution(Model):

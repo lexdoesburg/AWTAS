@@ -1,5 +1,6 @@
 import numpy as np
 import data as data_class
+import model
 
 p0 = 3.6e6 # Pa
 h = 100 # m
