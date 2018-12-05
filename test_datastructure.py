@@ -15,25 +15,31 @@ time = np.linspace(0, 43200, num=100)
 parameters = [p0, qm, h, rho, nu, C, r]
 
 # Test 1 - Test reading file
-print("Test 1")
-data_1 = data_class.Data('testdata.txt', parameters=parameters)
+# print("Test 1")
+# data_1 = data_class.Data('testdata.txt', parameters=parameters)
 
-print(data_1.time)
-print(data_1.observed)
-print(data_1.parameters) 
-print(data_1.approximation) # None
-print(data_1.phi) # None
-print(data_1.k) # None
+# print(data_1.time)
+# print(data_1.observation)
+# print(data_1.parameters) 
+# print(data_1.approximation) # None
+# print(data_1.phi) # None
+# print(data_1.k) # None
 
-# Test 2 - Set Parameters
-print("\nTest 2")
-data_2 = data_class.Data()
-print(data_2.time)
-print(data_2.observed)
-print(data_2.parameters) 
-print(data_2.approximation) # None
-print(data_2.phi) # None
-print(data_2.k) # None
+# # Test 2 - Set Parameters
+# print("\nTest 2")
+# data_2 = data_class.Data()
+# print(data_2.time)
+# print(data_2.observation)
+# print(data_2.parameters) 
+# print(data_2.approximation) # None
+# print(data_2.phi) # None
+# print(data_2.k) # None
 
-data_2.set_known_parameters(parameters)
-print(data_2.parameters)
+# data_2.set_known_parameters(parameters)
+# print(data_2.parameters)
+
+# data_1.generate_datafile('test_generation.txt')
+data_3 = data_class.Data('test_generation.txt')
+print(data_3.time)
+print(data_3.observation)
+print(data_3.parameters)

@@ -86,7 +86,7 @@ from PyQt5.QtWidgets import QDialog, QApplication, QPushButton, QVBoxLayout, QGr
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
-
+import time
 import random
 
 class Window(QDialog):
@@ -118,7 +118,7 @@ class Window(QDialog):
     def plot(self):
         ''' plot some random stuff '''
         # random data
-        data = [random.random() for i in range(10)]
+        data = [random.random() for i in range(1000)]
 
         # instead of ax.hold(False)
         self.figure.clear()
@@ -131,9 +131,11 @@ class Window(QDialog):
 
         # plot data
         ax.plot(data, '*-')
-
         # refresh canvas
+        start = time.clock()
         self.canvas.draw()
+        end = time.clock()
+        print('Time: ',(end-start))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
