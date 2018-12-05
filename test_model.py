@@ -118,14 +118,14 @@ theis_test_3 = setup_model('theis', parameters, test3_variables, time, test_num=
 # -----------------------------------------------------------------------------------
 
 # # -----------------------------------------------------------------------------------
-# print_optimal_parameters(theis_test_1, test1_variables, 1)
-# plot_solution(theis_test_1)
+print_optimal_parameters(theis_test_1, test1_variables, 1)
+plot_solution(theis_test_1)
 
-# print_optimal_parameters(theis_test_3, test2_variables, 1)
-# plot_solution(theis_test_2)
+print_optimal_parameters(theis_test_2, test2_variables, 2)
+plot_solution(theis_test_2)
 
-# print_optimal_parameters(theis_test_3, test3_variables, 1)
-# plot_solution(theis_test_3)
+print_optimal_parameters(theis_test_3, test3_variables, 3)
+plot_solution(theis_test_3)
 # # -----------------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------------
