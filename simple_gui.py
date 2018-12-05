@@ -277,15 +277,34 @@ class PlottingCanvas(FigureCanvas):
         self.draw()
     
     def plot_observed_data(self, data):
+        # Bottleneck here is in getting the layout of the plot set properly (either tight layout or draw)
+        start = time.clock()
         self.figure.clear()
+        end = time.clock()
+        print('time figure clear: {}'.format(end-start))
         self.fitted_lines = []
+        start = time.clock()
         self.axes = self.figure.add_subplot(1,1,1)
+        end = time.clock()
+        print('time add axes: {}'.format(end-start))
+        start = time.clock()
         self.axes.semilogx(np.log(data.time), data.observation, 'kx', label='Observed Data')
-        self.axes.set_xlabel('Log Time (s)')
+        end = time.clock()
+        print('time plot data (inc log data): {}'.format(end-start))
+        start = time.clock()
+        self.axes.set_xlabel('Log Time (log (s))')
         self.axes.set_ylabel('Pressure (Pa)')
         self.axes.legend(loc='lower left')
+        end = time.clock()
+        print('time set labels: {}'.format(end-start))
+        start = time.clock()
         self.figure.tight_layout(pad = 2)
+        end = time.clock()
+        print('time tight layout: {}'.format(end-start))
+        start = time.clock()
         self.draw()
+        end = time.clock()
+        print('time draw: {}'.format(end-start))
     
     def plot_fit(self, data):
         if self.fitted_lines:
