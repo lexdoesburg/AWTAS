@@ -1,127 +1,32 @@
-import sys
-
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QGridLayout, QMessageBox, QLineEdit, QLabel
-from PyQt5.QtWidgets import QFrame, QVBoxLayout, QCheckBox, QGroupBox, QSpacerItem, QSizePolicy, QMainWindow, QTabWidget
+from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout, QFileDialog, QMessageBox, QGroupBox, QGridLayout, QLabel, QSpacerItem, QSizePolicy
 from PyQt5.QtCore import pyqtSlot
-# from PyQt5.QtGui import 
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-# import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
 import numpy as np
-# import for testing performance
-import time
 
-# import theis_solution as ts
-import model
 import data as data_class
+import model
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.title = 'AWTAS'
-        # self.plot_widget = PlotWidget(self)
-        self.tabs = Tabs(self)
-        self.init_UI()
-        
-    def init_UI(self):
-        self.setWindowTitle(self.title)
-        # self.setCentralWidget(self.plot_widget)
-        self.setCentralWidget(self.tabs)
-        self.show()
-
-class Tabs(QWidget):
-    def __init__(self, parent=None):
-        super(Tabs, self).__init__(parent)
-        self.layout = QVBoxLayout()
-        self.tabs = QTabWidget()
-        self.tabs.setTabsClosable(True)
-        self.tabs.tabCloseRequested.connect(self.remove_tab)
-        self.tabs.setMovable(True)
-        # self.tabs.setTabsClosable(True)
-        self.main_tab = PlotWidget(self.tabs)
-        self.tabs.addTab(self.main_tab, 'Analysis 1')
-        self.new_tab_button = QPushButton('New')
-        self.new_tab_button.setToolTip('Open a new analysis.')
-        self.new_tab_button.clicked.connect(self.add_new_tab)
-        self.tabs.setCornerWidget(self.new_tab_button)
-        self.layout.addWidget(self.tabs)
-        self.setLayout(self.layout)
-    
-    @pyqtSlot()
-    def add_new_tab(self):
-        new_tab = PlotWidget(self)
-        self.tabs.addTab(new_tab, 'Analysis {}'.format(self.tabs.count()+1))
-        self.tabs.setCurrentIndex(self.tabs.count()-1)
-    
-    # @pyqtSlot()
-    def remove_tab(self, index):
-        widget = self.tabs.widget(index)
-        if widget is not None:
-            # print(widget, ' deleted')
-            widget.deleteLater()
-        self.tabs.removeTab(index)
-        if self.tabs.count() == 0:
-            self.tabs.addTab(PlotWidget(self), 'Analysis 1')
-
+import time
 
 class PlotWidget(QWidget):
     def __init__(self, parent=None):
         super(PlotWidget, self).__init__(parent)
-        # self.title = 'AWTAS'
-        # self.left = 0
-        # self.top = 30
-        # self.width = 640
-        # self.height = 480
-        # self.figure = plt.figure()
-        # self.figure = Figure()
-        # self.axes = None
-        # self.plotting_canvas = FigureCanvas(self.figure)
-
         self.plotting_canvas = PlottingCanvas(self)
         self.plot_toolbar = NavigationToolbar(self.plotting_canvas, self)
-
         self.data = data_class.Data()
         self.model = None
-
         self.data_imported = False
         self.parameters_imported = False
-
         self.parameter_value_labels = []
         self.variable_value_labels = []
-
-        # self.parameter_names = ['Initial Pressure', 'Mass Flowrate', 'Thickness', 'Density', 'Kinematic Viscosity', 'Compressibility', 'Radius']
-        # self.default_values = [3.6e6, -0.005, 100, 813.37, 0.0001111, 0.001303, 0.05]
-
         self.init_UI()
     
 
     def init_UI(self):
-        # self.setWindowTitle(self.title)
-        # self.setGeometry(self.left, self.top, self.width, self.height)
-
-        # ---------------------------------- 
-        # # Define exit action
-        # exit_action = QAction('&Exit', self)        
-        # exit_action.setShortcut('Ctrl+Q')
-        # exit_action.setStatusTip('Exit application')
-        # exit_action.triggered.connect(qApp.quit)
-
-        # # Import Data
-        # import_data = QAction('Load Data', self)
-        # import_data.setShortcut('Ctrl+L')
-        # import_data.setStatusTip('Load observation data from .txt file')
-        # import_data.triggered.connect(self.plot_data)
-
-        # # Menu_bar
-        # menu_bar = QMenuBar(self)
-        # file_menu = menu_bar.addMenu('&File')
-        # file_menu.addAction(exit_action)
-        # file_menu.addAction(import_data)
-        # ----------------------------------
-
         # Import data button
         self.import_data_button = QPushButton('Import Data', self)
         self.import_data_button.setToolTip('Import pressure measurements and time data.')
@@ -146,15 +51,14 @@ class PlotWidget(QWidget):
 
         # Define the layout
         self.layout = QGridLayout()
-        self.layout.addWidget(self.plotting_canvas, 1, 0)
         self.layout.addWidget(self.plot_toolbar, 0, 0)
+        self.layout.addWidget(self.plotting_canvas, 1, 0)
         # self.layout.addWidget(models_label, 0, 1)
         # self.layout.addWidget(self.models_dropdown, 0, 2)
         # self.layout.addWidget(self.import_data_button, 0, 1)
         # self.layout.addWidget(self.fit_button, 2, 1)
         self.layout.addLayout(button_layout, 0, 1)
         # layout.addLayout(self.parameters_layout(parameter_names=self.parameter_names, default_values=self.default_values), 1, 1)
-        # self.layout.addLayout(self.parameters_layout(), 1, 1)
         self.layout.addLayout(self.create_parameters_groupbox(),1,1)
         # Prioritise the canvas to stretch
         self.layout.setColumnStretch(0, 1)
@@ -164,8 +68,6 @@ class PlotWidget(QWidget):
         self.layout.setColumnMinimumWidth(0, 500)
         self.layout.setRowMinimumHeight(1, 500)
         self.setLayout(self.layout)
-
-        # self.show()
 
     # @pyqtSlot()
     # def select_model(self, model_type):
@@ -188,18 +90,9 @@ class PlotWidget(QWidget):
             # self.clear_all_parameters()
 
             start = time.time()
-            # self.figure.clear()
-            # self.axes = self.figure.add_subplot(1,1,1)
-            # self.axes.semilogx(np.log(self.data.time), self.data.observation, 'kx', label='Observed Data')
-            # self.axes.set_xlabel('Log Time (s)')
-            # self.axes.set_ylabel('Pressure (Pa)')
-            # self.axes.legend(loc='best')
             self.plotting_canvas.plot_observed_data(self.data)
             end = time.time()
-            print('Time elapsed = {}'.format(end - start))
-            print('Drawing')
-            # self.plotting_canvas.draw()
-            # self.figure.tight_layout()
+            print('Plotting Observed Data Time Elapsed = {}'.format(end - start))
         self.update_parameter_labels()
         self.data_imported = True
         self.parameters_imported = True
@@ -217,12 +110,6 @@ class PlotWidget(QWidget):
                     label.setText('{:.6f}'.format(self.data.variables[i]))
                 else:
                     label.setText('{:.6E}'.format(self.data.variables[i]))
-            # parameters_label = QLabel('Porosity: {:.6f}\tPermeability: {:.6E}'.format(self.data.phi, self.data.k))
-            # self.layout.addWidget(parameters_label, 2, 0)
-
-            # self.axes.semilogx(np.log(self.data.time), self.data.approximation, 'r-', label='Fitted Approximation')
-            # self.plotting_canvas.draw()
-            
         else:
             error_message = QMessageBox()
             error_message.setIcon(QMessageBox.Critical)
@@ -230,10 +117,60 @@ class PlotWidget(QWidget):
             error_message.setInformativeText('Please enter Theis solution model parameters first')
             error_message.setWindowTitle('Error')
             error_message.exec_()
-            # error_message = QErrorMessage()
-            # error_message.showMessage('Please import data and enter model parameters first')
-            # error_message.exec_()
+
+    def create_parameters_groupbox(self):
+        parameters_groupbox = QGroupBox("Known Parameters")
+        parameters_groupbox.setAlignment(4)
+        # parameters_groupbox.setCheckable(True)
+        # parameters_groupbox.setChecked(False)
+
+        parameters_grid = QGridLayout()
+        parameters_grid.addWidget(QLabel('Initial Pressure (Pa): '), 0, 0)
+        parameters_grid.addWidget(QLabel('Mass Flowrate (Kg/s) '), 1, 0)
+        parameters_grid.addWidget(QLabel('Thickness (m): '), 2, 0)
+        parameters_grid.addWidget(QLabel('Density (kg/m3): '), 3, 0)
+        parameters_grid.addWidget(QLabel('Kinematic Viscosity (m2/s): '), 4, 0)
+        parameters_grid.addWidget(QLabel('Compressibility (1/Pa): '), 5, 0)
+        parameters_grid.addWidget(QLabel('Radius (m): '), 6, 0)
+
+        # if self.data.parameters[0]:
+        #     for i, parameter in enumerate(self.data.parameters):
+        #         parameters_grid.addWidget(QLabel(str(parameter)), i, 1)
+        # else:
+        for i in range(parameters_grid.rowCount()):
+            new_label = QLabel()
+            self.parameter_value_labels.append(new_label)
+            parameters_grid.addWidget(new_label, i, 1)
+        
+        parameters_groupbox.setLayout(parameters_grid)
+
+        variables_groupbox = QGroupBox('Unknown Parameters')
+        variables_groupbox.setAlignment(4)
+
+        variables_grid = QGridLayout()
+        variables_grid.addWidget(QLabel('Porosity: '), 0, 0)
+        variables_grid.addWidget(QLabel('Permeability (m2): '), 1, 0)
+        for i in range(variables_grid.rowCount()):
+            new_label = QLabel()
+            self.variable_value_labels.append(new_label)
+            variables_grid.addWidget(new_label, i, 1)
+        # variables_grid.setVerticalSpacing()
+        variables_groupbox.setLayout(variables_grid)
+
+        fullWidget = QVBoxLayout()
+        fullWidget.addWidget(parameters_groupbox)
+        fullWidget.addWidget(variables_groupbox)
+        fullWidget.addSpacerItem(QSpacerItem(220, 0, hPolicy=QSizePolicy.Expanding, vPolicy=QSizePolicy.Expanding))
+        return fullWidget
+
+    def update_parameter_labels(self):
+        for i, label in enumerate(self.parameter_value_labels):
+            label.setText(str(self.data.parameters[i]))
     
+    def clear_all_parameters(self):
+        for label in self.parameter_value_labels + self.variable_value_labels:
+            label.setText('')
+
     # @pyqtSlot()
     # def save_parameters(self):
     #     parameters = []
@@ -336,60 +273,6 @@ class PlotWidget(QWidget):
     #     # layout.addWidget(input_button, row, 0)
     #     return layout
 
-    def create_parameters_groupbox(self):
-        parameters_groupbox = QGroupBox("Known Parameters")
-        parameters_groupbox.setAlignment(4)
-        # parameters_groupbox.setCheckable(True)
-        # parameters_groupbox.setChecked(False)
-
-        parameters_grid = QGridLayout()
-        parameters_grid.addWidget(QLabel('Initial Pressure (Pa): '), 0, 0)
-        parameters_grid.addWidget(QLabel('Mass Flowrate (Kg/s) '), 1, 0)
-        parameters_grid.addWidget(QLabel('Thickness (m): '), 2, 0)
-        parameters_grid.addWidget(QLabel('Density (kg/m3): '), 3, 0)
-        parameters_grid.addWidget(QLabel('Kinematic Viscosity (m2/s): '), 4, 0)
-        parameters_grid.addWidget(QLabel('Compressibility (1/Pa): '), 5, 0)
-        parameters_grid.addWidget(QLabel('Radius (m): '), 6, 0)
-
-        # if self.data.parameters[0]:
-        #     for i, parameter in enumerate(self.data.parameters):
-        #         parameters_grid.addWidget(QLabel(str(parameter)), i, 1)
-        # else:
-        for i in range(parameters_grid.rowCount()):
-            new_label = QLabel()
-            self.parameter_value_labels.append(new_label)
-            parameters_grid.addWidget(new_label, i, 1)
-        
-        parameters_groupbox.setLayout(parameters_grid)
-
-        variables_groupbox = QGroupBox('Unknown Parameters')
-        variables_groupbox.setAlignment(4)
-
-        variables_grid = QGridLayout()
-        variables_grid.addWidget(QLabel('Porosity: '), 0, 0)
-        variables_grid.addWidget(QLabel('Permeability (m2): '), 1, 0)
-        for i in range(variables_grid.rowCount()):
-            new_label = QLabel()
-            self.variable_value_labels.append(new_label)
-            variables_grid.addWidget(new_label, i, 1)
-        # variables_grid.setVerticalSpacing()
-        variables_groupbox.setLayout(variables_grid)
-
-        fullWidget = QVBoxLayout()
-        fullWidget.addWidget(parameters_groupbox)
-        fullWidget.addWidget(variables_groupbox)
-        fullWidget.addSpacerItem(QSpacerItem(220, 0, hPolicy=QSizePolicy.Expanding, vPolicy=QSizePolicy.Expanding))
-        return fullWidget
-
-    def update_parameter_labels(self):
-        for i, label in enumerate(self.parameter_value_labels):
-            label.setText(str(self.data.parameters[i]))
-    
-    def clear_all_parameters(self):
-        for label in self.parameter_value_labels + self.variable_value_labels:
-            label.setText('')
-
-
 class PlottingCanvas(FigureCanvas):
     def __init__(self, parent=None):
         # self.figure = plt.figure()
@@ -440,9 +323,3 @@ class PlottingCanvas(FigureCanvas):
         self.fitted_lines = self.axes.semilogx(np.log(data.time), data.approximation, 'r-', label='Fitted Approximation')
         self.axes.legend(loc='lower left')
         self.draw()
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = MainWindow()
-    sys.exit(app.exec_())
