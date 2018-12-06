@@ -90,8 +90,8 @@ class Model():
         optimal_parameters = estimates[:2, index]
         print('Optimal phi: {} Optimal k: {}'.format(optimal_parameters[0], optimal_parameters[1]))
         # print('Phi {}, k {}'.format(phi, k))
-        phi, k = optimal_parameters
-        self.data.set_unknown_parameters(phi, k) # Store phi and k in data structure
+        # phi, k = optimal_parameters
+        self.data.set_unknown_parameters(optimal_parameters) # Store phi and k in data structure
         self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
         print('Calls = ', self.calls)
         self.calls = 0

@@ -13,8 +13,9 @@ class Data():
             self.parameters = parameters # list of the well parameters
         else:
             self.parameters = [None]*7
-        self.phi = None # estimated porosity (float)
-        self.k = None # estimated permeability (float)
+        # self.phi = None # estimated porosity (float)
+        # self.k = None # estimated permeability (float)
+        self.variables = [None]*2
         
         # If a filename is given read the data in
         if filename:
@@ -62,9 +63,10 @@ class Data():
         """
         self.parameters = parameters
 
-    def set_unknown_parameters(self, phi, k):
-        self.phi = phi
-        self.k = k
+    def set_unknown_parameters(self, variables):
+        # self.phi = phi
+        # self.k = k
+        self.variables = variables
 
     def set_time(self, time):
         self.time = time
