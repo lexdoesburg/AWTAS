@@ -1,9 +1,9 @@
 import sys
 
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QGridLayout, QAction, qApp, QMenuBar, QMenu, QMessageBox, QLineEdit, QLabel, QInputDialog, QComboBox, QDoubleSpinBox
-from PyQt5.QtWidgets import QFrame, QVBoxLayout, QCheckBox
+from PyQt5.QtWidgets import QFrame, QVBoxLayout, QCheckBox, QGroupBox, QSpacerItem, QSizePolicy
 from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QFont
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -37,6 +37,9 @@ class AWTAS_App(QWidget):
 
         self.data_imported = False
         self.parameters_imported = False
+
+        self.parameter_value_labels = []
+        self.variable_value_labels = []
 
         # self.parameter_names = ['Initial Pressure', 'Mass Flowrate', 'Thickness', 'Density', 'Kinematic Viscosity', 'Compressibility', 'Radius']
         # self.default_values = [3.6e6, -0.005, 100, 813.37, 0.0001111, 0.001303, 0.05]
@@ -79,6 +82,9 @@ class AWTAS_App(QWidget):
         self.fit_button.clicked.connect(self.fit_data)
         self.fit_button.setEnabled(False)
 
+        button_layout = QVBoxLayout()
+        button_layout.addWidget(self.import_data_button)
+        button_layout.addWidget(self.fit_button)
         # Model Dropdown menu
         # models_label = QLabel(self)
         # models_label.setText("Select Model: ")
@@ -93,10 +99,12 @@ class AWTAS_App(QWidget):
         self.layout.addWidget(self.plot_toolbar, 0, 0)
         # self.layout.addWidget(models_label, 0, 1)
         # self.layout.addWidget(self.models_dropdown, 0, 2)
-        self.layout.addWidget(self.import_data_button, 0, 1)
-        self.layout.addWidget(self.fit_button, 2, 1)
+        # self.layout.addWidget(self.import_data_button, 0, 1)
+        # self.layout.addWidget(self.fit_button, 2, 1)
+        self.layout.addLayout(button_layout, 0, 1)
         # layout.addLayout(self.parameters_layout(parameter_names=self.parameter_names, default_values=self.default_values), 1, 1)
-        self.layout.addLayout(self.parameters_layout(), 1, 1)
+        # self.layout.addLayout(self.parameters_layout(), 1, 1)
+        self.layout.addLayout(self.create_parameters_groupbox(),1,1)
         # Prioritise the canvas to stretch
         self.layout.setColumnStretch(0, 1)
         print('First row stretch: {} Second row stretch: {} Third row stretch: {}'.format(self.layout.rowStretch(0), self.layout.rowStretch(1), self.layout.rowStretch(2)))
@@ -115,6 +123,7 @@ class AWTAS_App(QWidget):
 
     @pyqtSlot()
     def plot_data(self):
+        self.clear_all_parameters()
         filename, _ = QFileDialog.getOpenFileName(self, 'Load data file', "", '*.dat;*.txt')
         if filename:
             start = time.time()
@@ -124,6 +133,8 @@ class AWTAS_App(QWidget):
                 self.data = data_class.Data(filename=filename)
             end = time.time()
             print('Time elapsed = {}'.format(end - start))
+
+            # self.clear_all_parameters()
 
             start = time.time()
             # self.figure.clear()
@@ -138,7 +149,9 @@ class AWTAS_App(QWidget):
             print('Drawing')
             # self.plotting_canvas.draw()
             # self.figure.tight_layout()
+        self.update_parameter_labels()
         self.data_imported = True
+        self.parameters_imported = True
         if self.parameters_imported and self.data_imported:
             self.fit_button.setEnabled(True)
 
@@ -148,8 +161,14 @@ class AWTAS_App(QWidget):
             self.model = model.Theis_Solution(self.data)
             self.model.find_model_parameters()
             self.plotting_canvas.plot_fit(self.data)
-            parameters_label = QLabel('Porosity: {:.6f}\tPermeability: {:.6E}'.format(self.data.phi, self.data.k))
-            self.layout.addWidget(parameters_label, 2, 0)
+            for i, label in enumerate(self.variable_value_labels):
+                if i != len(self.data.variables)-1:
+                    label.setText('{:.6f}'.format(self.data.variables[i]))
+                else:
+                    label.setText('{:.6E}'.format(self.data.variables[i]))
+            # parameters_label = QLabel('Porosity: {:.6f}\tPermeability: {:.6E}'.format(self.data.phi, self.data.k))
+            # self.layout.addWidget(parameters_label, 2, 0)
+
             # self.axes.semilogx(np.log(self.data.time), self.data.approximation, 'r-', label='Fitted Approximation')
             # self.plotting_canvas.draw()
             
@@ -186,85 +205,140 @@ class AWTAS_App(QWidget):
     #     else:
     #         frame.hide()
 
-    def parameters_layout(self):
-        # phi_label = QLabel('Porosity: ')
-        # k_label = QLabel('Permeability: ')
-        # phi_input = QLineEdit()
-        # k_input = QLineEdit()
-        # frame_layout = QGridLayout()
-        # frame_layout.addWidget(phi_label, 0, 0)
-        # frame_layout.addWidget(phi_input, 0, 1)
-        # frame_layout.addWidget(k_label, 1, 0)
-        # frame_layout.addWidget(k_input, 1, 1)
+    # def parameters_layout(self):
+    #     # phi_label = QLabel('Porosity: ')
+    #     # k_label = QLabel('Permeability: ')
+    #     # phi_input = QLineEdit()
+    #     # k_input = QLineEdit()
+    #     # frame_layout = QGridLayout()
+    #     # frame_layout.addWidget(phi_label, 0, 0)
+    #     # frame_layout.addWidget(phi_input, 0, 1)
+    #     # frame_layout.addWidget(k_label, 1, 0)
+    #     # frame_layout.addWidget(k_input, 1, 1)
 
-        # frame = QFrame()
-        # frame.hide()
-        # frame.setLayout(frame_layout)
-        # self.params_checkbox = QCheckBox('Enter Porosity and Permeability Estimates')
-        # self.params_checkbox.stateChanged.connect(lambda: self.check_box(frame))
+    #     # frame = QFrame()
+    #     # frame.hide()
+    #     # frame.setLayout(frame_layout)
+    #     # self.params_checkbox = QCheckBox('Enter Porosity and Permeability Estimates')
+    #     # self.params_checkbox.stateChanged.connect(lambda: self.check_box(frame))
 
-        p0_label = QLabel('Initial Pressure')
-        self.p0_input = QLineEdit()
-        self.p0_input.setText('3.6e6')
-        qm_label = QLabel('Mass Flowrate')
-        self.qm_input = QLineEdit()
-        self.qm_input.setText('-0.005')
-        h_label = QLabel('Thickness')
-        self.h_input = QLineEdit()
-        self.h_input.setText('100')
-        rho_label = QLabel('Density')
-        self.rho_input = QLineEdit()
-        self.rho_input.setText('813.37')
-        nu_label = QLabel('Kinematic Viscosity')
-        self.nu_input = QLineEdit()
-        self.nu_input.setText('0.0001111')
-        C_label = QLabel('Compressibility')
-        self.C_input = QLineEdit()
-        self.C_input.setText('0.001303')
-        r_label = QLabel('Radius')
-        self.r_input = QLineEdit()
-        self.r_input.setText('0.05')
+    #     p0_label = QLabel('Initial Pressure')
+    #     self.p0_input = QLineEdit()
+    #     self.p0_input.setText('3.6e6')
+    #     qm_label = QLabel('Mass Flowrate')
+    #     self.qm_input = QLineEdit()
+    #     self.qm_input.setText('-0.005')
+    #     h_label = QLabel('Thickness')
+    #     self.h_input = QLineEdit()
+    #     self.h_input.setText('100')
+    #     rho_label = QLabel('Density')
+    #     self.rho_input = QLineEdit()
+    #     self.rho_input.setText('813.37')
+    #     nu_label = QLabel('Kinematic Viscosity')
+    #     self.nu_input = QLineEdit()
+    #     self.nu_input.setText('0.0001111')
+    #     C_label = QLabel('Compressibility')
+    #     self.C_input = QLineEdit()
+    #     self.C_input.setText('0.001303')
+    #     r_label = QLabel('Radius')
+    #     self.r_input = QLineEdit()
+    #     self.r_input.setText('0.05')
         
-        input_button = QPushButton('Save Parameters', self)
-        input_button.setToolTip('Import the above entered parameters')
-        input_button.clicked.connect(self.save_parameters)
+    #     input_button = QPushButton('Save Parameters', self)
+    #     input_button.setToolTip('Import the above entered parameters')
+    #     input_button.clicked.connect(self.save_parameters)
 
-        layout = QGridLayout()
-        # layout.addWidget(self.params_checkbox, 0, 0)
-        # layout.addWidget(frame, 1, 0)
-        # layout.addLayout(k_widget, 1, 1)
-        layout.addWidget(p0_label, 2, 0)
-        layout.addWidget(self.p0_input, 2, 1)
-        layout.addWidget(qm_label, 3, 0)
-        layout.addWidget(self.qm_input, 3, 1)
-        layout.addWidget(h_label, 4, 0)
-        layout.addWidget(self.h_input, 4, 1)
-        layout.addWidget(rho_label, 5, 0)
-        layout.addWidget(self.rho_input, 5, 1)
-        layout.addWidget(nu_label, 6, 0)
-        layout.addWidget(self.nu_input, 6, 1)
-        layout.addWidget(C_label, 7, 0)
-        layout.addWidget(self.C_input, 7, 1)
-        layout.addWidget(r_label, 8, 0)
-        layout.addWidget(self.r_input, 8, 1)
-        layout.addWidget(input_button, 9, 1)
+    #     layout = QGridLayout()
+    #     # layout.addWidget(self.params_checkbox, 0, 0)
+    #     # layout.addWidget(frame, 1, 0)
+    #     # layout.addLayout(k_widget, 1, 1)
+    #     layout.addWidget(p0_label, 2, 0)
+    #     layout.addWidget(self.p0_input, 2, 1)
+    #     layout.addWidget(qm_label, 3, 0)
+    #     layout.addWidget(self.qm_input, 3, 1)
+    #     layout.addWidget(h_label, 4, 0)
+    #     layout.addWidget(self.h_input, 4, 1)
+    #     layout.addWidget(rho_label, 5, 0)
+    #     layout.addWidget(self.rho_input, 5, 1)
+    #     layout.addWidget(nu_label, 6, 0)
+    #     layout.addWidget(self.nu_input, 6, 1)
+    #     layout.addWidget(C_label, 7, 0)
+    #     layout.addWidget(self.C_input, 7, 1)
+    #     layout.addWidget(r_label, 8, 0)
+    #     layout.addWidget(self.r_input, 8, 1)
+    #     layout.addWidget(input_button, 9, 1)
 
-        # layout = QGridLayout()
-        # layout.setVerticalSpacing(1)
-        # row = 0
-        # for parameter, default_value in zip(parameter_names, default_values):
-        #     label = QLabel(parameter)
-        #     input_box = QLineEdit()
-        #     if default_value:
-        #         input_box.setText(str(default_value))
-        #     layout.addWidget(label, row, 0)
-        #     layout.addWidget(input_box, row, 1)
-        #     row += 1
-        # input_button = QPushButton('Save Parameters', self)
-        # input_button.setToolTip('Import the above entered parameters')
-        # input_button.clicked.connect(self.save_parameters)
-        # layout.addWidget(input_button, row, 0)
-        return layout
+    #     # layout = QGridLayout()
+    #     # layout.setVerticalSpacing(1)
+    #     # row = 0
+    #     # for parameter, default_value in zip(parameter_names, default_values):
+    #     #     label = QLabel(parameter)
+    #     #     input_box = QLineEdit()
+    #     #     if default_value:
+    #     #         input_box.setText(str(default_value))
+    #     #     layout.addWidget(label, row, 0)
+    #     #     layout.addWidget(input_box, row, 1)
+    #     #     row += 1
+    #     # input_button = QPushButton('Save Parameters', self)
+    #     # input_button.setToolTip('Import the above entered parameters')
+    #     # input_button.clicked.connect(self.save_parameters)
+    #     # layout.addWidget(input_button, row, 0)
+    #     return layout
+
+    def create_parameters_groupbox(self):
+        parameters_groupbox = QGroupBox("Known Parameters")
+        parameters_groupbox.setAlignment(4)
+        # parameters_groupbox.setCheckable(True)
+        # parameters_groupbox.setChecked(False)
+
+        parameters_grid = QGridLayout()
+        parameters_grid.addWidget(QLabel('Initial Pressure (Pa): '), 0, 0)
+        parameters_grid.addWidget(QLabel('Mass Flowrate (Kg/s) '), 1, 0)
+        parameters_grid.addWidget(QLabel('Thickness (m): '), 2, 0)
+        parameters_grid.addWidget(QLabel('Density (kg/m3): '), 3, 0)
+        parameters_grid.addWidget(QLabel('Kinematic Viscosity (m2/s): '), 4, 0)
+        parameters_grid.addWidget(QLabel('Compressibility (1/Pa): '), 5, 0)
+        parameters_grid.addWidget(QLabel('Radius (m): '), 6, 0)
+
+        # if self.data.parameters[0]:
+        #     for i, parameter in enumerate(self.data.parameters):
+        #         parameters_grid.addWidget(QLabel(str(parameter)), i, 1)
+        # else:
+        for i in range(parameters_grid.rowCount()):
+            new_label = QLabel()
+            self.parameter_value_labels.append(new_label)
+            parameters_grid.addWidget(new_label, i, 1)
+        
+        parameters_groupbox.setLayout(parameters_grid)
+
+        variables_groupbox = QGroupBox('Unknown Parameters')
+        variables_groupbox.setAlignment(4)
+
+        variables_grid = QGridLayout()
+        variables_grid.addWidget(QLabel('Porosity: '), 0, 0)
+        variables_grid.addWidget(QLabel('Permeability (m2): '), 1, 0)
+        for i in range(variables_grid.rowCount()):
+            new_label = QLabel()
+            self.variable_value_labels.append(new_label)
+            variables_grid.addWidget(new_label, i, 1)
+        # variables_grid.setVerticalSpacing()
+        variables_groupbox.setLayout(variables_grid)
+
+        fullWidget = QVBoxLayout()
+        fullWidget.addWidget(parameters_groupbox)
+        fullWidget.addWidget(variables_groupbox)
+        fullWidget.addSpacerItem(QSpacerItem(220, 0, hPolicy=QSizePolicy.Expanding, vPolicy=QSizePolicy.Expanding))
+        return fullWidget
+
+    def update_parameter_labels(self):
+        for i, label in enumerate(self.parameter_value_labels):
+            label.setText(str(self.data.parameters[i]))
+    
+    def clear_all_parameters(self):
+        for label in self.parameter_value_labels + self.variable_value_labels:
+            label.setText('')
+        
+
 
 class PlottingCanvas(FigureCanvas):
     def __init__(self, parent=None):
