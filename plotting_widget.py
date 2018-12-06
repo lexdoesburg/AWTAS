@@ -15,14 +15,19 @@ import time
 class PlotWidget(QWidget):
     def __init__(self, parent=None):
         super(PlotWidget, self).__init__(parent)
+
         self.plotting_canvas = PlottingCanvas(self)
         self.plot_toolbar = NavigationToolbar(self.plotting_canvas, self)
+
         self.data = data_class.Data()
         self.model = None
+
         self.data_imported = False
         self.parameters_imported = False
+
         self.parameter_value_labels = []
         self.variable_value_labels = []
+
         self.init_UI()
     
 
@@ -38,9 +43,11 @@ class PlotWidget(QWidget):
         self.fit_button.clicked.connect(self.fit_data)
         self.fit_button.setEnabled(False)
 
+        # Group the two buttons together in a single layout
         button_layout = QVBoxLayout()
         button_layout.addWidget(self.import_data_button)
         button_layout.addWidget(self.fit_button)
+
         # Model Dropdown menu
         # models_label = QLabel(self)
         # models_label.setText("Select Model: ")
@@ -49,10 +56,10 @@ class PlotWidget(QWidget):
         # self.models_dropdown.addItem("Theis Solution")
         # # models_dropdown.activated[str].connect(self.select_model)
 
-        # Define the layout
+        # Define the overall widget layout
         self.layout = QGridLayout()
-        self.layout.addWidget(self.plot_toolbar, 0, 0)
         self.layout.addWidget(self.plotting_canvas, 1, 0)
+        self.layout.addWidget(self.plot_toolbar, 0, 0)
         # self.layout.addWidget(models_label, 0, 1)
         # self.layout.addWidget(self.models_dropdown, 0, 2)
         # self.layout.addWidget(self.import_data_button, 0, 1)
@@ -60,14 +67,20 @@ class PlotWidget(QWidget):
         self.layout.addLayout(button_layout, 0, 1)
         # layout.addLayout(self.parameters_layout(parameter_names=self.parameter_names, default_values=self.default_values), 1, 1)
         self.layout.addLayout(self.create_parameters_groupbox(),1,1)
-        # Prioritise the canvas to stretch
-        self.layout.setColumnStretch(0, 1)
-        print('First row stretch: {} Second row stretch: {} Third row stretch: {}'.format(self.layout.rowStretch(0), self.layout.rowStretch(1), self.layout.rowStretch(2)))
-        print('First column stretch: {} Second column stretch: {}'.format(self.layout.columnStretch(0), self.layout.columnStretch(1)))
+
         # Make the canvas at least 500x500 pixels
         self.layout.setColumnMinimumWidth(0, 500)
         self.layout.setRowMinimumHeight(1, 500)
+
+        # Prioritise the canvas to stretch over other components
+        self.layout.setColumnStretch(0, 1)
+        print('First row stretch: {} Second row stretch: {} Third row stretch: {}'.format(self.layout.rowStretch(0), self.layout.rowStretch(1), self.layout.rowStretch(2)))
+        print('First column stretch: {} Second column stretch: {}'.format(self.layout.columnStretch(0), self.layout.columnStretch(1)))
+
+        # Set the widget layout
         self.setLayout(self.layout)
+
+        # self.show()
 
     # @pyqtSlot()
     # def select_model(self, model_type):
@@ -133,10 +146,6 @@ class PlotWidget(QWidget):
         parameters_grid.addWidget(QLabel('Compressibility (1/Pa): '), 5, 0)
         parameters_grid.addWidget(QLabel('Radius (m): '), 6, 0)
 
-        # if self.data.parameters[0]:
-        #     for i, parameter in enumerate(self.data.parameters):
-        #         parameters_grid.addWidget(QLabel(str(parameter)), i, 1)
-        # else:
         for i in range(parameters_grid.rowCount()):
             new_label = QLabel()
             self.parameter_value_labels.append(new_label)
@@ -154,7 +163,6 @@ class PlotWidget(QWidget):
             new_label = QLabel()
             self.variable_value_labels.append(new_label)
             variables_grid.addWidget(new_label, i, 1)
-        # variables_grid.setVerticalSpacing()
         variables_groupbox.setLayout(variables_grid)
 
         fullWidget = QVBoxLayout()
@@ -171,6 +179,58 @@ class PlotWidget(QWidget):
         for label in self.parameter_value_labels + self.variable_value_labels:
             label.setText('')
 
+
+class PlottingCanvas(FigureCanvas):
+    def __init__(self, parent=None):
+        self.figure = Figure()
+        self.axes = None
+        FigureCanvas.__init__(self, self.figure)
+        self.setParent(parent)
+        # self.plot_toolbar = NavigationToolbar(self.plotting_canvas, self)
+        self.fitted_lines = []
+        self.draw()
+    
+    def plot_observed_data(self, data):
+        # Bottleneck here is in getting the layout of the plot set properly (either tight layout or draw)
+        start = time.clock()
+        # self.figure.clear()
+        if self.figure.get_axes():
+            self.figure.clear()
+            self.fitted_lines = []
+        end = time.clock()
+        print('time figure clear: {}'.format(end-start))
+
+        start = time.clock()
+        self.axes = self.figure.add_subplot(1,1,1)
+        end = time.clock()
+        print('time add axes: {}'.format(end-start))
+        start = time.clock()
+        self.axes.semilogx(np.log(data.time), data.observation, 'kx', label='Observed Data')
+        end = time.clock()
+        print('time plot data (inc log data): {}'.format(end-start))
+        start = time.clock()
+        self.axes.set_xlabel('Log Time (log (s))')
+        self.axes.set_ylabel('Pressure (Pa)')
+        self.axes.legend(loc='lower left')
+        end = time.clock()
+        print('time set labels: {}'.format(end-start))
+        start = time.clock()
+        self.figure.tight_layout(pad = 2)
+        end = time.clock()
+        print('time tight layout: {}'.format(end-start))
+        start = time.clock()
+        self.draw()
+        end = time.clock()
+        print('time draw: {}'.format(end-start))
+    
+    def plot_fit(self, data):
+        if self.fitted_lines:
+            self.axes.lines.remove(self.fitted_lines[0])
+        self.fitted_lines = self.axes.semilogx(np.log(data.time), data.approximation, 'r-', label='Fitted Approximation')
+        self.axes.legend(loc='lower left')
+        self.draw()
+
+    # # # Old functions for the PlotWidget class
     # @pyqtSlot()
     # def save_parameters(self):
     #     parameters = []
@@ -272,54 +332,3 @@ class PlotWidget(QWidget):
     #     # input_button.clicked.connect(self.save_parameters)
     #     # layout.addWidget(input_button, row, 0)
     #     return layout
-
-class PlottingCanvas(FigureCanvas):
-    def __init__(self, parent=None):
-        # self.figure = plt.figure()
-        self.figure = Figure()
-        self.axes = None
-        FigureCanvas.__init__(self, self.figure)
-        self.setParent(parent)
-        # self.plot_toolbar = NavigationToolbar(self.plotting_canvas, self)
-        self.fitted_lines = []
-        self.draw()
-    
-    def plot_observed_data(self, data):
-        # Bottleneck here is in getting the layout of the plot set properly (either tight layout or draw)
-        start = time.clock()
-        # self.figure.clear()
-        if self.figure.get_axes():
-            self.figure.clear()
-            self.fitted_lines = []
-        end = time.clock()
-        print('time figure clear: {}'.format(end-start))
-
-        start = time.clock()
-        self.axes = self.figure.add_subplot(1,1,1)
-        end = time.clock()
-        print('time add axes: {}'.format(end-start))
-        start = time.clock()
-        self.axes.semilogx(np.log(data.time), data.observation, 'kx', label='Observed Data')
-        end = time.clock()
-        print('time plot data (inc log data): {}'.format(end-start))
-        start = time.clock()
-        self.axes.set_xlabel('Log Time (log (s))')
-        self.axes.set_ylabel('Pressure (Pa)')
-        self.axes.legend(loc='lower left')
-        end = time.clock()
-        print('time set labels: {}'.format(end-start))
-        start = time.clock()
-        self.figure.tight_layout(pad = 2)
-        end = time.clock()
-        print('time tight layout: {}'.format(end-start))
-        start = time.clock()
-        self.draw()
-        end = time.clock()
-        print('time draw: {}'.format(end-start))
-    
-    def plot_fit(self, data):
-        if self.fitted_lines:
-            self.axes.lines.remove(self.fitted_lines[0])
-        self.fitted_lines = self.axes.semilogx(np.log(data.time), data.approximation, 'r-', label='Fitted Approximation')
-        self.axes.legend(loc='lower left')
-        self.draw()

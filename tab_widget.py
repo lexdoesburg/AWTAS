@@ -11,7 +11,6 @@ class Tabs(QWidget):
         self.tabs.setTabsClosable(True)
         self.tabs.tabCloseRequested.connect(self.remove_tab)
         self.tabs.setMovable(True)
-        # self.tabs.setTabsClosable(True)
         self.main_tab = plotting_widget.PlotWidget(self.tabs)
         self.tabs.addTab(self.main_tab, 'Analysis 1')
         self.new_tab_button = QPushButton('New')
@@ -31,7 +30,6 @@ class Tabs(QWidget):
     def remove_tab(self, index):
         widget = self.tabs.widget(index)
         if widget is not None:
-            # print(widget, ' deleted')
             widget.deleteLater()
         self.tabs.removeTab(index)
         if self.tabs.count() == 0:
