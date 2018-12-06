@@ -26,7 +26,7 @@ class Tabs(QWidget):
         self.tabs.addTab(new_tab, 'Analysis {}'.format(self.tabs.count()+1))
         self.tabs.setCurrentIndex(self.tabs.count()-1)
     
-    # @pyqtSlot()
+    # @pyqtSlot() # If uncommented get an error.
     def remove_tab(self, index):
         widget = self.tabs.widget(index)
         if widget is not None:
