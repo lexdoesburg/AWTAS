@@ -1,9 +1,9 @@
 import sys
 
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QGridLayout, QAction, qApp, QMenuBar, QMenu, QMessageBox, QLineEdit, QLabel, QInputDialog, QComboBox, QDoubleSpinBox
-from PyQt5.QtWidgets import QFrame, QVBoxLayout, QCheckBox, QGroupBox, QSpacerItem, QSizePolicy
-from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtGui import QIcon, QFont
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QGridLayout, QMessageBox, QLineEdit, QLabel
+from PyQt5.QtWidgets import QFrame, QVBoxLayout, QCheckBox, QGroupBox, QSpacerItem, QSizePolicy, QMainWindow
+from PyQt5.QtCore import pyqtSlot
+# from PyQt5.QtGui import 
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -17,10 +17,22 @@ import time
 import model
 import data as data_class
 
-class AWTAS_App(QWidget):
-    def __init__(self, parent=None):
-        super(AWTAS_App, self).__init__(parent)
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
         self.title = 'AWTAS'
+        self.plot_widget = PlotWidget(self)
+        self.init_UI()
+        
+    def init_UI(self):
+        self.setWindowTitle(self.title)
+        self.setCentralWidget(self.plot_widget)
+        self.show()
+
+class PlotWidget(QWidget):
+    def __init__(self, parent=None):
+        super(PlotWidget, self).__init__(parent)
+        # self.title = 'AWTAS'
         # self.left = 0
         # self.top = 30
         # self.width = 640
@@ -29,7 +41,7 @@ class AWTAS_App(QWidget):
         self.axes = None
         # self.plotting_canvas = FigureCanvas(self.figure)
 
-        self.plotting_canvas = PlottingCanvas()
+        self.plotting_canvas = PlottingCanvas(self)
         self.plot_toolbar = NavigationToolbar(self.plotting_canvas, self)
 
         self.data = data_class.Data()
@@ -48,12 +60,12 @@ class AWTAS_App(QWidget):
  
 
     def init_UI(self):
-        self.setWindowTitle(self.title)
+        # self.setWindowTitle(self.title)
         # self.setGeometry(self.left, self.top, self.width, self.height)
 
         # ---------------------------------- 
         # # Define exit action
-        # exit_action = QAction(QIcon('exit.png'), '&Exit', self)        
+        # exit_action = QAction('&Exit', self)        
         # exit_action.setShortcut('Ctrl+Q')
         # exit_action.setStatusTip('Exit application')
         # exit_action.triggered.connect(qApp.quit)
@@ -114,7 +126,7 @@ class AWTAS_App(QWidget):
         self.layout.setRowMinimumHeight(1, 500)
         self.setLayout(self.layout)
 
-        self.show()
+        # self.show()
 
     # @pyqtSlot()
     # def select_model(self, model_type):
@@ -387,35 +399,32 @@ class PlottingCanvas(FigureCanvas):
         self.axes.legend(loc='lower left')
         self.draw()
 
-class ParametersWidget(QFrame):
-    def __init__(self, parameter_names, default_values=None):
-        super().__init__()
-        self.parameter_names = parameter_names
-        if default_values:
-            self.default_values = default_values
-        else:
-            self.default_values = [None]*len(self.parameter_names)
-        self.init_UI()
+# class ParametersWidget(QFrame):
+#     def __init__(self, parameter_names, default_values=None):
+#         super().__init__()
+#         self.parameter_names = parameter_names
+#         if default_values:
+#             self.default_values = default_values
+#         else:
+#             self.default_values = [None]*len(self.parameter_names)
+#         self.init_UI()
     
-    def init_UI(self):
-        # self.frameStyle()
-        layout = QGridLayout()
-        layout.setVerticalSpacing(10)
-        row = 0
-        for parameter, default_value in zip(self.parameter_names, self.default_values):
-            label = QLabel(parameter)
-            input_box = QLineEdit()
-            if default_value:
-                input_box.setText(str(default_value))
-            layout.addWidget(label, row, 0)
-            layout.addWidget(input_box, row, 1)
-            row += 1
-
-
-
+#     def init_UI(self):
+#         # self.frameStyle()
+#         layout = QGridLayout()
+#         layout.setVerticalSpacing(10)
+#         row = 0
+#         for parameter, default_value in zip(self.parameter_names, self.default_values):
+#             label = QLabel(parameter)
+#             input_box = QLineEdit()
+#             if default_value:
+#                 input_box.setText(str(default_value))
+#             layout.addWidget(label, row, 0)
+#             layout.addWidget(input_box, row, 1)
+#             row += 1
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = AWTAS_App()
+    ex = MainWindow()
     sys.exit(app.exec_())
