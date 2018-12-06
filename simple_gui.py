@@ -1,7 +1,7 @@
 import sys
 
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QGridLayout, QMessageBox, QLineEdit, QLabel
-from PyQt5.QtWidgets import QFrame, QVBoxLayout, QCheckBox, QGroupBox, QSpacerItem, QSizePolicy, QMainWindow
+from PyQt5.QtWidgets import QFrame, QVBoxLayout, QCheckBox, QGroupBox, QSpacerItem, QSizePolicy, QMainWindow, QTabWidget
 from PyQt5.QtCore import pyqtSlot
 # from PyQt5.QtGui import 
 
@@ -21,13 +21,36 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.title = 'AWTAS'
-        self.plot_widget = PlotWidget(self)
+        # self.plot_widget = PlotWidget(self)
+        self.tabs = Tabs(self)
         self.init_UI()
         
     def init_UI(self):
         self.setWindowTitle(self.title)
-        self.setCentralWidget(self.plot_widget)
+        # self.setCentralWidget(self.plot_widget)
+        self.setCentralWidget(self.tabs)
         self.show()
+
+class Tabs(QWidget):
+    def __init__(self, parent=None):
+        super(Tabs, self).__init__(parent)
+        self.layout = QVBoxLayout()
+        self.tabs = QTabWidget()
+        self.tabs.setMovable(True)
+        # self.tabs.setTabsClosable(True)
+        self.main_tab = PlotWidget(self)
+        self.tabs.addTab(self.main_tab, 'Plot 1')
+        self.new_tab_button = QPushButton('New Plot')
+        self.new_tab_button.clicked.connect(self.add_new_tab)
+        self.tabs.setCornerWidget(self.new_tab_button)
+        self.layout.addWidget(self.tabs)
+        self.setLayout(self.layout)
+    
+    @pyqtSlot()
+    def add_new_tab(self):
+        new_tab = PlotWidget(self)
+
+        self.tabs.addTab(new_tab, 'Plot {}'.format(self.tabs.count()+1))
 
 class PlotWidget(QWidget):
     def __init__(self, parent=None):
