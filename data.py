@@ -4,7 +4,7 @@ class Data():
     """
     This is a class which defines the problem data structure (eventually extended for use in all model types).
     """
-    def __init__(self, filename=None, time=None, observation=None, parameters=None):
+    def __init__(self, filename=None, time=None, observation=None, parameters=None, estimated_error=None):
         self.filename = filename # the filename of where the data was imported from
         self.time = time # array of time data
         self.observation = observation # array of observed pressure data
@@ -17,6 +17,8 @@ class Data():
         # self.k = None # estimated permeability (float)
         self.variables = [None]*2
         
+        self.estimated_error = estimated_error
+
         # If a filename is given read the data in
         if filename:
             self.read_file()
@@ -76,6 +78,9 @@ class Data():
     
     def set_approximation(self, approximation):
         self.approximation = approximation
+
+    def set_error(self, error):
+        self.estimated_error = error
     
     def generate_datafile(self, filename, variables=None):
         with open(filename, 'w') as file:

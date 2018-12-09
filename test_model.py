@@ -75,7 +75,9 @@ test1_variables = [phi, k]
 
 # Build model
 # theis_test_1 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=1e-4)
-theis_test_1 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=500)
+theis_test_1 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=10000)
+theis_test_1.data.set_error(10000)
+theis_test_5 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=10000)
 
 # -----------------------------------------------------------------------------------
 
@@ -163,14 +165,17 @@ theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=
 optimal_parameters = theis_test_1.find_model_parameters()
 plot_solution(theis_test_1)
 
-optimal_parameters = theis_test_2.find_model_parameters()
-plot_solution(theis_test_2)
+# optimal_parameters = theis_test_2.find_model_parameters()
+# plot_solution(theis_test_2)
 
-optimal_parameters = theis_test_3.find_model_parameters()
-plot_solution(theis_test_3)
+# optimal_parameters = theis_test_3.find_model_parameters()
+# plot_solution(theis_test_3)
 
-optimal_parameters = theis_test_4.find_model_parameters()
-plot_solution(theis_test_4)
+# optimal_parameters = theis_test_4.find_model_parameters()
+# plot_solution(theis_test_4)
+
+optimal_parameters = theis_test_5.find_model_parameters()
+plot_solution(theis_test_5)
 # # -----------------------------------------------------------------------------------
 
 # # ----------------------------------------------------------------------------------

@@ -37,10 +37,12 @@ class Model():
             residual = self.__chi_squared(error)
         return residual
 
-    def __chi_squared(self, error=None):
+    def __chi_squared(self, variables=None, error=None):
         # sd = np.std(self.data.observation)
         if error:
-            chi_squared = ((self.data.observation-self.data.approximation)/error)**2
+            self.calls += 1
+            chi_squared = ((self.data.observation-self.model(variables))/error)**2
+            # chi_squared = ((self.data.observation-self.data.approximation)/error)**2
             # chi_squared = np.sum(((self.data.observation-self.data.approximation)/error)**2)
         else:
             chi_squared = np.sum((self.data.observation-self.data.approximation))**2
@@ -79,8 +81,15 @@ class Model():
         for k in [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]:
             for phi in [0.2, 0.15, 0.1, 0.05, 0.01]:
                 initial_parameters = np.array([phi, k])
-                optimal_parameters, flag = leastsq(self.residual_function, initial_parameters) # if flag is 1 - found a good soln                
-                # optimal_parameters, cov_x, infodict, mesg, flag = leastsq(self.residual_function, initial_parameters, full_output=1) # if flag is 1 - found a good soln
+                # optimal_parameters, flag = leastsq(self.residual_function, initial_parameters) # if flag is 1 - found a good soln                
+                if self.data.estimated_error:
+                    # Calling with estimated error
+                    print("Call with estimated error")
+                    optimal_parameters, flag = leastsq(self.__chi_squared, initial_parameters, args=(self.data.estimated_error)) # if flag is 1 - found a good soln
+                else: 
+                    # Calling without estimated error   
+                    print("Call without estimated error")            
+                    optimal_parameters, cov_x, infodict, mesg, flag = leastsq(self.residual_function, initial_parameters, full_output=1) # if flag is 1 - found a good soln
                 self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
                 chi_squared = self.__chi_squared()
                 # print('Nfev = ', infodict['nfev'])
