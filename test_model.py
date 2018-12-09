@@ -74,7 +74,9 @@ parameters = [p0, qm, h, rho, nu, C, r]
 test1_variables = [phi, k]
 
 # Build model
-theis_test_1 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=1e-4)
+# theis_test_1 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=1e-4)
+theis_test_1 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=500)
+
 # -----------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------
@@ -94,7 +96,9 @@ parameters = [p0, qm, h, rho, nu, C, r]
 test2_variables = [phi, k]
 
 # Build model
-theis_test_2 = setup_model('theis', parameters, test2_variables, time, test_num=2, sd=2e-5)
+# theis_test_2 = setup_model('theis', parameters, test2_variables, time, test_num=2, sd=2e-5)
+theis_test_2 = setup_model('theis', parameters, test2_variables, time, test_num=2, sd=20)
+
 # -----------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------
@@ -114,7 +118,9 @@ parameters = [p0, qm, h, rho, nu, C, r]
 test3_variables = [phi, k]
 
 # Build model
-theis_test_3 = setup_model('theis', parameters, test3_variables, time, test_num=3, sd=1e-10)
+# theis_test_3 = setup_model('theis', parameters, test3_variables, time, test_num=3, sd=1e-10)
+theis_test_3 = setup_model('theis', parameters, test3_variables, time, test_num=3, sd=0.0001)
+
 # -----------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------
@@ -136,7 +142,9 @@ parameters = [p0, qm, h, rho, nu, C, r]
 test4_variables = [phi, k]
 
 # Build model
-theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=4, sd=3e-5)
+# theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=4, sd=3e-5)
+theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=4, sd=30)
+
 # -----------------------------------------------------------------------------------
 
 # # -----------------------------------------------------------------------------------

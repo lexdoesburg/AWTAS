@@ -109,7 +109,7 @@ class Model():
         self.calls = 0
         return optimal_parameters
 
-    def generate_data(self, variables, parameters, time, noise = False, sd = 2.5e-4, save_file=False, filename="{}_testdata.dat".format('theis_soln')):
+    def generate_data(self, variables, parameters, time, noise = False, sd = 150, save_file=False, filename="{}_testdata.dat".format('theis_soln')):
         """
         Generate approximated data using the Theis solution for a guess of porosity and permeability.
         """
@@ -120,8 +120,13 @@ class Model():
         p = self.model(variables)
         if noise:
             np.random.seed(0) # Set random seed to 0 for consistency in testing
-            p += sd*np.random.randn(p.shape[0])
-            print('SD = {}'.format(np.std(p)))
+            # magnitude = 10**(np.floor(np.log10(np.average(p))))
+            noise = np.random.randn(p.shape[0])
+            # noise = (sd*(noise/np.std(noise)))*magnitude
+            noise = sd * (noise/np.std(noise))
+            p += noise
+            # p += sd*np.random.randn(p.shape[0])
+            print('SD = {}'.format(np.std(noise)))
         self.data.set_observation(p)
         if save_file:
             self.data.generate_datafile(filename, variables=variables)
