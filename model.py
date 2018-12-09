@@ -3,6 +3,8 @@ from scipy.special import exp1
 from scipy.optimize import curve_fit
 from scipy.optimize import leastsq
 
+import lmfit
+
 import data as data_class
 
 class Model():
@@ -23,19 +25,29 @@ class Model():
         """
         raise NotImplementedError('Model function has not been implemented.')
 
-    def residual_function(self, variables):
+    def residual_function(self, variables, error=None):
         """
         Calculate the residual of the model (difference between observed data and estimated data)
         """
         # phi, k = parameters
         self.calls += 1
-        return self.data.observation - self.model(variables)
+        if not error:
+            residual = self.data.observation - self.model(variables)
+        else:
+            residual = self.__chi_squared(error)
+        return residual
 
-    def __chi_squared(self):
-        sd = np.std(self.data.observation)
-        chi_squared = np.sum((self.data.observation-self.data.approximation)/sd)**2
-        # chi_squared = np.sum((self.data.observation-self.data.approximation))**2
+    def __chi_squared(self, error=None):
+        # sd = np.std(self.data.observation)
+        if error:
+            chi_squared = ((self.data.observation-self.data.approximation)/error)**2
+            # chi_squared = np.sum(((self.data.observation-self.data.approximation)/error)**2)
+        else:
+            chi_squared = np.sum((self.data.observation-self.data.approximation))**2
         return chi_squared
+
+    def find_model_params_test(self):
+        pass
 
     def find_model_parameters(self, variables=None, curve_fit=False):
         """
@@ -108,7 +120,8 @@ class Model():
         p = self.model(variables)
         if noise:
             np.random.seed(0) # Set random seed to 0 for consistency in testing
-            p += p*sd*np.random.randn(p.shape[0])
+            p += sd*np.random.randn(p.shape[0])
+            print('SD = {}'.format(np.std(p)))
         self.data.set_observation(p)
         if save_file:
             self.data.generate_datafile(filename, variables=variables)
