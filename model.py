@@ -48,8 +48,18 @@ class Model():
             chi_squared = np.sum((self.data.observation-self.data.approximation))**2
         return chi_squared
 
+    def func(self, t, phi, k):
+        variables = phi, k
+        return self.model(variables)
+
+
     def find_model_params_test(self):
-        pass
+        xData = self.data.time
+        yData = self.data.observation
+        initial_guess = [0.105, 1e-14]
+        popt, pcov = curve_fit(self.func, xData, yData, p0=initial_guess, diag=(1./xData.mean(),1./yData.mean()) )
+        print(popt)
+        return popt
 
     def find_model_parameters(self, variables=None, curve_fit=False):
         """
@@ -78,6 +88,7 @@ class Model():
         # broken = False
         estimates = np.ndarray(shape=(3,25))
         i = 0
+        # Could run this for the 3-5 values of k with a fixed phi and then take the best solution as starting point
         for k in [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]:
             for phi in [0.2, 0.15, 0.1, 0.05, 0.01]:
                 initial_parameters = np.array([phi, k])
@@ -169,6 +180,26 @@ class Theis_Solution(Model):
             # p = p0 + (qm/(r*np.pi*k*(h/nu)))*exp1((r**2)/(4*D*self.data.time)) 
             p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*self.data.time)) # Same as fortran output
         if self.data.time[0] <= 1e-7: # Check if initial reading is at time 0
+            p[0] = p0
+        return p
+
+    
+    def test_model(self, params, t):
+        phi = params['phi']
+        k = params['k']
+        p0 = params['p0']
+        qm = params['qm']
+        rho = params['rho']
+        nu = params['nu']
+        h = params['h']
+        C = params['C']
+        r = params['r']
+
+        D = k/(nu*phi*rho*C)
+        with np.errstate(divide="ignore", invalid="ignore"): # Hides 'RuntimeWarning: invalid value encountered in divide' if t[0] == 0.
+            # p = p0 + (qm/(r*np.pi*k*(h/nu)))*exp1((r**2)/(4*D*self.data.time)) 
+            p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*t)) # Same as fortran output
+        if t[0] <= 1e-7: # Check if initial reading is at time 0
             p[0] = p0
         return p
 
