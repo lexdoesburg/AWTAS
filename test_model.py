@@ -76,9 +76,8 @@ test1_variables = [phi, k]
 # Build model
 # theis_test_1 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=1e-4)
 theis_test_1 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=300)
-theis_test_1.data.set_error(300)
 theis_test_5 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=300)
-
+theis_test_5.data.set_error(300)
 # -----------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------
@@ -162,32 +161,46 @@ theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=
 # print_optimal_parameters(theis_test_4, test4_variables, 3)
 # plot_solution(theis_test_4)
 
-start = time_module.clock()
-optimal_parameters = theis_test_1.find_model_parameters()
-end = time_module.clock()
-print('Time to find solution: ',end-start)
-plot_solution(theis_test_1, dual_plot=True)
+# # ----------- Old find_model_parameters function-------------------------------------
 
-optimal_parameters = theis_test_2.find_model_parameters()
-plot_solution(theis_test_2, dual_plot=True)
+# optimal_parameters = theis_test_1.find_model_parameters(verbose=True)
+# plot_solution(theis_test_1, dual_plot=True)
 
-optimal_parameters = theis_test_3.find_model_parameters()
-plot_solution(theis_test_3, dual_plot=True)
+# optimal_parameters = theis_test_2.find_model_parameters(verbose=True)
+# plot_solution(theis_test_2, dual_plot=True)
 
-optimal_parameters = theis_test_4.find_model_parameters()
-plot_solution(theis_test_4, dual_plot=True)
+# optimal_parameters = theis_test_3.find_model_parameters(verbose=True)
+# plot_solution(theis_test_3, dual_plot=True)
 
-start = time_module.clock()
-optimal_parameters = theis_test_5.find_model_parameters()
-end = time_module.clock()
-print('Time to find solution: ',end-start)
-plot_solution(theis_test_5, dual_plot=True)
+# optimal_parameters = theis_test_4.find_model_parameters(verbose=True)
+# plot_solution(theis_test_4, dual_plot=True)
+
+# optimal_parameters = theis_test_5.find_model_parameters(verbose=True)
+# plot_solution(theis_test_5, dual_plot=True)
+
+# # ----------- New find_model_parameters function-------------------------------------
+
+# optimal_parameters = theis_test_1.find_model_parameters2(verbose=True)
+# plot_solution(theis_test_1, dual_plot=True)
+
+# optimal_parameters = theis_test_2.find_model_parameters2(verbose=True)
+# plot_solution(theis_test_2, dual_plot=True)
+
+# optimal_parameters = theis_test_3.find_model_parameters2(verbose=True)
+# plot_solution(theis_test_3, dual_plot=True)
+
+# optimal_parameters = theis_test_4.find_model_parameters2(verbose=True)
+# plot_solution(theis_test_4, dual_plot=True)
+
+# optimal_parameters = theis_test_5.find_model_parameters2(verbose=True)
+# plot_solution(theis_test_5, dual_plot=True)
+
 # # -----------------------------------------------------------------------------------
 # theis_test_1.find_model_params_test()
 
 
 
-# # ----------------------------------------------------------------------------------
+# # -----------------------------------------------------------------------------------
 # # Test difficult function
 # p1 = 3.6e6 # Pa
 # h = 100 # m

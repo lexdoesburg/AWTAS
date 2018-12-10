@@ -7,6 +7,8 @@ import lmfit
 
 import data as data_class
 
+import time
+
 class Model():
     def __init__(self, data=None):
         """
@@ -31,21 +33,24 @@ class Model():
         """
         # phi, k = parameters
         self.calls += 1
-        if not error:
+        if error is None:
+            # Calling without estimated error   
+            # print("Call without estimated error")   
             residual = self.data.observation - self.model(variables)
         else:
-            residual = self.__chi_squared(error)
+            # Calling with estimated error   
+            # print("Call with estimated error")   
+            residual = (self.data.observation - self.model(variables))/error
         return residual
 
-    def __chi_squared(self, variables=None, error=None):
+    def __chi_squared(self, error=None):
         # sd = np.std(self.data.observation)
-        if error:
-            self.calls += 1
-            chi_squared = ((self.data.observation-self.model(variables))/error)**2
+        if error is not None:
+            chi_squared = np.sum((self.data.observation-self.data.approximation)/error)**2
             # chi_squared = ((self.data.observation-self.data.approximation)/error)**2
             # chi_squared = np.sum(((self.data.observation-self.data.approximation)/error)**2)
         else:
-            chi_squared = np.sum((self.data.observation-self.data.approximation))**2
+            chi_squared = np.sum(self.data.observation-self.data.approximation)**2
         return chi_squared
 
     def func(self, t, phi, k):
@@ -61,7 +66,77 @@ class Model():
         print(popt)
         return popt
 
-    def find_model_parameters(self, variables=None, curve_fit=False):
+    def generate_initial_guess(self, initial_guess=None):
+        k_range = np.array([1e-16, 1e-12]) # Range of feasible permeabilities
+        phi_range = (0.01, 0.2) # Range of feasible porosities
+        
+        # def parameters_in_range(parameters):
+        #     phi, k = parameters
+        #     range_k = k_range/1e-16
+        #     k = k/1e-16
+        #     eps = 1e-7
+        #     if phi_range[0] <= phi <= phi_range[1] and k-range_k[0] >= eps and range_k[1]-k >= eps:
+        #         return True
+        #     else:
+        #         return False
+
+        if initial_guess is not None:
+            # print('Initial guess supplied')
+            phi, k = initial_guess
+            k_magnitude = np.floor(np.log10(k))
+            print('k magnitude = ', k_magnitude)
+            if k_magnitude-1 < -16:
+                k_guess = [k_range[0], k, 10**(k_magnitude+1)]
+            elif k_magnitude+1 > -12:
+                k_guess = [10**(k_magnitude-1), k, k_range[1]]
+            else:
+                k_guess = [10**(k_magnitude-1), k, 10**(k_magnitude+1)]
+            
+            phi_search_range = 0.07 # Will search 0.07 above and below the given guess
+            if phi - phi_search_range < 0.01:
+                phi_guess = [phi_range[0], phi, phi+phi_search_range]
+            elif phi + phi_search_range > 0.2:
+                phi_guess = [phi-phi_search_range, phi, phi_range[1]]
+            else:
+                phi_guess = [phi-phi_search_range, phi, phi+phi_search_range]
+        else:
+            # print('No initial guess supplied')
+            k_guess = [1e-16, 1e-14, 1e-12]
+            phi_guess = [0.01, 0.105, 0.2]
+            # phi = 0.105
+
+        best_estimate = np.empty(3) # Format, phi, k, chi_sq
+        best_estimate.fill(np.inf)
+
+        for k in k_guess:
+            for phi in phi_guess:
+                initial_parameters = [phi, k]
+                optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error)) # if flag is 1 - found a good soln
+                chi_squared = self.__chi_squared(self.data.error)
+                # print('Phi: {} k: {} Chi squared: {}'.format(phi,k,chi_squared))
+                # chi_squared_magnitude = np.floor(np.log10(chi_squared))
+                # truth_test = parameters_in_range(optimal_parameters)
+                # print('Phi: {} k: {} Chi squared: {} Truth test: {}'.format(phi,k,chi_squared,truth_test))
+                if chi_squared < best_estimate[2]:
+                    best_estimate[0], best_estimate[1], best_estimate[2] = optimal_parameters[0], optimal_parameters[1], chi_squared
+                # print('Current Best Estimate: {}'.format(best_estimate))
+                    
+        return best_estimate[:-1]
+
+    def find_model_parameters2(self, initial_guess=None, verbose=False):
+        start_time = time.clock()
+        initial_parameters = self.generate_initial_guess(initial_guess)
+        optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error)) # if flag is 1 - found a good soln
+        self.data.set_unknown_parameters(optimal_parameters)
+        end_time = time.clock()
+        if verbose:
+            print('Total model calls: {} Total time spent: {}'.format(self.calls, (end_time-start_time)))
+            print('Initial Guess: {}'.format(initial_parameters))
+            print('Optimal Phi: {} Optimal k: {}'.format(optimal_parameters[0], optimal_parameters[1]))
+        self.calls = 0
+        return optimal_parameters
+
+    def find_model_parameters(self, variables=None, curve_fit=False, verbose=False):
         """
         Find the model parameters porosity and permeability.
 
@@ -79,7 +154,7 @@ class Model():
             - Actual value of porosity = 0.1, permeability = 1e-12. (with permeability guess of 1e-13, porosity guess can be less accurate).
         - Look at using either curve_fit or least_squares instead.
         """
-
+        start_time = time.clock()
         # if curve_fit:
         #     # was going to possibly use scipy.optimize.curve_fit if no initial parameters were given
         #     pass
@@ -93,14 +168,14 @@ class Model():
             for phi in [0.2, 0.15, 0.1, 0.05, 0.01]:
                 initial_parameters = np.array([phi, k])
                 # optimal_parameters, flag = leastsq(self.residual_function, initial_parameters) # if flag is 1 - found a good soln                
-                if self.data.estimated_error:
-                    # Calling with estimated error
-                    print("Call with estimated error")
-                    optimal_parameters, flag = leastsq(self.__chi_squared, initial_parameters, args=(self.data.estimated_error)) # if flag is 1 - found a good soln
-                else: 
+                # if self.data.error:
+                #     # Calling with estimated error
+                #     # print("Call with estimated error")
+                optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error)) # if flag is 1 - found a good soln
+                # else: 
                     # Calling without estimated error   
-                    print("Call without estimated error")            
-                    optimal_parameters, cov_x, infodict, mesg, flag = leastsq(self.residual_function, initial_parameters, full_output=1) # if flag is 1 - found a good soln
+                    # print("Call without estimated error")            
+                    # optimal_parameters, cov_x, infodict, mesg, flag = leastsq(self.residual_function, initial_parameters, full_output=1) # if flag is 1 - found a good soln
                 self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
                 chi_squared = self.__chi_squared()
                 # print('Nfev = ', infodict['nfev'])
@@ -116,16 +191,14 @@ class Model():
             # if broken:
             #     break
         index = np.argmin(estimates[2])
-        print('index = {} chi squared = {}'.format(index, estimates[2, index]))
-        print('Function called: {} times'.format(calls))
-
         optimal_parameters = estimates[:2, index]
-        print('Optimal phi: {} Optimal k: {}'.format(optimal_parameters[0], optimal_parameters[1]))
-        # print('Phi {}, k {}'.format(phi, k))
-        # phi, k = optimal_parameters
         self.data.set_unknown_parameters(optimal_parameters) # Store phi and k in data structure
         self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
-        print('Calls = ', self.calls)
+
+        end_time = time.clock()
+        if verbose:
+            print('Total model calls: {} Total time spent: {}'.format(self.calls, (end_time-start_time)))
+            print('Optimal Phi: {} Optimal k: {}'.format(optimal_parameters[0], optimal_parameters[1]))
         self.calls = 0
         return optimal_parameters
 
@@ -181,6 +254,7 @@ class Theis_Solution(Model):
             p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*self.data.time)) # Same as fortran output
         if self.data.time[0] <= 1e-7: # Check if initial reading is at time 0
             p[0] = p0
+        self.data.approximation = p # Set the approximation for quick estimation of chi_sq
         return p
 
     
