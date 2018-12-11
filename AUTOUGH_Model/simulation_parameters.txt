@@ -1,7 +1,55 @@
-Initial Pressure (Bar): 90.0009281439781
-Initial Steam Mass Fraction: 0.3
+
+Current estimate: [  1.45000000e-01   2.50000000e-15] Chi-squared: 39345.697806250275Porosity: 0.14500000000000002
+Permeability: 2.5e-15
+Time for simulation: 150.33208800908514
+Current estimate: [  1.00000000e-02   1.00000000e-16   7.87826659e+07]
+Current estimate: [  1.00000000e-02   1.00000000e-16   7.87826659e+07]
+Current estimate: [  1.00000000e-02   1.00000000e-16   7.87826659e+07]
+Current estimate: [  1.00000000e-02   2.50000000e-15   5.12285009e+06]
+Current estimate: [  7.50000000e-02   2.50000000e-15   9.99234147e+05]
+Current estimate: [  1.45000000e-01   2.50000000e-15   3.93456978e+04]
+Current estimate: [  1.45000000e-01   2.50000000e-15   3.93456978e+04]
+Current estimate: [  1.45000000e-01   2.50000000e-15   3.93456978e+04]
+Current estimate: [  1.45000000e-01   2.50000000e-15   3.93456978e+04]
+Porosity: 0.14500000000000002
+Permeability: 2.5e-15
+Time for simulation: 147.39040130312273
+Current estimate: [  1.00000000e-02   1.00000000e-16   7.87826659e+07]
+Current estimate: [  1.00000000e-02   1.00000000e-16   7.87826659e+07]
+Current estimate: [  1.00000000e-02   1.00000000e-16   7.87826659e+07]
+Current estimate: [  1.00000000e-02   1.00000000e-16   7.87826659e+07]
+Current estimate: [  1.00000000e-02   1.00000000e-16   7.87826659e+07]
+Current estimate: [  1.00000000e-02   1.00000000e-16   7.87826659e+07]
+Current estimate: [  1.00000000e-02   1.00000000e-14   7.03797975e+06]
+Current estimate: [  1.00000000e-02   1.00000000e-14   7.03797975e+06]
+Current estimate: [  1.00000000e-02   1.00000000e-14   7.03797975e+06]
+Current estimate: [  1.00000000e-02   1.00000000e-14   7.03797975e+06]
+Current estimate: [  1.00000000e-02   1.00000000e-14   7.03797975e+06]
+Current estimate: [  1.00000000e-02   1.00000000e-14   7.03797975e+06]
 Porosity: 0.01
 Permeability: 1e-14
-Time for simulation: 19396.76868514649
-Function Calls: 3120
-Observed Fit: Actually bad (SKG9D_fit.png)
+Time for simulation: 135.46618878254262
+Current estimate: [  1.00000000e-02   1.00000000e-16   7.87826659e+07]
+Current estimate: [  1.00000000e-02   1.00000000e-16   7.87826659e+07]
+Current estimate: [  1.00000000e-02   1.00000000e-16   7.87826659e+07]
+Current estimate: [  1.00000000e-02   2.00000000e-15   1.02155519e+07]
+Current estimate: [  4.00000000e-02   2.00000000e-15   3.85375022e+06]
+Current estimate: [  1.10000000e-01   2.00000000e-15   1.85989180e+06]
+Current estimate: [  1.10000000e-01   2.00000000e-15   1.85989180e+06]
+Current estimate: [  1.10000000e-01   2.00000000e-15   1.85989180e+06]
+Current estimate: [  1.10000000e-01   2.00000000e-15   1.85989180e+06]
+Porosity: 0.11000000000000001
+Permeability: 2e-15
+Time for simulation: 156.50888410454687
+Current estimate: [  1.00000000e-02   1.00000000e-16   7.87826659e+07]
+Current estimate: [  1.00000000e-02   1.00000000e-16   7.87826659e+07]
+Current estimate: [  1.00000000e-02   1.00000000e-16   7.87826659e+07]
+Current estimate: [  1.00000000e-02   2.00000000e-15   1.02155519e+07]
+Current estimate: [  4.00000000e-02   2.00000000e-15   3.85375022e+06]
+Current estimate: [  8.00000000e-02   2.00000000e-15   2.22742223e+06]
+Current estimate: [  8.00000000e-02   2.00000000e-15   2.22742223e+06]
+Current estimate: [  8.00000000e-02   2.00000000e-15   2.22742223e+06]
+Current estimate: [  8.00000000e-02   2.00000000e-15   2.22742223e+06]
+Porosity: 0.08
+Permeability: 2e-15
+Time for simulation: 158.24481368133988
