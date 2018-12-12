@@ -34,12 +34,12 @@ class Model():
         phi, k = variables
         self.calls += 1
         start = time.clock()
-        if phi >= 0.22 or phi <= 0.0095:
-            self.data.approximation = [9999999999]*len(self.data.observation)
-            return [9999999999]*len(self.data.observation)
-        elif k >= 1.2e-12 or k <= 0.8e-16:
-            self.data.approximation = [9999999999]*len(self.data.observation)
-            return [9999999999]*len(self.data.observation)
+        # if phi >= 0.22 or phi <= 0.0095:
+        #     self.data.approximation = [9999999999]*len(self.data.observation)
+        #     return [9999999999]*len(self.data.observation)
+        # elif k >= 1.2e-12 or k <= 0.8e-16:
+        #     self.data.approximation = [9999999999]*len(self.data.observation)
+        #     return [9999999999]*len(self.data.observation)
 
         approximation = self.model(variables)
         if len(approximation) != len(self.data.observation):
@@ -57,6 +57,7 @@ class Model():
             # print("Call with estimated error")   
             residual = (self.data.observation - approximation)/error
         end = time.clock()
+        phi, k = self.transf1(variables)
         print('Calling residual ({}): Phi: {} k: {} Chi-squared: {} Time Elapsed: {}'.format(self.calls, phi, k, self.__chi_squared(error), end-start))
         return residual
 
@@ -71,39 +72,14 @@ class Model():
 
         if error is not None:
             chi_squared = np.sum((self.data.observation-self.data.approximation)/error)**2
-            # chi_squared = ((self.data.observation-self.data.approximation)/error)**2
-            # chi_squared = np.sum(((self.data.observation-self.data.approximation)/error)**2)
         else:
             chi_squared = np.sum(self.data.observation-self.data.approximation)**2
         return chi_squared
-
-    def func(self, t, phi, k):
-        variables = phi, k
-        return self.model(variables)
-
-
-    def find_model_params_test(self):
-        xData = self.data.time
-        yData = self.data.observation
-        initial_guess = [0.105, 1e-14]
-        popt, pcov = curve_fit(self.func, xData, yData, p0=initial_guess, diag=(1./xData.mean(),1./yData.mean()) )
-        print(popt)
-        return popt
 
     def generate_initial_guess(self, initial_guess=None, single_run=False):
         k_range = np.array([1e-16, 1e-12]) # Range of feasible permeabilities
         phi_range = (0.01, 0.2) # Range of feasible porosities
         
-        # def parameters_in_range(parameters):
-        #     phi, k = parameters
-        #     range_k = k_range/1e-16
-        #     k = k/1e-16
-        #     eps = 1e-7
-        #     if phi_range[0] <= phi <= phi_range[1] and k-range_k[0] >= eps and range_k[1]-k >= eps:
-        #         return True
-        #     else:
-        #         return False
-
         if initial_guess is not None and not single_run:
             # print('Initial guess supplied')
             phi, k = initial_guess
@@ -134,13 +110,17 @@ class Model():
 
         best_estimate = np.empty(3) # Format, phi, k, chi_sq
         best_estimate.fill(np.inf)
-
+        iterat = 0
         for k in k_guess:
             for phi in phi_guess:
+                iterat += 1
                 initial_parameters = [phi, k]
-                optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), diag=(1./1e-2,1./1e-16), epsfcn=1.7) # if flag is 1 - found a good soln
+                initial_parameters = self.transf0(initial_parameters)
+                # optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), diag=(1./1e-2,1./1e-15), epsfcn=1.7) # if flag is 1 - found a good soln
+                optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), epsfcn=1.7) # if flag is 1 - found a good soln
+                optimal_parameters = self.transf1(optimal_parameters)
                 chi_squared = self.__chi_squared(self.data.error)
-                print('Phi: {} k: {} Chi squared: {}'.format(phi,k,chi_squared))
+                print('Iter {}: Phi: {} k: {} Chi squared: {}'.format(iterat, phi,k,chi_squared))
                 # chi_squared_magnitude = np.floor(np.log10(chi_squared))
                 # truth_test = parameters_in_range(optimal_parameters)
                 # print('Phi: {} k: {} Chi squared: {} Truth test: {}'.format(phi,k,chi_squared,truth_test))
@@ -157,7 +137,11 @@ class Model():
         # initial_guess = self.transf0(initial_guess)
         # print('Initial guess = {}'.format(initial_guess))
         initial_parameters = self.generate_initial_guess(initial_guess, single_run)
-        optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), diag=(1./1e-2,1./1e-16), epsfcn=1.7) # if flag is 1 - found a good soln
+        if not single_run:
+            # optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), diag=(1./1e-2,1./1e-15), epsfcn=1.7) # if flag is 1 - found a good soln            
+            optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error),diag=(1./1e-2,1./1e-15)) # if flag is 1 - found a good soln
+        else:
+            optimal_parameters = initial_parameters
         chi_squared = self.__chi_squared(self.data.error)
         self.data.set_unknown_parameters(optimal_parameters)
         end_time = time.clock()
@@ -179,73 +163,18 @@ class Model():
         return [(theta[0]-xlim[0])/(xlim[1]-xlim[0]), (theta[1]-ylim[0])/(ylim[1]-ylim[0])]
 
 
-    def find_model_parameters(self, variables=None, curve_fit=False, verbose=False):
+    def transf1(self, X):
+        """transform parameter vector to their original base
+
+        Args:
+            X (list): parameter vector in adapted base
         """
-        Find the model parameters porosity and permeability.
+        xlim = [0.01, 0.2]	# initial phi range
+        ylim = [1e-16, 1e-12]	# initial k range
+        return [X[0]*(xlim[1]-xlim[0])+xlim[0], X[1]*(ylim[1]-ylim[0])+ylim[0]]
 
-        Inputs: phi (float) - Intial guess of porosity (default is arbitrary - from AWTAS page 11)
-                k (float) - Initial guess of permeability (default is arbitrary - from AWTAS page 11)
-                curve_fit (boolean)
-        
-        Output: phi (float) - Estimated value of porosity
-                k (float)- Estimated value of permeability
-
-        NOTES:
-        - A suitable range for porosity is 0.01 - 0.2, permeability is 1e-16—1e-12
-        - Leastsq is highly sensitive to permeability (with porosity = 0.1): Doesn't find optimal permeability for 1e-15—1e-16 and for 1e-9 and upwards.
-            - Also sensitive to porosity (with k = 1e-14): Doesn't find either parameter for porosity > 0.125 and any value < 0.1
-            - Actual value of porosity = 0.1, permeability = 1e-12. (with permeability guess of 1e-13, porosity guess can be less accurate).
-        - Look at using either curve_fit or least_squares instead.
-        """
-        start_time = time.clock()
-        # if curve_fit:
-        #     # was going to possibly use scipy.optimize.curve_fit if no initial parameters were given
-        #     pass
-        # else:
-        calls = 0
-        # broken = False
-        estimates = np.ndarray(shape=(3,25))
-        i = 0
-        # Could run this for the 3-5 values of k with a fixed phi and then take the best solution as starting point
-        for k in [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]:
-            for phi in [0.2, 0.15, 0.1, 0.05, 0.01]:
-                initial_parameters = np.array([phi, k])
-                # optimal_parameters, flag = leastsq(self.residual_function, initial_parameters) # if flag is 1 - found a good soln                
-                # if self.data.error:
-                #     # Calling with estimated error
-                #     # print("Call with estimated error")
-                optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error)) # if flag is 1 - found a good soln
-                # else: 
-                    # Calling without estimated error   
-                    # print("Call without estimated error")            
-                    # optimal_parameters, cov_x, infodict, mesg, flag = leastsq(self.residual_function, initial_parameters, full_output=1) # if flag is 1 - found a good soln
-                self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
-                chi_squared = self.__chi_squared()
-                # print('Nfev = ', infodict['nfev'])
-                # print('Chi squared: {} Function evaluated at output: {}'.format(chi_squared, np.sum(infodict['fvec'])))
-                estimates[:, i] = optimal_parameters[0], optimal_parameters[1], chi_squared                
-                # estimates[:, i] = optimal_parameters[0], optimal_parameters[1], abs(np.sum(infodict['fvec']))
-                # print('Phi: {} k: {} Chi squared: {}'.format(phi, k, chi_squared))
-                i += 1
-                calls += 1
-            #     if chi_squared <= 20:
-            #         broken = True
-            #         break
-            # if broken:
-            #     break
-        index = np.argmin(estimates[2])
-        optimal_parameters = estimates[:2, index]
-        self.data.set_unknown_parameters(optimal_parameters) # Store phi and k in data structure
-        self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
-
-        end_time = time.clock()
-        if verbose:
-            print('Total model calls: {} Total time spent: {}'.format(self.calls, (end_time-start_time)))
-            print('Optimal Phi: {} Optimal k: {}'.format(optimal_parameters[0], optimal_parameters[1]))
-        self.calls = 0
-        return optimal_parameters
-
-    def generate_data(self, variables, parameters, time, noise = False, sd = 150, save_file=False, filename="{}_testdata.dat".format('theis_soln')):
+   
+    def generate_data(self, variables, time, parameters=None, noise = False, sd = 150, save_file=False, filename="{}_testdata.dat".format('theis_soln')):
         """
         Generate approximated data using the Theis solution for a guess of porosity and permeability.
         """
@@ -267,37 +196,6 @@ class Model():
         if save_file:
             self.data.generate_datafile(filename, variables=variables)
         # return self.data
-    
-    # def __generate_datafile(self, filename, measurement):
-    #     with open(filename, 'w') as file:
-    #         file.write('Time(s),Pressure(Pa)\n')
-    #         for i in range(len(self.data.time)):
-    #             if self.data.time[i] >= 1e-7:
-    #                 file.write('{},{}\n'.format(self.data.time[i], measurement[i]))
-    #             else:
-    #                 file.write('{},{}\n'.format(0, measurement[i]))
-
-
-class Theis_Solution(Model):
-    def model(self, parameters):
-        """
-        Calculate and return the pressure for the given input using the analytical Theis solution.
-
-        Inputs: phi - Porosity
-                k - Permeability
-                Makes use of self.data for remaining parameters
-        
-        Output: p(t) - pressure at a given time (or time array).
-        """
-        phi, k = parameters
-        p0, qm, h, rho, nu, C, r = self.data.parameters # Unpack the well parameters
-        D = k/(nu*phi*rho*C)
-        with np.errstate(divide="ignore", invalid="ignore"): # Hides 'RuntimeWarning: invalid value encountered in divide' if t[0] == 0.
-            p = p0 + (qm/(r*np.pi*k*(h/nu)))*exp1((r**2)/(4*D*self.data.time)) # TODO: Double check exponential integral is correct
-            # p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*t)) # TODO: Double check exponential integral is correct
-        if self.data.time[0] <= 1e-7: # Check if initial reading is at time 0
-            p[0] = p0
-        return p
 
 import os
 from t2data import *
@@ -330,8 +228,8 @@ class SKG9D(Model):
         # permeability = 2.76e-15	# initial permeability (m2)
         # porosity = parameters[2]
         # permeability = parameters[3]
-        # porosity, permeability = self.transf1(parameters)
-        porosity, permeability = parameters
+        porosity, permeability = self.transf1(parameters)
+        # porosity, permeability = parameters
         
         start_datfile = time.time()
         # write values in the AUTOUGH2 dat file

@@ -166,3 +166,94 @@ Current estimate: [  9.92709359e-02   2.70153797e-15   3.02444446e+04]
 Porosity: 0.09927093587146177
 Permeability: 2.619648923582658e-15
 Time for simulation: 310.69235761735746
+Current estimate: [  1.07291123e-01   2.58058585e-15   7.06879204e+02]
+Porosity: 0.10729112261197976
+Permeability: 2.5805858488945195e-15
+Time for simulation: 246.6133044823824
+Current estimate: [  1.07291123e-01   2.58058585e-15   7.06879204e+02]
+Porosity: 0.10729112261197976
+Permeability: 2.5805858488945195e-15
+Time for simulation: 149.96797133902743
+Current estimate: [  1.05650690e-01   2.60516238e-15   4.43671032e+02]
+Porosity: 0.10565069008368806
+Permeability: 2.6051623765412625e-15
+Time for simulation: 69.66333530355382
+Current estimate: [  4.00000000e-02   6.00000000e-16   7.87826659e+07]
+Porosity: 0.04
+Permeability: 6e-16
+Time for simulation: 4.668131150272681
+Current estimate: [  4.00000000e-02   6.00000000e-16   7.87826659e+07]
+Porosity: 0.04
+Permeability: 6e-16
+Time for simulation: 4.500432583140185
+Current estimate: [  4.00000000e-02   6.00000000e-16   7.87826659e+07]
+Porosity: 0.04
+Permeability: 6e-16
+Time for simulation: 4.249819329372365
+Current estimate: [  4.00000000e-02   6.00000000e-16   7.87826659e+07]
+Porosity: 0.04
+Permeability: 6e-16
+Time for simulation: 4.307566008926971
+Current estimate: [  4.00000000e-02   6.00000000e-16   1.51289998e+24]
+Porosity: 0.04
+Permeability: 6.000000000000001e-16
+Time for simulation: 0.023521595045428775
+Current estimate: [  4.00000000e-02   6.00000000e-16   7.87826659e+07]
+Porosity: 0.04
+Permeability: 6.000000000000001e-16
+Time for simulation: 9.246965125889844
+Current estimate: [  8.44662237e-02   2.81943214e-15   4.24874332e+04]
+Porosity: 0.08446622374662256
+Permeability: 2.8194321444755477e-15
+Time for simulation: 176.48668018249995
+Current estimate: [  1.12315854e-01   2.53425890e-15   6.70074854e+03]
+Porosity: 0.11231585353564749
+Permeability: 2.5342589003548597e-15
+Time for simulation: 156.64884240993186
+Current estimate: [  1.05650690e-01   2.60516238e-15   4.43671032e+02]
+Porosity: 0.10565069008368806
+Permeability: 2.6051623765412625e-15
+Time for simulation: 79.55194439027512
+Current estimate: [  1.12315854e-01   2.53425890e-15   6.70074854e+03]
+Porosity: 0.11231585353564749
+Permeability: 2.5342589003548597e-15
+Time for simulation: 167.4092861382008
+Current estimate: [  5.36353651e-02   3.14698023e-15   2.88708768e+04]
+Porosity: 0.05363536514763514
+Permeability: 3.1469802306335473e-15
+Time for simulation: 144.5986971791232
+Current estimate: [  5.36353651e-02   3.14698023e-15   1.15483507e+03]
+Porosity: 0.05363536514763514
+Permeability: 3.1469802306335457e-15
+Time for simulation: 146.54474322432318
+Current estimate: [  5.84318614e-02   3.07003799e-15   2.89362076e+04]
+Porosity: 0.058431861368775644
+Permeability: 3.070037994097899e-15
+Time for simulation: 157.50794769638156
+Current estimate: [  5.84318614e-02   3.07003799e-15   2.89362076e+04]
+Porosity: 0.058431861368775644
+Permeability: 3.070037994097899e-15
+Time for simulation: 140.26700371725664
+Current estimate: [  4.00000000e-02   6.00000000e-16   5.38847992e+07]
+Porosity: 0.04
+Permeability: 6.000000000000001e-16
+Time for simulation: 4.314899696859742
+Current estimate: [  1.00000000e-02   1.00000000e-16   5.38847992e+07]
+Current estimate: [  1.00000000e-02   1.00000000e-16   5.38847992e+07]
+Current estimate: [  1.00000000e-02   1.00000000e-16   5.38847992e+07]
+Current estimate: [  1.00000000e-02   1.00000000e-15   5.26576624e+07]
+Current estimate: [  1.05000000e-01   1.00000000e-15   2.35379631e+07]
+Current estimate: [  2.00000000e-01   1.00000000e-15   9.42231702e+06]
+Current estimate: [  1.00000000e-02   1.00000000e-14   5.13825814e+06]
+Current estimate: [  1.00000000e-02   1.00000000e-14   5.13825814e+06]
+Current estimate: [  1.00000000e-02   1.00000000e-14   5.13825814e+06]
+Current estimate: [  1.00000000e-02   1.00000000e-14   5.13825814e+06]
+Current estimate: [  1.00000000e-02   1.00000000e-14   5.13825814e+06]
+Current estimate: [  1.00000000e-02   1.00000000e-14   5.13825814e+06]
+Current estimate: [  1.00000000e-02   1.00000000e-14   5.13825814e+06]
+Current estimate: [  1.00000000e-02   1.00000000e-14   5.13825814e+06]
+Current estimate: [  1.00000000e-02   1.00000000e-14   5.13825814e+06]
+Porosity: 0.01
+Permeability: 1e-14
+Time for simulation: 249.95450571716125
+Current estimate: [  2.93029002e-03   1.37048196e-13   2.01711059e+05]
