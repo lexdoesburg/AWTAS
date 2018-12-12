@@ -34,12 +34,12 @@ class Model():
         phi, k = variables
         self.calls += 1
         start = time.clock()
-        # if phi >= 0.22 or phi <= 0.0095:
-        #     self.data.approximation = [9999999999]*len(self.data.observation)
-        #     return [9999999999]*len(self.data.observation)
-        # elif k >= 1.2e-12 or k <= 0.8e-16:
-        #     self.data.approximation = [9999999999]*len(self.data.observation)
-        #     return [9999999999]*len(self.data.observation)
+        if phi >= 0.22 or phi <= 0.0095:
+            self.data.approximation = [9999999999]*len(self.data.observation)
+            return [9999999999]*len(self.data.observation)
+        elif k >= 1.2e-12 or k <= 0.8e-16:
+            self.data.approximation = [9999999999]*len(self.data.observation)
+            return [9999999999]*len(self.data.observation)
 
         approximation = self.model(variables)
         if len(approximation) != len(self.data.observation):
@@ -57,7 +57,7 @@ class Model():
             # print("Call with estimated error")   
             residual = (self.data.observation - approximation)/error
         end = time.clock()
-        phi, k = self.transf1(variables)
+        # phi, k = self.transf1(variables)
         print('Calling residual ({}): Phi: {} k: {} Chi-squared: {} Time Elapsed: {}'.format(self.calls, phi, k, self.__chi_squared(error), end-start))
         return residual
 
@@ -115,10 +115,10 @@ class Model():
             for phi in phi_guess:
                 iterat += 1
                 initial_parameters = [phi, k]
-                initial_parameters = self.transf0(initial_parameters)
+                # initial_parameters = self.transf0(initial_parameters)
                 # optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), diag=(1./1e-2,1./1e-15), epsfcn=1.7) # if flag is 1 - found a good soln
                 optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), epsfcn=1.7) # if flag is 1 - found a good soln
-                optimal_parameters = self.transf1(optimal_parameters)
+                # optimal_parameters = self.transf1(optimal_parameters)
                 chi_squared = self.__chi_squared(self.data.error)
                 print('Iter {}: Phi: {} k: {} Chi squared: {}'.format(iterat, phi,k,chi_squared))
                 # chi_squared_magnitude = np.floor(np.log10(chi_squared))
@@ -139,7 +139,7 @@ class Model():
         initial_parameters = self.generate_initial_guess(initial_guess, single_run)
         if not single_run:
             # optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), diag=(1./1e-2,1./1e-15), epsfcn=1.7) # if flag is 1 - found a good soln            
-            optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error),diag=(1./1e-2,1./1e-15)) # if flag is 1 - found a good soln
+            optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error),epsfcn=1.7) # if flag is 1 - found a good soln
         else:
             optimal_parameters = initial_parameters
         chi_squared = self.__chi_squared(self.data.error)
@@ -148,7 +148,7 @@ class Model():
         if verbose:
             print('Total model calls: {} Total time spent: {}'.format(self.calls, (end_time-start_time)))
             print('Initial Guess: {}'.format(initial_parameters))
-            print('Optimal Phi: {} Optimal k: {}'.format(optimal_parameters[0], optimal_parameters[1]))
+            print('Optimal Phi: {} Optimal k: {} Chi-squared: {}'.format(optimal_parameters[0], optimal_parameters[1], chi_squared))
         self.calls = 0
         return optimal_parameters
 
@@ -228,8 +228,8 @@ class SKG9D(Model):
         # permeability = 2.76e-15	# initial permeability (m2)
         # porosity = parameters[2]
         # permeability = parameters[3]
-        porosity, permeability = self.transf1(parameters)
-        # porosity, permeability = parameters
+        # porosity, permeability = self.transf1(parameters)
+        porosity, permeability = parameters
         
         start_datfile = time.time()
         # write values in the AUTOUGH2 dat file

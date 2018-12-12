@@ -20,9 +20,9 @@ def transf0(theta):
 
 # Import data from text file
 data = data_class.Data()
-# data.read_file('SKG9D_press.txt')
-data.read_file('SKG9D_test1.dat')
-data.set_error(1.2)
+data.read_file('SKG9D_press.txt')
+# data.read_file('SKG9D_test1.dat')
+# data.set_error(1.2)
 # Create model object
 new_model = model.SKG9D(data)
 
@@ -48,7 +48,7 @@ new_model = model.SKG9D(data)
 start = time_module.clock()
 guess = np.array([0.04, .6e-15])
 # guess = None
-parameters = new_model.find_model_parameters2(guess, verbose=True, single_run=True)
+parameters = new_model.find_model_parameters2(guess, verbose=True, single_run=False)
 
 end = time_module.clock()
 print('---------\nFinding Parameters Time elapsed = {}'.format(end - start))
@@ -72,14 +72,14 @@ with open('simulation_parameters.txt', 'a') as file:
 # optimal_parameters = [1.12315854e-01, 2.53425890e-15]
 # optimal_parameters = [5.36353651e-02, 3.14698023e-15]
 optimal_parameters = parameters
-# c = new_model.model(optimal_parameters)
-c = new_model.model(transf0(optimal_parameters))
+c = new_model.model(optimal_parameters)
+# c = new_model.model(transf0(optimal_parameters))
 c_chi = new_model.chi_squared()
 print(c_chi)
 
-# p = new_model.model([0.082, 2.76e-15])
+p = new_model.model([0.082, 2.76e-15])
 # p = new_model.model(transf0([0.082, 2.76e-15]))
-p = new_model.model(transf0([0.1, 2.6e-15]))
+# p = new_model.model(transf0([0.1, 2.6e-15]))
 chi_squared = new_model.chi_squared()
 print(chi_squared)
 # # print(p)
