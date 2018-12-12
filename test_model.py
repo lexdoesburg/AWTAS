@@ -180,7 +180,7 @@ theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=
 
 # # ----------- New find_model_parameters function-------------------------------------
 
-optimal_parameters = theis_test_1.find_model_parameters2([0.27, 9.82e-12], verbose=True, single_run=True)
+optimal_parameters = theis_test_1.find_model_parameters2(verbose=True)
 plot_solution(theis_test_1, dual_plot=True)
 
 optimal_parameters = theis_test_2.find_model_parameters2(verbose=True)
@@ -196,11 +196,11 @@ optimal_parameters = theis_test_5.find_model_parameters2(verbose=True)
 plot_solution(theis_test_5, dual_plot=True)
 
 # # -----------------------------------------------------------------------------------
-plt.plot(theis_test_1.data.time, theis_test_1.model([0.27, 6.95e-12]), 'k--', label='Initial')
-plt.plot(theis_test_1.data.time, theis_test_1.model(optimal_parameters), 'r-', label='Approximation')
-plt.plot(theis_test_1.data.time, theis_test_1.data.observation, 'kx', label='Data')
-plt.legend(loc='best')
-plt.show()
+# plt.plot(theis_test_1.data.time, theis_test_1.model([0.27, 6.95e-12]), 'k--', label='Initial')
+# plt.plot(theis_test_1.data.time, theis_test_1.model(optimal_parameters), 'r-', label='Approximation')
+# plt.plot(theis_test_1.data.time, theis_test_1.data.observation, 'kx', label='Data')
+# plt.legend(loc='best')
+# plt.show()
 
 
 

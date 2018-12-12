@@ -104,8 +104,8 @@ class Model():
             k_guess = [initial_guess[1]]
         else:
             # print('No initial guess supplied')
-            k_guess = [1e-16, 1e-14, 1e-12]
-            phi_guess = [0.01, 0.105, 0.2]
+            k_guess = [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]
+            phi_guess = np.linspace(0.01, 0.2, 10)
             # phi = 0.105
 
         best_estimate = np.empty(3) # Format, phi, k, chi_sq
@@ -114,14 +114,17 @@ class Model():
         for k in k_guess:
             for phi in phi_guess:
                 initial_parameters = [phi, k]
-                optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), epsfcn=None) # if flag is 1 - found a good soln
+                # optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), epsfcn=None) # if flag is 1 - found a good soln
+                self.data.approximation = self.model(initial_parameters)
                 chi_squared = self.__chi_squared(self.data.error)
-                # print('Phi: {} k: {} Chi squared: {}'.format(phi,k,chi_squared))
+                print('Phi: {} k: {} Chi squared: {}'.format(phi,k,chi_squared))
                 # chi_squared_magnitude = np.floor(np.log10(chi_squared))
                 # truth_test = parameters_in_range(optimal_parameters)
                 # print('Phi: {} k: {} Chi squared: {} Truth test: {}'.format(phi,k,chi_squared,truth_test))
                 if chi_squared < best_estimate[2]:
-                    best_estimate[0], best_estimate[1], best_estimate[2] = optimal_parameters[0], optimal_parameters[1], chi_squared
+                    # best_estimate[0], best_estimate[1], best_estimate[2] = optimal_parameters[0], optimal_parameters[1], chi_squared
+                    best_estimate[0], best_estimate[1], best_estimate[2] = phi, k, chi_squared
+                    
                 # print('Current Best Estimate: {}'.format(best_estimate))
                     
         return best_estimate[:-1]
@@ -136,9 +139,10 @@ class Model():
         self.data.set_unknown_parameters(optimal_parameters)
         end_time = time.clock()
         if verbose:
+            chi_squared = self.__chi_squared(self.data.error)
             print('Total model calls: {} Total time spent: {}'.format(self.calls, (end_time-start_time)))
             print('Initial Guess: {}'.format(initial_parameters))
-            print('Optimal Phi: {} Optimal k: {}'.format(optimal_parameters[0], optimal_parameters[1]))
+            print('Optimal Phi: {} Optimal k: {} Chi-Squared: {}'.format(optimal_parameters[0], optimal_parameters[1], chi_squared))
         self.calls = 0
         return optimal_parameters
 
