@@ -14,9 +14,10 @@ data.read_file('SKG9D_press.txt')
 # Create model object
 new_model = model.SKG9D(data)
 # Check data was read correctly
-print(data.time)
-print(data.observation)
-print('length', len(data.observation))
+# print(data.time)
+# print(data.observation)
+# print('length', len(data.observation))
+
 # Initialise
 # 103.07, 0.2332 optimal
 # initial_parameters = np.array([102., .2, 0.082, 2.76e-15])
@@ -24,27 +25,31 @@ print('length', len(data.observation))
 # r0 = new_model.wellbore_obj(X0)
 # print(r0)
 
-# # Find solution using model
-# start = time_module.clock()
-# guess = np.array([0.04, 2e-15])
-# parameters = new_model.find_model_parameters2(guess, verbose=True)
-# end = time_module.clock()
-# print('---------\nFinding Parameters Time elapsed = {}'.format(end - start))
-# print('---------\n---------\n{}\n---------\n---------\n'.format(parameters))
+# Find solution using model
+start = time_module.clock()
+guess = np.array([0.04, .6e-15])
+# guess = None
+parameters = new_model.find_model_parameters2(guess, verbose=True, single_run=True)
+end = time_module.clock()
+print('---------\nFinding Parameters Time elapsed = {}'.format(end - start))
+print('---------\n---------\n{}\n---------\n---------\n'.format(parameters))
 
-# with open('simulation_parameters.txt', 'a') as file:
-#     # file.write('Initial Pressure (Bar): {}\n'.format(parameters[0]))
-#     # file.write('Initial Steam Mass Fraction: {}\n'.format(parameters[1]))
-#     file.write('Porosity: {}\n'.format(parameters[0]))
-#     file.write('Permeability: {}\n'.format(parameters[1]))
-#     file.write('Time for simulation: {}\n'.format(end-start))
+with open('simulation_parameters.txt', 'a') as file:
+    # file.write('Initial Pressure (Bar): {}\n'.format(parameters[0]))
+    # file.write('Initial Steam Mass Fraction: {}\n'.format(parameters[1]))
+    file.write('Porosity: {}\n'.format(parameters[0]))
+    file.write('Permeability: {}\n'.format(parameters[1]))
+    file.write('Time for simulation: {}\n'.format(end-start))
 
 # initial_parameters = np.array([102.50286809, 0.22538374])
 # initial_parameters = np.array([103.07, 0.2332,0.082,2.76e-15])
 
-optimal_parameters = [0.145, 2.5e-15]
-# optimal_parameters = parameters
-
+# optimal_parameters = [0.015755192744286974, 3.703236263357016e-15]
+# optimal_parameters = [0.01570910057030036, 3.703079600761992e-15]
+# optimal_parameters = [1.04999999e-01, 2.58974857e-15]
+# optimal_parameters = [0.10499999948594617, 2.602715815877674e-15]
+# optimal_parameters = [0.07192956166621617, 2.9056658976041045e-15]
+optimal_parameters = parameters
 c = new_model.model(optimal_parameters)
 c_chi = new_model.chi_squared()
 print(c_chi)

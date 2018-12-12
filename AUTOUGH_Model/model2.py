@@ -34,6 +34,13 @@ class Model():
         phi, k = variables
         self.calls += 1
         start = time.clock()
+        if phi >= 0.22 or phi <= 0.0095:
+            self.data.approximation = [9999999999]*len(self.data.observation)
+            return [9999999999]*len(self.data.observation)
+        elif k >= 1.2e-12 or k <= 0.8e-16:
+            self.data.approximation = [9999999999]*len(self.data.observation)
+            return [9999999999]*len(self.data.observation)
+
         approximation = self.model(variables)
         if len(approximation) != len(self.data.observation):
             num_to_append = len(self.data.observation)-len(approximation)
@@ -83,7 +90,7 @@ class Model():
         print(popt)
         return popt
 
-    def generate_initial_guess(self, initial_guess=None):
+    def generate_initial_guess(self, initial_guess=None, single_run=False):
         k_range = np.array([1e-16, 1e-12]) # Range of feasible permeabilities
         phi_range = (0.01, 0.2) # Range of feasible porosities
         
@@ -97,7 +104,7 @@ class Model():
         #     else:
         #         return False
 
-        if initial_guess is not None:
+        if initial_guess is not None and not single_run:
             # print('Initial guess supplied')
             phi, k = initial_guess
             k_magnitude = np.floor(np.log10(k))
@@ -116,9 +123,12 @@ class Model():
                 phi_guess = [phi-phi_search_range, phi, phi_range[1]]
             else:
                 phi_guess = [phi-phi_search_range, phi, phi+phi_search_range]
+        elif initial_guess is not None and single_run:
+            phi_guess = [initial_guess[0]]
+            k_guess = [initial_guess[1]]
         else:
             # print('No initial guess supplied')
-            k_guess = [1e-16, 1e-14, 1e-12]
+            k_guess = [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]
             phi_guess = [0.01, 0.105, 0.2]
             # phi = 0.105
 
@@ -128,7 +138,7 @@ class Model():
         for k in k_guess:
             for phi in phi_guess:
                 initial_parameters = [phi, k]
-                optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), diag=(1./1e-2,1./1e-16)) # if flag is 1 - found a good soln
+                optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), diag=(1./1e-2,1./1e-16), epsfcn=1.7) # if flag is 1 - found a good soln
                 chi_squared = self.__chi_squared(self.data.error)
                 print('Phi: {} k: {} Chi squared: {}'.format(phi,k,chi_squared))
                 # chi_squared_magnitude = np.floor(np.log10(chi_squared))
@@ -142,10 +152,12 @@ class Model():
                     
         return best_estimate[:-1]
 
-    def find_model_parameters2(self, initial_guess=None, verbose=False):
+    def find_model_parameters2(self, initial_guess=None, verbose=False, single_run=False):
         start_time = time.clock()
-        initial_parameters = self.generate_initial_guess(initial_guess)
-        optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), diag=(1./1e-2,1./1e-16)) # if flag is 1 - found a good soln
+        # initial_guess = self.transf0(initial_guess)
+        # print('Initial guess = {}'.format(initial_guess))
+        initial_parameters = self.generate_initial_guess(initial_guess, single_run)
+        optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), diag=(1./1e-2,1./1e-16), epsfcn=1.7) # if flag is 1 - found a good soln
         chi_squared = self.__chi_squared(self.data.error)
         self.data.set_unknown_parameters(optimal_parameters)
         end_time = time.clock()
@@ -155,6 +167,17 @@ class Model():
             print('Optimal Phi: {} Optimal k: {}'.format(optimal_parameters[0], optimal_parameters[1]))
         self.calls = 0
         return optimal_parameters
+
+    def transf0(self, theta):
+        """transform parameter vector to a new base adapted for automated calibration
+
+        Args:
+            theta (list): parameter vector in original base
+        """
+        xlim = [0.01, 0.2]	# initial phi range
+        ylim = [1e-16, 1e-12]	# initial k range
+        return [(theta[0]-xlim[0])/(xlim[1]-xlim[0]), (theta[1]-ylim[0])/(ylim[1]-ylim[0])]
+
 
     def find_model_parameters(self, variables=None, curve_fit=False, verbose=False):
         """
@@ -282,11 +305,24 @@ from t2listing import *
 import csv
 
 class SKG9D(Model):
+    # parameter space
+        
+    def transf1(self, X):
+        """transform parameter vector to their original base
+
+        Args:
+            X (list): parameter vector in adapted base
+        """
+        xlim = [0.01, 0.2]	# initial phi range
+        ylim = [1e-16, 1e-12]	# initial k range
+        return [X[0]*(xlim[1]-xlim[0])+xlim[0], X[1]*(ylim[1]-ylim[0])+ylim[0]]
+
+
     def model(self, parameters, verbose=False):
         """
         """
         # Parameter space
-
+        
         # Parameters to determine
         p0 = 103.07e5 # Initial reservoir pressure (Pa)
         x0 = 0.2332		# initial steam mass fraction
@@ -294,6 +330,7 @@ class SKG9D(Model):
         # permeability = 2.76e-15	# initial permeability (m2)
         # porosity = parameters[2]
         # permeability = parameters[3]
+        # porosity, permeability = self.transf1(parameters)
         porosity, permeability = parameters
         
         start_datfile = time.time()
@@ -340,12 +377,15 @@ class SKG9D(Model):
             # print('Inside exception')
             list_p = [0]*123
 
+        if list_p == []:
+            list_p = [0]*123
+
         start_deletion = time.time()
         # Delete negative pressures
         while list_p[-1] < 0.:
             # list_t = list_t[:-2]
             # list_h = list_h[:-2]
-            list_p = list_p[:-2]
+            list_p = list_p[:-1]
         self.data.set_approximation(list_p)
         end_deletion = time.time()
         deletion_time = end_deletion-start_deletion
