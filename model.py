@@ -66,7 +66,7 @@ class Model():
         print(popt)
         return popt
 
-    def generate_initial_guess(self, initial_guess=None):
+    def generate_initial_guess(self, initial_guess=None, single_run=False):
         k_range = np.array([1e-16, 1e-12]) # Range of feasible permeabilities
         phi_range = (0.01, 0.2) # Range of feasible porosities
         
@@ -80,7 +80,7 @@ class Model():
         #     else:
         #         return False
 
-        if initial_guess is not None:
+        if initial_guess is not None and not single_run:
             # print('Initial guess supplied')
             phi, k = initial_guess
             k_magnitude = np.floor(np.log10(k))
@@ -99,6 +99,9 @@ class Model():
                 phi_guess = [phi-phi_search_range, phi, phi_range[1]]
             else:
                 phi_guess = [phi-phi_search_range, phi, phi+phi_search_range]
+        elif initial_guess is not None and single_run:
+            phi_guess = [initial_guess[0]]
+            k_guess = [initial_guess[1]]
         else:
             # print('No initial guess supplied')
             k_guess = [1e-16, 1e-14, 1e-12]
@@ -111,7 +114,7 @@ class Model():
         for k in k_guess:
             for phi in phi_guess:
                 initial_parameters = [phi, k]
-                optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error)) # if flag is 1 - found a good soln
+                optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), epsfcn=None) # if flag is 1 - found a good soln
                 chi_squared = self.__chi_squared(self.data.error)
                 # print('Phi: {} k: {} Chi squared: {}'.format(phi,k,chi_squared))
                 # chi_squared_magnitude = np.floor(np.log10(chi_squared))
@@ -123,10 +126,13 @@ class Model():
                     
         return best_estimate[:-1]
 
-    def find_model_parameters2(self, initial_guess=None, verbose=False):
+    def find_model_parameters2(self, initial_guess=None, verbose=False, single_run=False):
         start_time = time.clock()
-        initial_parameters = self.generate_initial_guess(initial_guess)
-        optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error)) # if flag is 1 - found a good soln
+        initial_parameters = self.generate_initial_guess(initial_guess, single_run=single_run)
+        if not single_run:
+            optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), epsfcn=None) # if flag is 1 - found a good soln
+        else:
+            optimal_parameters = initial_parameters
         self.data.set_unknown_parameters(optimal_parameters)
         end_time = time.clock()
         if verbose:
