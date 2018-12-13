@@ -66,16 +66,18 @@ phi = 0.1
 rho = 813.37 # Water at 240 degrees celsius
 nu = 0.0001111 # Water at 240 degrees celsius
 C = 0.001303 # Water at 240 degrees celsius
-t = 15 # days
-t = t * 24 * 60 * 60
+# t = 15 # days
+# t = t * 24 * 60 * 60
+t = 54000 # secs
+
 print(t)
-time = np.linspace(0, t, num=1000)
+time = np.linspace(0, t, num=270)
 parameters = [p0, qm, h, rho, nu, C, r]
 test1_variables = [phi, k]
 
 # Build model
 # theis_test_1 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=1e-4)
-theis_test_1 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=300)
+theis_test_1 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=300, noise=False)
 theis_test_5 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=300)
 theis_test_5.data.set_error(300)
 # -----------------------------------------------------------------------------------
@@ -180,20 +182,20 @@ theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=
 
 # # ----------- New find_model_parameters function-------------------------------------
 
-optimal_parameters = theis_test_1.find_model_parameters2(verbose=True)
-plot_solution(theis_test_1, dual_plot=True)
+# optimal_parameters = theis_test_1.find_model_parameters2(verbose=True)
+# plot_solution(theis_test_1, dual_plot=True)
 
-optimal_parameters = theis_test_2.find_model_parameters2(verbose=True)
-plot_solution(theis_test_2, dual_plot=True)
+# optimal_parameters = theis_test_2.find_model_parameters2(verbose=True)
+# plot_solution(theis_test_2, dual_plot=True)
 
-optimal_parameters = theis_test_3.find_model_parameters2(verbose=True)
-plot_solution(theis_test_3, dual_plot=True)
+# optimal_parameters = theis_test_3.find_model_parameters2(verbose=True)
+# plot_solution(theis_test_3, dual_plot=True)
 
-optimal_parameters = theis_test_4.find_model_parameters2(verbose=True)
-plot_solution(theis_test_4, dual_plot=True)
+# optimal_parameters = theis_test_4.find_model_parameters2(verbose=True)
+# plot_solution(theis_test_4, dual_plot=True)
 
-optimal_parameters = theis_test_5.find_model_parameters2(verbose=True)
-plot_solution(theis_test_5, dual_plot=True)
+# optimal_parameters = theis_test_5.find_model_parameters2(verbose=True)
+# plot_solution(theis_test_5, dual_plot=True)
 
 # # -----------------------------------------------------------------------------------
 # plt.plot(theis_test_1.data.time, theis_test_1.model([0.27, 6.95e-12]), 'k--', label='Initial')
@@ -202,6 +204,15 @@ plot_solution(theis_test_5, dual_plot=True)
 # plt.legend(loc='best')
 # plt.show()
 
+# # -----------------------------------------------------------------------------------
+
+time,pressure = np.genfromtxt('theis_test1.txt', delimiter=',', skip_header=0).T
+print(time)
+print(pressure)
+plt.semilogx(np.log(time),pressure,'k-',label='fortran')
+plt.semilogx(np.log(theis_test_1.data.time), theis_test_1.data.observation, 'r--',label='python')
+plt.legend(loc='best')
+plt.show()
 
 
 # # -----------------------------------------------------------------------------------

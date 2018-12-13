@@ -3,7 +3,7 @@ from scipy.special import exp1
 from scipy.optimize import curve_fit
 from scipy.optimize import leastsq
 
-import lmfit
+# import lmfit
 
 import data as data_class
 

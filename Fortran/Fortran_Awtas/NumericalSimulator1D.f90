@@ -9,7 +9,7 @@ module NumericalSimulator1D
 ! nb: M is the number of grid blocks.
 
   integer(I4B)              :: M
-  real(DP), allocatable     :: DR(:),PER(:),POR(:),V(:)     
+  real(DP), allocatable     :: DR(:),PER(:),POR(:),V(:)
   real(DP), allocatable     :: P(:),T(:),SV(:),X(:)
   real(DP), allocatable     :: POLD(:),TOLD(:),SVOLD(:),XOLD(:)
   real(DP), allocatable     :: BMOLD(:),BEOLD(:)
@@ -105,7 +105,7 @@ module NumericalSimulator1D
       time=time+dt
 !     Calculate the mass flow rate and enthalpy (injection only) for the given time:
       call GetFlows(time,FlowIndex,QQMM,HIN,.true.,ResetTimeStepSize)
-  
+
 !     Start of Newton iterations:
 10    IT=0
 
@@ -122,15 +122,15 @@ module NumericalSimulator1D
 	  if (analysisstopped) exit
 
 !     Initialise:
-      P=POLD         
-      T=TOLD         
-      SV=SVOLD         
-      X=XOLD         
-      IPH=IPHOLD 
+      P=POLD
+      T=TOLD
+      SV=SVOLD
+      X=XOLD
+      IPH=IPHOLD
 	  HF=HFOLD
 
 !     Notation: P,T, ... are new time values, POLD, TOLD, ... are old time values
-!     at the start of each time step, or after a Newton-Raphson failure, new values are set 
+!     at the start of each time step, or after a Newton-Raphson failure, new values are set
 !     equal to old values.
 
 11    CONTINUE
@@ -143,9 +143,9 @@ module NumericalSimulator1D
   	  if (IGOOD>0) then  ! Problems... reduce timestep:
 	    call ReduceTimestep(time,dt,FlowIndex,QQMM,HIN,ResetTimeStepSize)
 	    IGOOD=0
-        GO TO 10 
-      end if	  
-	  	 
+        GO TO 10
+      end if
+
 !     Add on the solution increments XX and make any necessary phase changes:
       call UPDATE(M,IPH,P,T,SV,X,XX,EPS)
 
@@ -155,8 +155,8 @@ module NumericalSimulator1D
         IT=IT+1
         if (IT.GT.IMAX) then
 		  call ReduceTimestep(time,dt,FlowIndex,QQMM,HIN,ResetTimeStepSize)
-          GO TO 10 
-        end if 
+          GO TO 10
+        end if
 
         GO TO 11
 
@@ -168,10 +168,10 @@ module NumericalSimulator1D
       call InterpolateResponse(time,dt,TestEndTime,NumericalSolution1D)
 
 !     Update 'old' variables:
-      POLD=P         
-      TOLD=T         
-      SVOLD=SV         
-      XOLD=X         
+      POLD=P
+      TOLD=T
+      SVOLD=SV
+      XOLD=X
       IPHOLD=IPH
 	  HFOLD=HF
 	  ModFlowRateOld=ModFlowRate
@@ -192,17 +192,17 @@ module NumericalSimulator1D
 	deallocate(DoneDataPoints)
 
     return
-    
-  end function NumericalSolution1D 
+
+  end function NumericalSolution1D
 
 ! ------------------------------------------------------------------------------------
 
   subroutine InterpolateResponse(NewTime,dt,TestEndTime,Response)
 !   Interpolates model Response at the observation points and times,
 !   from the results generated at the model block centres and modelled times.
-!   Modelled results are calculated only for observations within the 
+!   Modelled results are calculated only for observations within the
 !   current model timestep [NewTime-dt,NewTime).
-!   It's assumed that the data are in chronological order. 
+!   It's assumed that the data are in chronological order.
 
 !   Argument Variables:
     real(DP), intent(in)    :: NewTime, dt,TestEndTime
@@ -238,14 +238,14 @@ module NumericalSimulator1D
 		theta=(ObsTime-OldTime)/dt
 
 !       If theta<0, reset to 0:
-        theta=max(theta,0.0_dp)  
-!       (This shouldn't really happen, but could if there 
+        theta=max(theta,0.0_dp)
+!       (This shouldn't really happen, but could if there
 !       are datapoints for t<0, for example.)
 
 	    if ((theta<1.0_dp).or.(NewTime==TestEndTime)) then
 
 !         Interpolate modelled value.  Since the underlying model is
-!         a finite-volume model, spatial interpolation is assumed 
+!         a finite-volume model, spatial interpolation is assumed
 !         constant over each grid block.
 
 		  OneMinusTheta=1.0_dp-theta
@@ -255,7 +255,7 @@ module NumericalSimulator1D
 		    if (ObsPoint(i)%IsPumpObsPoint) then
 			  OldValue=ModFlowRateOld
 			  NewValue=ModFlowRate
-			end if 
+			end if
 		  case(1) ! Pressure:
 		    OldValue=InterpolateBlockValue(POLD,BlockNo)
 			NewValue=InterpolateBlockValue(P,BlockNo)
@@ -263,7 +263,7 @@ module NumericalSimulator1D
 		    OldValue=InterpolateBlockValue(TOLD,BlockNo)
 			NewValue=InterpolateBlockValue(T,BlockNo)
 		  case(3) ! Enthalpy:
-		    OldValue=HFOLD 
+		    OldValue=HFOLD
 			NewValue=HF
 		  end select
 
@@ -275,7 +275,7 @@ module NumericalSimulator1D
         else ! theta>=1:
 
 !         Finished for this observation point.
-		  exit		  
+		  exit
 
 		end if
 
@@ -298,7 +298,7 @@ module NumericalSimulator1D
 	integer(I4B), intent(in):: BlockNo
 	real(DP):: InterpolateBlockValue
 
-    if (BlockNo==0) then 
+    if (BlockNo==0) then
       InterpolateBlockValue=SandFaceWeight1*Values(1)+ &
 	    SandFaceWeight2*Values(2)+SandFaceWeight3*Values(3)
 	else
@@ -311,9 +311,9 @@ module NumericalSimulator1D
 ! ----------------------------------------------------------------------------------
 
   subroutine CalculateSandfaceWeights
-!   Calculates weighting factors for sandface extrapolation.  
-!   This is done by fitting a quadratic through the 
-!   first 3 block centres to fit the value at the sandface.  
+!   Calculates weighting factors for sandface extrapolation.
+!   This is done by fitting a quadratic through the
+!   first 3 block centres to fit the value at the sandface.
 
 !   Locals:
     real(DP):: d1,x2,x3
@@ -324,7 +324,7 @@ module NumericalSimulator1D
     SandFaceWeight1=(4._dp*x2*x3+d1*(2._dp*(x2+x3)+d1))/(4._dp*x2*x3)
 	SandFaceWeight2=d1*(2._dp*x3+d1)/(4._dp*x2*(x2-x3))
 	SandFaceWeight3=d1*(2._dp*x2+d1)/(4._dp*x3*(x3-x2))
-    
+
 	return
   end subroutine CalculateSandfaceWeights
 
@@ -338,36 +338,36 @@ module NumericalSimulator1D
 !   Argument variables:
     real(DP), intent(in) :: LayerThickness, ActionWellRadius
 
-	call SetupBlockSizes(ActionWellRadius) 
+	call SetupBlockSizes(ActionWellRadius)
     call CalculateGridGeometryParameters(ActionWellRadius,LayerThickness)
 !   Work out observation point positions on the grid:
     call GetObsPointGridPositions(ActionWellRadius)
 !   Calculate weighting factors for sandface interpolation:
-    if (not(WellBlockIncl)) call CalculateSandfaceWeights
-	
+    if (.NOT.WellBlockIncl) call CalculateSandfaceWeights
+
 	return
   end subroutine SetupGrid
-  
+
 ! ------------------------------------------------------------------------
 
   subroutine SetupFractionalGrid(LayerThickness,ActionWellRadius,FractionalDimension)
-!   Sets up fractional-dimension radial grid for the simulation, of thickness 
+!   Sets up fractional-dimension radial grid for the simulation, of thickness
 !   'LayerThickness' and dimension FractionalDimension.
 
 !   Argument variables:
     real(DP), intent(in) :: LayerThickness, ActionWellRadius, FractionalDimension
 
-	call SetupBlockSizes(ActionWellRadius) 
+	call SetupBlockSizes(ActionWellRadius)
     call CalculateFractionalGridGeometryParameters(ActionWellRadius,&
 	  LayerThickness,FractionalDimension)
 !   Work out observation point positions on the grid:
     call GetObsPointGridPositions(ActionWellRadius)
 !   Calculate weighting factors for sandface interpolation:
     call CalculateSandfaceWeights
-	
+
 	return
   end subroutine SetupFractionalGrid
-    
+
 ! ------------------------------------------------------------------------
 
   subroutine SetupBlockSizes(ActionWellRadius)
@@ -382,7 +382,7 @@ module NumericalSimulator1D
 !   Local variables:
     real(DP),parameter     :: ConstDR=0.05_dp
 	real(DP),parameter     :: GrowthFactor=1.2_dp
-    integer(I4B),parameter :: NConstBlocks=10 
+    integer(I4B),parameter :: NConstBlocks=10
 	integer(I4B)           :: i
 !   No. of blocks (hard-coded for now):
 	M=100
@@ -401,8 +401,8 @@ module NumericalSimulator1D
       DR(1)=ActionWellRadius
 	  do i=2,NConstBlocks
 	    DR(i)=ConstDR
-	  end do     
-	else ! No well block:     
+	  end do
+	else ! No well block:
 	  do i=1,NConstBlocks
 	    DR(i)=ConstDR
 	  end do
@@ -491,7 +491,7 @@ module NumericalSimulator1D
 ! ------------------------------------------------------------------------
 
   subroutine GetObsPointGridPositions(rw)
-! Work out grid position of each observation point- this is used to 
+! Work out grid position of each observation point- this is used to
 ! interpolate the model response from the grid values to the actual
 ! observation point position.  Here a piecewise-constant representation
 ! of pressure & temperatures over the grid is assumed, so we need only
@@ -557,7 +557,7 @@ module NumericalSimulator1D
 !   Local variables:
     real(DP):: Ks,TargetRs,Rs,R0,R1
 	integer(I4B):: i,NumSkinBlocks
-	real(DP), parameter :: Safety=0.1  
+	real(DP), parameter :: Safety=0.1
 
 	TargetRs=max(2.0_dp,dexp(-SkinFactor+Safety))*ActionWellRadius
 
@@ -595,9 +595,9 @@ module NumericalSimulator1D
   end subroutine AssignBlockProperties
 
 ! ------------------------------------------------------------------------
-      
+
   subroutine AssignInitialConditions(InitialPressure,InitialX)
-!   Assigns initial conditions (InitialPressure,InitialX) to all 
+!   Assigns initial conditions (InitialPressure,InitialX) to all
 !   blocks in the grid.
 
 !   Argument Variables:
@@ -642,7 +642,7 @@ module NumericalSimulator1D
 	end select
 
     return
-  end subroutine GetLeakyRechargeParameters       
+  end subroutine GetLeakyRechargeParameters
 
 ! ------------------------------------------------------------------------
 
@@ -662,9 +662,9 @@ module NumericalSimulator1D
     deallocate(DR,PER,POR,V)
 	deallocate(P,T,SV,X)
 	deallocate(POLD,TOLD,SVOLD,XOLD)
-	deallocate(BMOLD,BEOLD) 
-	deallocate(IPH,IPHOLD) 
-	deallocate(A,DELR,XK) 
+	deallocate(BMOLD,BEOLD)
+	deallocate(IPH,IPHOLD)
+	deallocate(A,DELR,XK)
 	deallocate(XX,RR,COMP)
 	deallocate(ObsPointGridBlock)
     return
@@ -672,6 +672,4 @@ module NumericalSimulator1D
 
 ! ------------------------------------------------------------------------------------
 
-end module NumericalSimulator1D  
-
-
+end module NumericalSimulator1D

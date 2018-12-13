@@ -1,3 +1,6 @@
+! gfortran -o pseudodata pseudodata.f90 variable_types.o problem_data.o variable_parameters.o models.o noise.o theis_solution.o utility_functions.o
+
+
 program PseudoData
 
 ! Generates artificial test data by adding random noise to the results
@@ -58,7 +61,7 @@ read(*,*) ModelType
 ! Problem dimensions:
 NPumps=1
 
-MaxNPumpTimes=1000  
+MaxNPumpTimes=1000
 
 select case (ModelType)
 case(0)
@@ -95,8 +98,8 @@ allocate(variable(NVariables))
 
 Pump(1)%NData=1
 
-write (*,*) ' Enter model parameters:'
-read (*,*) (variable(i),i=1,NVariables)
+! write (*,*) ' Enter model parameters:'
+! read (*,*) (variable(i),i=1,NVariables)
 
 select case (ModelType)
 
@@ -109,6 +112,8 @@ select case (ModelType)
 	case (1)
       open(unit=dat,file='wellfit_theis.dat',status='old')
       read(dat,*) k,nu,phi,rho,c,b,Q0,P0
+      variable(1)=k
+      variable(2)=phi
       ReservoirCondition(1)=P0
       FixedParameter(1)=0.0_DP
       FixedParameter(2)=b
@@ -142,7 +147,7 @@ select case (ModelType)
     write(*,*) 'Data file:'
     read(*,'(a)') DataFileName
     open(unit=dat,file=DataFileName,status='old')
-	read(dat,*) Pressure0,X0 
+	read(dat,*) Pressure0,X0
 	read(dat,*) rw,thick,CR,COND,RHOR,COMP
     ReservoirCondition(1)=Pressure0
 	ReservoirCondition(2)=X0
@@ -162,7 +167,7 @@ select case (ModelType)
     read(dat,*) Pump(1)%Scheme,Pump(1)%NData
 	do i=1,Pump(1)%NData
 	  read(dat,*) PumpData(1,i)%time,PumpData(1,i)%rate
-	end do	
+	end do
 	close(dat)
 
   case(3,4) ! Numerical models with variable k/phi:
@@ -170,7 +175,7 @@ select case (ModelType)
     write(*,*) 'Data file:'
     read(*,'(a)') DataFileName
     open(unit=dat,file=DataFileName,status='old')
-	read(dat,*) Pressure0,X0 
+	read(dat,*) Pressure0,X0
 	read(dat,*) rw,thick,CR,COND,RHOR,COMP,COMT
     ReservoirCondition(1)=Pressure0
 	ReservoirCondition(2)=X0
@@ -191,7 +196,7 @@ select case (ModelType)
     read(dat,*) Pump(1)%Scheme,Pump(1)%NData
 	do i=1,Pump(1)%NData
 	  read(dat,*) PumpData(1,i)%time,PumpData(1,i)%rate
-	end do	
+	end do
 	close(dat)
 
   case(5) ! Multi-layer model:
@@ -199,7 +204,7 @@ select case (ModelType)
     write(*,*) 'Data file:'
     read(*,'(a)') DataFileName
     open(unit=dat,file=DataFileName,status='old')
-	read(dat,*) Pressure0,X0 
+	read(dat,*) Pressure0,X0
 	read(dat,*) rw,thick
 	read(dat,*) fracth,fracsp
 	read(dat,*) CRF,CONDF,RHORF,COMPF
@@ -222,7 +227,7 @@ select case (ModelType)
     FixedParameter(14)=0.0_dp
     FixedParameter(15)=0.0_dp
 	FixedParameter(16)=0.0_dp
-    FixedParameter(17)=0.0_dp   
+    FixedParameter(17)=0.0_dp
 	read(dat,*) Pump(1)%Enthalpy, StepRates
 	if (StepRates==0) then
 	  Pump(1)%StepFlows=.false.
@@ -232,7 +237,7 @@ select case (ModelType)
     read(dat,*) Pump(1)%Scheme,Pump(1)%NData
 	do i=1,Pump(1)%NData
 	  read(dat,*) PumpData(1,i)%time,PumpData(1,i)%rate
-	end do	
+	end do
 	close(dat)
 
 end select
@@ -274,64 +279,84 @@ do ObsPointNo=1,NObsPoints
   end if
 
   write (*,*) 'Time range (start t, dt, end t) :'
+  write (*,*) 'Attempting to read'
   read (*,*) t0,dt,t1
-
+  write (*,*) 'Attempt 1'
   ObsPoint(ObsPointNo)%NData=0
+  write (*,*) 'Attempt 2'
   do t=t0,t1,dt
-
+    write (*,*) 'Attempt 3'
     DataNo=DataNo+1
+    write (*,*) 'Attempt 4'
     if (DataNo<=MaxTotalNData) then
+      write (*,*) 'Attempt 5'
       ReadData(DataNo)%time=t
+      write (*,*) 'Attempt 6'
       ObsPoint(ObsPointNo)%NData=ObsPoint(ObsPointNo)%NData+1
     else
+      write (*,*) 'Attempt 7'
       write (*,'(a,i5)') 'Too many data- can handle only',MaxTotalNData
       stop
     end if
 
   end do
-
+  write (*,*) 'Attempt 8'
   TotalNData=TotalNData+ObsPoint(ObsPointNo)%NData
 
 end do  ! ObsPoint loop.
-
+write (*,*) 'Attempt 9'
 allocate(TestData(TotalNData))
+write (*,*) 'Attempt 10'
 TestData=ReadData(1:TotalNData)
-
+write (*,*) 'Attempt 11'
 ! Assign ObsPoint errors to TestData:
 ObsPoint%Weight=1.0_dp
+write (*,*) 'Attempt 12'
 TestData%Weight=1.0_dp
+write (*,*) 'Attempt 13'
 do ObsPointNo=1,NObsPoints
+  write (*,*) 'Attempt 14'
   lower=ObsPoint(ObsPointNo)%DataIndex
+  write (*,*) 'Attempt 15'
   upper=lower+ObsPoint(ObsPointNo)%NData-1
+  write (*,*) 'Attempt 16'
   TestData(lower:upper)%error=ObsPoint(ObsPointNo)%error
 end do
-
+write (*,*) 'Attempt 17'
 ! Generate modelled values:
+! TestData%ModelledValue=1
 TestData%ModelledValue=model(variable,updatemodelprogress)
-
+write (*,*) 'Attempt 18'
 ! Add random noise:
  call AddNoise
 
 ! Write file:
-
+write (*,*) 'Attempt 19'
 write (out,'(10(e15.5,1x))') (variable(i),i=1,NVariables)
+write (*,*) 'Attempt 20'
 write (out,'(i15)') NObsPoints
+write (*,*) 'Attempt 21'
 write (out,*)
-
+write (*,*) 'Attempt 22'
 DataNo=0
-
+write (*,*) 'Attempt 23'
 do ObsPointNo=1,NObsPoints
-
+  write (*,*) 'Attempt 24'
   write (out,'(i15,1x,i15)') ObsPointNo,ObsPoint(ObsPointNo)%Property
+  write (*,*) 'Attempt 25'
   write (out,'(e15.5,1x,e15.5)') ObsPoint(ObsPointNo)%Position%x(1),ObsPoint(ObsPointNo)%DataOffset
+  write (*,*) 'Attempt 26'
   write (out,'(i15,1x,e15.5)') ObsPoint(ObsPointNo)%NData,ObsPoint(ObsPointNo)%Error
+  write (*,*) 'Attempt 27'
   do i=1,ObsPoint(ObsPointNo)%NData
+    write (*,*) 'Attempt 28'
     DataNo=DataNo+1
-    write (out,'(e15.6,1x,e15.6)') TestData(DataNo)%time,TestData(DataNo)%ModelledValue
+    write (*,*) 'Attempt 29'
+    write (out,'(e30.25,1x,e30.25)') TestData(DataNo)%time,TestData(DataNo)%ModelledValue
   end do
 
 end do
-
+write (*,*) 'Attempt 30'
 close(out)
 
 stop
@@ -346,6 +371,6 @@ subroutine updatemodelprogress(nummodelruns,timestepsize, &
   integer(I4B), intent(in) :: nummodelruns
   real(DP), intent(in) :: timestepsize,progressfraction
   logical(LGT), intent(inout) :: analysisstopped
-  
+
   return
 end subroutine updatemodelprogress
