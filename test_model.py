@@ -77,7 +77,7 @@ test1_variables = [phi, k]
 
 # Build model
 # theis_test_1 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=1e-4)
-theis_test_1 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=300, noise=False)
+theis_test_1 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=150, noise=True)
 theis_test_5 = setup_model('theis', parameters, test1_variables, time, test_num=1, sd=300)
 theis_test_5.data.set_error(300)
 # -----------------------------------------------------------------------------------
@@ -206,11 +206,13 @@ theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=
 
 # # -----------------------------------------------------------------------------------
 
-time,pressure = np.genfromtxt('theis_test1.txt', delimiter=',', skip_header=0).T
+time,pressure = np.genfromtxt('theis_test1.txt', delimiter=' ', skip_header=0).T
 print(time)
 print(pressure)
-plt.semilogx(np.log(time),pressure,'k-',label='fortran')
-plt.semilogx(np.log(theis_test_1.data.time), theis_test_1.data.observation, 'r--',label='python')
+# plt.semilogx(np.log(time),pressure,'kx',label='fortran')
+# plt.semilogx(np.log(theis_test_1.data.time), theis_test_1.data.observation, 'ro',label='python')
+plt.plot(time,pressure,'kx',label='fortran')
+plt.plot(theis_test_1.data.time, theis_test_1.data.observation, 'rx',label='python')
 plt.legend(loc='best')
 plt.show()
 
