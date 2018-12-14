@@ -233,20 +233,7 @@ module theis_main
     TestData(lower:upper)%error=ObsPoint(1)%error
     ! Generate modelled values:
     TestData%ModelledValue=model(variable,updatemodelprogress)
-    ! Write file:
-    ! write (out,'(10(e15.5,1x))') (variable(i),i=1,NVariables)
-    ! write (out,'(i15)') NObsPoints
-    ! write (out,*)
-    ! DataNo=0
-    ! write (out,'(i15,1x,i15)') ObsPointNo,ObsPoint(1)%Property
-    ! write (out,'(e15.5,1x,e15.5)') ObsPoint(1)%Position%x(1),ObsPoint(1)%DataOffset
-    ! write (out,'(i15,1x,e15.5)') ObsPoint(1)%NData,ObsPoint(1)%Error
-    ! do i=1,ObsPoint(1)%NData
-    !   DataNo=DataNo+1
-    !   write (out,'(e30.25,1x,e30.25)') TestData(DataNo)%time,TestData(DataNo)%ModelledValue
-    ! end do
     pressure = TestData%ModelledValue
-    ! close(out)
     return
   end subroutine Theis
 
