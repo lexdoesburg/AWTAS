@@ -1,5 +1,6 @@
-Pressure0,X0
-rw,thick,CR,COND,RHOR,COMP
+13500000,260
+0.16,290,0.5,COND,RHOR,2.44E-11
 Pump(1)%Enthalpy, StepRates
 Pump(1)%Scheme,Pump(1)%NData
 PumpData(1,i)%time,PumpData(1,i)%rate
+phi=0.1,k=7.13E-15

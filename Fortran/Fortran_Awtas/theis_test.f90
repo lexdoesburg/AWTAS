@@ -2,7 +2,7 @@
 ! gfortran -o pseudodata pseudodata.f90 variable_types.o problem_data.o variable_parameters.o models.o noise.o theis_solution.o utility_functions.o
 
 ! For homogeneous porous simulator
-! gfortran -o pseudodata pseudodata.f90 variable_types.o problem_data.o variable_parameters.o models.o noise.o theis_solution.o utility_functions.o homogeneousporous.o thermodynamics.o numericalsimulator1d_routines.o NumericalSimulator1D.o gammafunction.o matrixsolvers.o modelprogress.o
+! gfortran -o theis_test theis_test.f90 variable_types.o problem_data.o variable_parameters.o models.o noise.o theis_solution.o utility_functions.o homogeneousporous.o thermodynamics.o numericalsimulator1d_routines.o NumericalSimulator1D.o gammafunction.o matrixsolvers.o modelprogress.o
 program PseudoData
 
 ! Generates artificial test data by adding random noise to the results
@@ -18,9 +18,12 @@ use noise
 
 implicit none
 
+character(len=60) :: inFile
+character(len=60) :: outFile
+
 ! Global variables:
 integer(I4B) :: out,dat
-character(len=60) :: outfile
+! character(len=60) :: outfile
 integer(I4B) :: MaxTotalNData
 integer(I4B) :: ObsPointNo,i,DataNo
 real(DP) :: t,t0,dt,t1
@@ -38,28 +41,32 @@ real(DP) :: WellRadius
 
 external updatemodelprogress
 
+call get_command_argument(1,inFile)
+call get_command_argument(2,outFile)
+
 dat=10
 out=11
 
 MaxTotalNData=5000
 
-write (*,*) 'Output file name:'
-read (*,'(a)') outfile
+! write (*,*) 'Output file name:'
+! read (*,'(a)') outfile
 
-open (unit=out,file=outfile,status='replace')
-write (*,*) ' Number of observation points:'
-read(*,*) NObsPoints
+open (unit=out,file=outFile,status='replace')
+! write (*,*) ' Number of observation points:'
+! read(*,*) NObsPoints
+NObsPoints=1
 
-! Get model type:
-write(*,*) ' Model type:'
-write(*,*) '   0: analytical'
-write(*,*) '   1: numerical homogeneous'
-write(*,*) '   2: numerical fractional'
-write(*,*) '   3: numerical homogeneous (variable k/phi)'
-write(*,*) '   4: numerical fractional (variable k/phi)'
-write(*,*) '   5: multi-layer:'
-read(*,*) ModelType
-
+! ! Get model type:
+! write(*,*) ' Model type:'
+! write(*,*) '   0: analytical'
+! write(*,*) '   1: numerical homogeneous'
+! write(*,*) '   2: numerical fractional'
+! write(*,*) '   3: numerical homogeneous (variable k/phi)'
+! write(*,*) '   4: numerical fractional (variable k/phi)'
+! write(*,*) '   5: multi-layer:'
+! read(*,*) ModelType
+ModelType=0
 ! Problem dimensions:
 NPumps=1
 
@@ -107,12 +114,12 @@ select case (ModelType)
 
   case(0) ! Analytical:
 
-    write(*,*) ' Pumping type (1:constant, 2:sinusoidal):'
-    read(*,*) Pump(1)%Scheme
-
+    ! write(*,*) ' Pumping type (1:constant, 2:sinusoidal):'
+    ! read(*,*) Pump(1)%Scheme
+    Pump(1)%Scheme=1
     select case (Pump(1)%Scheme)
 	case (1)
-      open(unit=dat,file='wellfit_theis.dat',status='old')
+      open(unit=dat,file=inFile,status='old')
       read(dat,*) k,nu,phi,rho,c,b,Q0,P0
       variable(1)=k
       variable(2)=phi
@@ -251,28 +258,29 @@ do ObsPointNo=1,NObsPoints
 
   write (*,'(a,i2,a)') 'Observation Point ',ObsPointNo,'...'
 
-  select case (ModelType)
-  case(0) ! Analytical:
-    write (*,*) 'Property (0: flow, 1:pressure):'
-  case(1:5) ! Numerical:
-    write (*,*) 'Property (1:pressure, 2:temperature, 3: enthalpy):'
-  end select
-
-  read (*,*) ObsPoint(ObsPointNo)%Property
-
+  ! select case (ModelType)
+  ! case(0) ! Analytical:
+  !   write (*,*) 'Property (0: flow, 1:pressure):'
+  ! case(1:5) ! Numerical:
+  !   write (*,*) 'Property (1:pressure, 2:temperature, 3: enthalpy):'
+  ! end select
+  !
+  ! read (*,*) ObsPoint(ObsPointNo)%Property
+  ObsPoint(ObsPointNo)%Property=1
 !  write (*,*) 'Data offset:'
 !  read (*,*) ObsPoint(ObsPointNo)%DataOffset
    ObsPoint(ObsPointNo)%DataOffset=0.0
 
-  write (*,*) 'Distance from action well:'
-  read (*,*) ObsPoint(ObsPointNo)%Position%x(1)
+  ! write (*,*) 'Distance from action well:'
+  ! read (*,*) ObsPoint(ObsPointNo)%Position%x(1)
+  ObsPoint(ObsPointNo)%Position%x(1)=0.05
 
   ObsPoint(ObsPointNo)%Position%x(2)=0.0  ! Not used.
   ObsPoint(ObsPointNo)%Position%x(3)=0.0  ! Not used.
 
-  write (*,*) 'Error:'
-  read (*,*) ObsPoint(ObsPointNo)%Error
-!   ObsPoint(ObsPointNo)%Error=0.0
+  ! write (*,*) 'Error:'
+  ! read (*,*) ObsPoint(ObsPointNo)%Error
+  ObsPoint(ObsPointNo)%Error=0.0
 
   if (ObsPointNo>1) then
     ObsPoint(ObsPointNo)%DataIndex=ObsPoint(ObsPointNo-1)%DataIndex+ObsPoint(ObsPointNo-1)%NData
@@ -280,85 +288,87 @@ do ObsPointNo=1,NObsPoints
     ObsPoint(ObsPointNo)%DataIndex=1
   end if
 
-  write (*,*) 'Time range (start t, dt, end t) :'
-  write (*,*) 'Attempting to read'
-  read (*,*) t0,dt,t1
-  write (*,*) 'Attempt 1'
+  ! write (*,*) 'Time range (start t, dt, end t) :'
+  ! read (*,*) t0,dt,t1
+  t0=0
+  dt=200
+  t1=54000
+  ! write (*,*) 'Attempt 1'
   ObsPoint(ObsPointNo)%NData=0
-  write (*,*) 'Attempt 2'
+  ! write (*,*) 'Attempt 2'
   do t=t0,t1,dt
-    write (*,*) 'Attempt 3'
+    ! write (*,*) 'Attempt 3'
     DataNo=DataNo+1
-    write (*,*) 'Attempt 4'
+    ! write (*,*) 'Attempt 4'
     if (DataNo<=MaxTotalNData) then
-      write (*,*) 'Attempt 5'
+      ! write (*,*) 'Attempt 5'
       ReadData(DataNo)%time=t
-      write (*,*) 'Attempt 6'
+      ! write (*,*) 'Attempt 6'
       ObsPoint(ObsPointNo)%NData=ObsPoint(ObsPointNo)%NData+1
     else
-      write (*,*) 'Attempt 7'
+      ! write (*,*) 'Attempt 7'
       write (*,'(a,i5)') 'Too many data- can handle only',MaxTotalNData
       stop
     end if
 
   end do
-  write (*,*) 'Attempt 8'
+  ! write (*,*) 'Attempt 8'
   TotalNData=TotalNData+ObsPoint(ObsPointNo)%NData
 
 end do  ! ObsPoint loop.
-write (*,*) 'Attempt 9'
+! write (*,*) 'Attempt 9'
 allocate(TestData(TotalNData))
-write (*,*) 'Attempt 10'
+! write (*,*) 'Attempt 10'
 TestData=ReadData(1:TotalNData)
-write (*,*) 'Attempt 11'
+! write (*,*) 'Attempt 11'
 ! Assign ObsPoint errors to TestData:
 ObsPoint%Weight=1.0_dp
-write (*,*) 'Attempt 12'
+! write (*,*) 'Attempt 12'
 TestData%Weight=1.0_dp
-write (*,*) 'Attempt 13'
+! write (*,*) 'Attempt 13'
 do ObsPointNo=1,NObsPoints
-  write (*,*) 'Attempt 14'
+  ! write (*,*) 'Attempt 14'
   lower=ObsPoint(ObsPointNo)%DataIndex
-  write (*,*) 'Attempt 15'
+  ! write (*,*) 'Attempt 15'
   upper=lower+ObsPoint(ObsPointNo)%NData-1
-  write (*,*) 'Attempt 16'
+  ! write (*,*) 'Attempt 16'
   TestData(lower:upper)%error=ObsPoint(ObsPointNo)%error
 end do
-write (*,*) 'Attempt 17'
+! write (*,*) 'Attempt 17'
 ! Generate modelled values:
 ! TestData%ModelledValue=1
 TestData%ModelledValue=model(variable,updatemodelprogress)
-write (*,*) 'Attempt 18'
+! write (*,*) 'Attempt 18'
 ! Add random noise:
  call AddNoise
 
 ! Write file:
-write (*,*) 'Attempt 19'
+! write (*,*) 'Attempt 19'
 write (out,'(10(e15.5,1x))') (variable(i),i=1,NVariables)
-write (*,*) 'Attempt 20'
+! write (*,*) 'Attempt 20'
 write (out,'(i15)') NObsPoints
-write (*,*) 'Attempt 21'
+! write (*,*) 'Attempt 21'
 write (out,*)
-write (*,*) 'Attempt 22'
+! write (*,*) 'Attempt 22'
 DataNo=0
-write (*,*) 'Attempt 23'
+! write (*,*) 'Attempt 23'
 do ObsPointNo=1,NObsPoints
-  write (*,*) 'Attempt 24'
+  ! write (*,*) 'Attempt 24'
   write (out,'(i15,1x,i15)') ObsPointNo,ObsPoint(ObsPointNo)%Property
-  write (*,*) 'Attempt 25'
+  ! write (*,*) 'Attempt 25'
   write (out,'(e15.5,1x,e15.5)') ObsPoint(ObsPointNo)%Position%x(1),ObsPoint(ObsPointNo)%DataOffset
-  write (*,*) 'Attempt 26'
+  ! write (*,*) 'Attempt 26'
   write (out,'(i15,1x,e15.5)') ObsPoint(ObsPointNo)%NData,ObsPoint(ObsPointNo)%Error
-  write (*,*) 'Attempt 27'
+  ! write (*,*) 'Attempt 27'
   do i=1,ObsPoint(ObsPointNo)%NData
-    write (*,*) 'Attempt 28'
+    ! write (*,*) 'Attempt 28'
     DataNo=DataNo+1
-    write (*,*) 'Attempt 29'
+    ! write (*,*) 'Attempt 29'
     write (out,'(e30.25,1x,e30.25)') TestData(DataNo)%time,TestData(DataNo)%ModelledValue
   end do
 
 end do
-write (*,*) 'Attempt 30'
+! write (*,*) 'Attempt 30'
 close(out)
 
 stop
