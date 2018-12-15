@@ -1,3 +1,2 @@
-import TheisSolution
+from theis_wrapper import Theis
 
-# print(TheisSolution.__doc__)

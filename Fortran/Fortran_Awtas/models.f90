@@ -6,7 +6,7 @@ module models
   use variable_types
   use theis_solution
   ! use sinusoidal_isothermal
-  use HomogeneousPorousSimulator
+  ! use HomogeneousPorousSimulator
   ! use FractionalSimulator
   ! use VariableKPhiSimulator
   ! use FractionalVariableKPhiSimulator
@@ -46,8 +46,8 @@ module models
         ! case (2)
         !   model=AnalyticalSinusoidal(variable)
         end select
-      case (1)  ! Homogeneous porous layer- numerical:
-		model=HomogeneousPorous(variable,updatemodelprogress)
+    !   case (1)  ! Homogeneous porous layer- numerical:
+		! model=HomogeneousPorous(variable,updatemodelprogress)
 	  ! case (2)  ! Numerical fractional dimension model:
 		! model=Fractional(variable,updatemodelprogress)
 	  ! case (3)  ! Homog. porous model with variable k/phi:

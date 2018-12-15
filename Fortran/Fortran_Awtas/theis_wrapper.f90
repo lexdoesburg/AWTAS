@@ -1,6 +1,6 @@
 module theis_wrapper
 
-  use iso_c_binding
+  use iso_c_binding, only: c_double, c_int
   use theis_main, only: Theis
 
   implicit none
@@ -16,3 +16,5 @@ module theis_wrapper
   end subroutine c_Theis
 
 end module theis_wrapper
+
+! gfortran -o only_theis.exe main.f90 theis_main.o variable_types.o problem_data.o variable_parameters.o models.o theis_solution.o utility_functions.o

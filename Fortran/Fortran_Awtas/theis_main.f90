@@ -142,7 +142,7 @@
 
 module theis_main
 
-  use iso_c_binding
+  ! use iso_c_binding
   use variable_types
   use problem_data
   use variable_parameters
@@ -247,3 +247,5 @@ module theis_main
   end subroutine updatemodelprogress
 
 end module theis_main
+
+! gfortran -o only_theis.exe theis_main.f90 variable_types.o problem_data.o variable_parameters.o models.o theis_solution.o utility_functions.o
