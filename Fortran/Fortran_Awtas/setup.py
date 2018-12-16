@@ -22,6 +22,7 @@ ext_modules = [Extension(# module name:
                          ['theis_wrapper.pyx'],
                          # other compile args for gcc
                          extra_compile_args=['-fPIC', '-O3'],
+                         libraries=['gfortran'],
                          # other files to link to
                          extra_link_args=['variable_types.o', 'variable_parameters.o',
                                           'utility_functions.o', 'problem_data.o',

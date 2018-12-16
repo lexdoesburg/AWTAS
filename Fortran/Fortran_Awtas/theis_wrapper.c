@@ -1313,6 +1313,10 @@ static CYTHON_INLINE void __Pyx_SafeReleaseBuffer(Py_buffer* info);
 static Py_ssize_t __Pyx_minusones[] = { -1, -1, -1, -1, -1, -1, -1, -1 };
 static Py_ssize_t __Pyx_zeros[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
+/* BufferIndexError.proto */
+static void __Pyx_RaiseBufferIndexError(int axis);
+
+#define __Pyx_BufPtrStrided1d(type, buf, i0, s0) (type)((char*)buf + i0 * s0)
 /* PyThreadStateGet.proto */
 #if CYTHON_FAST_THREAD_STATE
 #define __Pyx_PyThreadState_declare  PyThreadState *__pyx_tstate;
@@ -1730,11 +1734,11 @@ static PyObject *__pyx_codeobj__9;
 /* Late includes */
 
 /* "theis_wrapper.pyx":7
- *     void c_Theis(double* k, double* nu, double* phi, double* rho, double* c, double* b, double* Q0, double* P0, double* r, double* t0, double* dt, double* t1, int* numData, double* pressure)
+ *     void c_theis(double* k, double* nu, double* phi, double* rho, double* c, double* b, double* Q0, double* P0, double* r, double* t0, double* dt, double* t1, int* numData, double* pressure)
  * 
  * def theis(double k, double nu, double phi, double rho, double c, double b, double Q0, double P0, double r, double t0, double dt, double t1, int numData):             # <<<<<<<<<<<<<<
  *     cdef ndarray[double] pressure = empty(numData)
- *     #c_Theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, &pressure[0])
+ *     c_theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, &pressure[0])
  */
 
 /* Python wrapper */
@@ -1931,6 +1935,8 @@ static PyObject *__pyx_pf_13theis_wrapper_theis(CYTHON_UNUSED PyObject *__pyx_se
   PyObject *__pyx_t_3 = NULL;
   PyObject *__pyx_t_4 = NULL;
   PyArrayObject *__pyx_t_5 = NULL;
+  Py_ssize_t __pyx_t_6;
+  int __pyx_t_7;
   __Pyx_RefNannySetupContext("theis", 0);
   __pyx_pybuffer_pressure.pybuffer.buf = NULL;
   __pyx_pybuffer_pressure.refcount = 0;
@@ -1941,8 +1947,8 @@ static PyObject *__pyx_pf_13theis_wrapper_theis(CYTHON_UNUSED PyObject *__pyx_se
  * 
  * def theis(double k, double nu, double phi, double rho, double c, double b, double Q0, double P0, double r, double t0, double dt, double t1, int numData):
  *     cdef ndarray[double] pressure = empty(numData)             # <<<<<<<<<<<<<<
- *     #c_Theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, &pressure[0])
- *     c_Theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, <double*> pressure.data)
+ *     c_theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, &pressure[0])
+ *     #c_theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, <double*> pressure.data)
  */
   __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_empty); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 8, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
@@ -1978,17 +1984,28 @@ static PyObject *__pyx_pf_13theis_wrapper_theis(CYTHON_UNUSED PyObject *__pyx_se
   __pyx_v_pressure = ((PyArrayObject *)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "theis_wrapper.pyx":10
+  /* "theis_wrapper.pyx":9
+ * def theis(double k, double nu, double phi, double rho, double c, double b, double Q0, double P0, double r, double t0, double dt, double t1, int numData):
  *     cdef ndarray[double] pressure = empty(numData)
- *     #c_Theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, &pressure[0])
- *     c_Theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, <double*> pressure.data)             # <<<<<<<<<<<<<<
+ *     c_theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, &pressure[0])             # <<<<<<<<<<<<<<
+ *     #c_theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, <double*> pressure.data)
  *     return pressure
  */
-  c_Theis((&__pyx_v_k), (&__pyx_v_nu), (&__pyx_v_phi), (&__pyx_v_rho), (&__pyx_v_c), (&__pyx_v_b), (&__pyx_v_Q0), (&__pyx_v_P0), (&__pyx_v_r), (&__pyx_v_t0), (&__pyx_v_dt), (&__pyx_v_t1), (&__pyx_v_numData), ((double *)__pyx_v_pressure->data));
+  __pyx_t_6 = 0;
+  __pyx_t_7 = -1;
+  if (__pyx_t_6 < 0) {
+    __pyx_t_6 += __pyx_pybuffernd_pressure.diminfo[0].shape;
+    if (unlikely(__pyx_t_6 < 0)) __pyx_t_7 = 0;
+  } else if (unlikely(__pyx_t_6 >= __pyx_pybuffernd_pressure.diminfo[0].shape)) __pyx_t_7 = 0;
+  if (unlikely(__pyx_t_7 != -1)) {
+    __Pyx_RaiseBufferIndexError(__pyx_t_7);
+    __PYX_ERR(0, 9, __pyx_L1_error)
+  }
+  c_theis((&__pyx_v_k), (&__pyx_v_nu), (&__pyx_v_phi), (&__pyx_v_rho), (&__pyx_v_c), (&__pyx_v_b), (&__pyx_v_Q0), (&__pyx_v_P0), (&__pyx_v_r), (&__pyx_v_t0), (&__pyx_v_dt), (&__pyx_v_t1), (&__pyx_v_numData), (&(*__Pyx_BufPtrStrided1d(double *, __pyx_pybuffernd_pressure.rcbuffer->pybuffer.buf, __pyx_t_6, __pyx_pybuffernd_pressure.diminfo[0].strides))));
 
   /* "theis_wrapper.pyx":11
- *     #c_Theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, &pressure[0])
- *     c_Theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, <double*> pressure.data)
+ *     c_theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, &pressure[0])
+ *     #c_theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, <double*> pressure.data)
  *     return pressure             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
@@ -1997,11 +2014,11 @@ static PyObject *__pyx_pf_13theis_wrapper_theis(CYTHON_UNUSED PyObject *__pyx_se
   goto __pyx_L0;
 
   /* "theis_wrapper.pyx":7
- *     void c_Theis(double* k, double* nu, double* phi, double* rho, double* c, double* b, double* Q0, double* P0, double* r, double* t0, double* dt, double* t1, int* numData, double* pressure)
+ *     void c_theis(double* k, double* nu, double* phi, double* rho, double* c, double* b, double* Q0, double* P0, double* r, double* t0, double* dt, double* t1, int* numData, double* pressure)
  * 
  * def theis(double k, double nu, double phi, double rho, double c, double b, double Q0, double P0, double r, double t0, double dt, double t1, int numData):             # <<<<<<<<<<<<<<
  *     cdef ndarray[double] pressure = empty(numData)
- *     #c_Theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, &pressure[0])
+ *     c_theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, &pressure[0])
  */
 
   /* function exit code */
@@ -4642,11 +4659,11 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GIVEREF(__pyx_tuple__7);
 
   /* "theis_wrapper.pyx":7
- *     void c_Theis(double* k, double* nu, double* phi, double* rho, double* c, double* b, double* Q0, double* P0, double* r, double* t0, double* dt, double* t1, int* numData, double* pressure)
+ *     void c_theis(double* k, double* nu, double* phi, double* rho, double* c, double* b, double* Q0, double* P0, double* r, double* t0, double* dt, double* t1, int* numData, double* pressure)
  * 
  * def theis(double k, double nu, double phi, double rho, double c, double b, double Q0, double P0, double r, double t0, double dt, double t1, int numData):             # <<<<<<<<<<<<<<
  *     cdef ndarray[double] pressure = empty(numData)
- *     #c_Theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, &pressure[0])
+ *     c_theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, &pressure[0])
  */
   __pyx_tuple__8 = PyTuple_Pack(14, __pyx_n_s_k, __pyx_n_s_nu, __pyx_n_s_phi, __pyx_n_s_rho, __pyx_n_s_c, __pyx_n_s_b, __pyx_n_s_Q0, __pyx_n_s_P0, __pyx_n_s_r, __pyx_n_s_t0, __pyx_n_s_dt, __pyx_n_s_t1, __pyx_n_s_numData, __pyx_n_s_pressure); if (unlikely(!__pyx_tuple__8)) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__8);
@@ -4979,11 +4996,11 @@ if (!__Pyx_RefNanny) {
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "theis_wrapper.pyx":7
- *     void c_Theis(double* k, double* nu, double* phi, double* rho, double* c, double* b, double* Q0, double* P0, double* r, double* t0, double* dt, double* t1, int* numData, double* pressure)
+ *     void c_theis(double* k, double* nu, double* phi, double* rho, double* c, double* b, double* Q0, double* P0, double* r, double* t0, double* dt, double* t1, int* numData, double* pressure)
  * 
  * def theis(double k, double nu, double phi, double rho, double c, double b, double Q0, double P0, double r, double t0, double dt, double t1, int numData):             # <<<<<<<<<<<<<<
  *     cdef ndarray[double] pressure = empty(numData)
- *     #c_Theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, &pressure[0])
+ *     c_theis(&k, &nu, &phi, &rho, &c, &b, &Q0, &P0, &r, &t0, &dt, &t1, &numData, &pressure[0])
  */
   __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_13theis_wrapper_1theis, NULL, __pyx_n_s_theis_wrapper); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
@@ -6078,6 +6095,12 @@ static int __Pyx__GetBufferAndValidate(
 fail:;
   __Pyx_SafeReleaseBuffer(buf);
   return -1;
+}
+
+/* BufferIndexError */
+  static void __Pyx_RaiseBufferIndexError(int axis) {
+  PyErr_Format(PyExc_IndexError,
+     "Out of bounds on buffer access (axis %d)", axis);
 }
 
 /* PyErrFetchRestore */

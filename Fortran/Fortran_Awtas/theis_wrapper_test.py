@@ -1,2 +1,4 @@
-from theis_wrapper import Theis
+from theis_wrapper import theis
+
+
 

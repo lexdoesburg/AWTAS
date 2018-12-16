@@ -152,7 +152,7 @@ module theis_main
 
   contains
 
-  subroutine Theis(k,nu,phi,rho,c,b,Q0,P0,r,t0,dt,t1,numData,pressure)
+  subroutine theis(k,nu,phi,rho,c,b,Q0,P0,r,t0,dt,t1,numData,pressure)
     ! Arguments
     real(DP), intent(in) :: k,nu,phi,rho,c,b,Q0,P0,r,t0,dt,t1
     integer(I4B), intent(in) :: numData
@@ -235,7 +235,7 @@ module theis_main
     TestData%ModelledValue=model(variable,updatemodelprogress)
     pressure = TestData%ModelledValue
     return
-  end subroutine Theis
+  end subroutine theis
 
   subroutine updatemodelprogress(nummodelruns,timestepsize, &
     progressfraction, analysisstopped)
