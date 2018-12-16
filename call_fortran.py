@@ -5,16 +5,39 @@ import model
 import data
 import numpy as np
 import matplotlib.pyplot as plt
+from theis_wrapper import theis
 
 program = '/Users/lexdoesburg/Documents/Uni2018/Summer_Research/Summer_Project/AWTAS/Fortran/Fortran_Awtas/theis_test.exe'
 # arguments = ['wellfit_theis.dat','theis_testdata.txt']
-start = time.time()
+fe_start = time.time()
 subprocess.call([program, 'wellfit_theis.dat', 'theis_testdata.txt'])
-end = time.time()
+fe_end = time.time()
 
-print('Fortran Time elapsed: {}'.format(end-start))
+# Fortran module
+fm_start = time.time()
 
-start = time.time()
+P0 = 3.6e6 # Pa
+b = 100 # m
+r = 0.05 # m
+Q0 = -0.005 # m^3/s
+k = 1e-12 # m^2
+phi = 0.1
+rho = 813.37 # Water at 240 degrees celsius
+nu = 0.0001111 # Water at 240 degrees celsius
+c = 0.001303 # Water at 240 degrees celsius
+t0 = 0
+dt = 200
+t1 = 54000
+numData = 271
+
+# time = np.linspace(0,54000,271)
+fm_pressure = theis(k, nu, phi, rho, c, b, Q0, P0, r, t0, dt, t1, numData)
+fm_end = time.time()
+# print(fm_pressure)
+
+# Python Module
+pm_start = time.time()
+
 theis_data = data.Data()
 theis_data.time = np.linspace(0,54000,271)
 
@@ -32,17 +55,22 @@ parameters = [p0, qm, h, rho, nu, C, r]
 
 theis_data.parameters = parameters
 theis_model = model.Theis_Solution(theis_data)
-pressure = theis_model.model([phi,k])
-end = time.time()
+pm_pressure = theis_model.model([phi,k])
+pm_end = time.time()
 
-print('Python Time elapsed: {}'.format(end-start))
+print('Fortran Executable Time elapsed: {}'.format(fe_end-fe_start))
+print('Fortran Module time elapsed = {}'.format(fm_end-fm_start))
+print('Python Time elapsed: {}'.format(pm_end-pm_start))
 
-time,pressure1 = np.genfromtxt('theis_testdata.txt', delimiter=' ', skip_header=6).T
+print(pm_pressure-fm_pressure)
 
-plt.plot(time,pressure1,'k-',label='Fortran')
-plt.plot(theis_data.time, pressure,'r--',label='Python')
-plt.legend(loc='best')
-plt.show()
+time,fe_pressure = np.genfromtxt('theis_testdata.txt', delimiter=' ', skip_header=6).T
+
+# plt.plot(time,fe_pressure,'k-',label='Fortran Executable')
+# plt.plot(theis_data.time, fm_pressure,'g--',label='Fortran Module')
+# plt.plot(theis_data.time, pm_pressure,'r:',label='Python')
+# plt.legend(loc='best')
+# plt.show()
 
 
 # import subprocess
