@@ -7,12 +7,12 @@ module theis_wrapper
 
   contains
 
-  subroutine c_theis(k,nu,phi,rho,c,b,Q0,P0,r,t0,dt,t1,numData,pressure) bind(c)
-    real(c_double), intent(in) :: k,nu,phi,rho,c,b,Q0,P0,r,t0,dt,t1
+  subroutine c_theis(k,nu,phi,rho,c,b,Q0,P0,r,numData,time,pressure) bind(c)
+    real(c_double), intent(in) :: k,nu,phi,rho,c,b,Q0,P0,r
     integer(c_int), intent(in) :: numData
-    ! real(DP), intent(in) :: t(numData)
+    real(c_double), dimension(numData), intent(in) :: time
     real(c_double), dimension(numData), intent(out) :: pressure
-    call Theis(k,nu,phi,rho,c,b,Q0,P0,r,t0,dt,t1,numData,pressure)
+    call theis(k,nu,phi,rho,c,b,Q0,P0,r,numData,time,pressure)
   end subroutine c_theis
 
 end module theis_wrapper

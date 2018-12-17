@@ -152,22 +152,23 @@ module theis_main
 
   contains
 
-  subroutine theis(k,nu,phi,rho,c,b,Q0,P0,r,t0,dt,t1,numData,pressure)
+  subroutine theis(k,nu,phi,rho,c,b,Q0,P0,r,numData,time,pressure)
     ! Arguments
-    real(DP), intent(in) :: k,nu,phi,rho,c,b,Q0,P0,r,t0,dt,t1
+    real(DP), intent(in) :: k,nu,phi,rho,c,b,Q0,P0,r
     integer(I4B), intent(in) :: numData
     ! real(DP), intent(in) :: t(numData)
+    real(DP), dimension(numData), intent(in) :: time
     real(DP), dimension(numData), intent(out) :: pressure
     ! Locals
     integer(I4B) :: MaxTotalNData
     integer(I4B) :: ObsPointNo,i,DataNo
     real(DP), allocatable :: variable(:)
     type(datapoint),allocatable :: ReadData(:)
-    integer(I4B) :: lower,upper,t
+    integer(I4B) :: lower,upper
 
     ! external updatemodelprogress
 
-    MaxTotalNData=5000
+    MaxTotalNData=10000
 
     ! open (unit=out,file=outFile,status='replace')
     NObsPoints=1
@@ -212,10 +213,10 @@ module theis_main
     ObsPoint(1)%DataIndex=1
     ObsPoint(1)%NData=0
 
-    do t=t0,t1,dt
+    do i=1,numData
       DataNo=DataNo+1
       if (DataNo<=MaxTotalNData) then
-        ReadData(DataNo)%time=t
+        ReadData(DataNo)%time=time(i)
         ObsPoint(1)%NData=ObsPoint(1)%NData+1
       else
         write (*,'(a,i5)') 'Too many data- can handle only',MaxTotalNData

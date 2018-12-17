@@ -30,16 +30,17 @@ dt = 200
 t1 = 54000
 numData = 271
 
-# time = np.linspace(0,54000,271)
-fm_pressure = theis(k, nu, phi, rho, c, b, Q0, P0, r, t0, dt, t1, numData)
+time_array = np.linspace(0,54000,10000)
+# fm_pressure = theis(k, nu, phi, rho, c, b, Q0, P0, r, t0, dt, t1, numData)
+fm_pressure = theis(k, nu, phi, rho, c, b, Q0, P0, r, len(time_array), time_array)
 fm_end = time.time()
-# print(fm_pressure)
+print(fm_pressure)
 
 # Python Module
 pm_start = time.time()
 
 theis_data = data.Data()
-theis_data.time = np.linspace(0,54000,271)
+theis_data.time = time_array
 
 p0 = 3.6e6 # Pa
 h = 100 # m
@@ -58,19 +59,18 @@ theis_model = model.Theis_Solution(theis_data)
 pm_pressure = theis_model.model([phi,k])
 pm_end = time.time()
 
+print(pm_pressure-fm_pressure)
 print('Fortran Executable Time elapsed: {}'.format(fe_end-fe_start))
 print('Fortran Module time elapsed = {}'.format(fm_end-fm_start))
 print('Python Time elapsed: {}'.format(pm_end-pm_start))
 
-print(pm_pressure-fm_pressure)
-
 time,fe_pressure = np.genfromtxt('theis_testdata.txt', delimiter=' ', skip_header=6).T
 
 # plt.plot(time,fe_pressure,'k-',label='Fortran Executable')
-# plt.plot(theis_data.time, fm_pressure,'g--',label='Fortran Module')
-# plt.plot(theis_data.time, pm_pressure,'r:',label='Python')
-# plt.legend(loc='best')
-# plt.show()
+plt.plot(theis_data.time, fm_pressure,'g--',label='Fortran Module')
+plt.plot(theis_data.time, pm_pressure,'r:',label='Python')
+plt.legend(loc='best')
+plt.show()
 
 
 # import subprocess
