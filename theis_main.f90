@@ -96,6 +96,15 @@ module theis_main
     ! Generate modelled values:
     TestData%ModelledValue=model(variable,updatemodelprogress)
     pressure = TestData%ModelledValue
+    ! call DestroyProblemDataArrays
+    deallocate(Pump)
+    deallocate(ObsPoint)
+    deallocate(ReadData)
+    deallocate(PumpData)
+    deallocate(FixedParameter)
+    deallocate(ReservoirCondition)
+    deallocate(variable)
+    deallocate(TestData)
     return
   end subroutine theis
 
