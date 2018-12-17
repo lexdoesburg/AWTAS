@@ -6,6 +6,7 @@ import data
 import numpy as np
 import matplotlib.pyplot as plt
 from theis_wrapper import theis
+from theis_solution import theis_solution
 
 program = '/Users/lexdoesburg/Documents/Uni2018/Summer_Research/Summer_Project/AWTAS/Fortran/Fortran_Awtas/theis_test.exe'
 # arguments = ['wellfit_theis.dat','theis_testdata.txt']
@@ -59,10 +60,15 @@ theis_model = model.Theis_Solution(theis_data)
 pm_pressure = theis_model.model([phi,k])
 pm_end = time.time()
 
+rp_start = time.time()
+rp_pressure = theis_solution(p0, qm, k, h, phi, rho, nu, C, r, time_array)
+rp_end = time.time()
+
 print(pm_pressure-fm_pressure)
-print('Fortran Executable Time elapsed: {}'.format(fe_end-fe_start))
-print('Fortran Module time elapsed = {}'.format(fm_end-fm_start))
-print('Python Time elapsed: {}'.format(pm_end-pm_start))
+print('Fortran Executable time elapsed: {}'.format(fe_end-fe_start))
+print('Fortran Module time elapsed: {}'.format(fm_end-fm_start))
+print('Python time elapsed: {}'.format(pm_end-pm_start))
+print('Raw python time elapsed: {}'.format(rp_end-rp_start))
 
 time,fe_pressure = np.genfromtxt('theis_testdata.txt', delimiter=' ', skip_header=6).T
 
