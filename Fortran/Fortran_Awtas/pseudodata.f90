@@ -97,6 +97,7 @@ allocate(ReadData(MaxTotalNData))
 allocate(PumpData(NPumps,MaxNPumpTimes))
 allocate(FixedParameter(NFixedParameters),ReservoirCondition(NReservoirConditions))
 allocate(variable(NVariables))
+allocate(PumpSchemeParams(1,1)) ! added by  lex
 
 Pump(1)%NData=1
 
@@ -146,11 +147,15 @@ select case (ModelType)
 
   case(1,2) ! Numerical models:
 
-    write(*,*) 'Data file:'
-    read(*,'(a)') DataFileName
-    open(unit=dat,file=DataFileName,status='old')
+    ! write(*,*) 'Data file:'
+    ! read(*,'(a)') DataFileName
+    ! open(unit=dat,file=DataFileName,status='old')
+    open(unit=dat,file='wellfit_hporous1.dat',status='old')
+  read(dat,*) phi,k
 	read(dat,*) Pressure0,X0
 	read(dat,*) rw,thick,CR,COND,RHOR,COMP
+  variable(1)=k
+  variable(2)=phi
     ReservoirCondition(1)=Pressure0
 	ReservoirCondition(2)=X0
     FixedParameter(1)=0.0_DP
@@ -164,12 +169,13 @@ select case (ModelType)
 	if (StepRates==0) then
 	  Pump(1)%StepFlows=.false.
 	else
+    PumpSchemeParams(1,1)=StepRates ! lex added
 	  Pump(1)%StepFlows=.true.
 	end if
     read(dat,*) Pump(1)%Scheme,Pump(1)%NData
-	do i=1,Pump(1)%NData
-	  read(dat,*) PumpData(1,i)%time,PumpData(1,i)%rate
-	end do
+	! do i=1,Pump(1)%NData
+	!   read(dat,*) PumpData(1,i)%time,PumpData(1,i)%rate
+	! end do
 	close(dat)
 
   case(3,4) ! Numerical models with variable k/phi:
@@ -270,9 +276,9 @@ do ObsPointNo=1,NObsPoints
   ObsPoint(ObsPointNo)%Position%x(2)=0.0  ! Not used.
   ObsPoint(ObsPointNo)%Position%x(3)=0.0  ! Not used.
 
-  write (*,*) 'Error:'
-  read (*,*) ObsPoint(ObsPointNo)%Error
-!   ObsPoint(ObsPointNo)%Error=0.0
+  ! write (*,*) 'Error:'
+  ! read (*,*) ObsPoint(ObsPointNo)%Error
+  ObsPoint(ObsPointNo)%Error=0.0
 
   if (ObsPointNo>1) then
     ObsPoint(ObsPointNo)%DataIndex=ObsPoint(ObsPointNo-1)%DataIndex+ObsPoint(ObsPointNo-1)%NData
@@ -280,9 +286,12 @@ do ObsPointNo=1,NObsPoints
     ObsPoint(ObsPointNo)%DataIndex=1
   end if
 
-  write (*,*) 'Time range (start t, dt, end t) :'
-  write (*,*) 'Attempting to read'
-  read (*,*) t0,dt,t1
+  ! write (*,*) 'Time range (start t, dt, end t) :'
+  ! write (*,*) 'Attempting to read'
+  ! read (*,*) t0,dt,t1
+  t0=0
+  dt=200
+  t1=54000
   write (*,*) 'Attempt 1'
   ObsPoint(ObsPointNo)%NData=0
   write (*,*) 'Attempt 2'
@@ -328,37 +337,37 @@ write (*,*) 'Attempt 17'
 ! Generate modelled values:
 ! TestData%ModelledValue=1
 TestData%ModelledValue=model(variable,updatemodelprogress)
-write (*,*) 'Attempt 18'
-! Add random noise:
- call AddNoise
+! write (*,*) 'Attempt 18'
+! ! Add random noise:
+!  call AddNoise
 
 ! Write file:
-write (*,*) 'Attempt 19'
+! write (*,*) 'Attempt 19'
 write (out,'(10(e15.5,1x))') (variable(i),i=1,NVariables)
-write (*,*) 'Attempt 20'
+! write (*,*) 'Attempt 20'
 write (out,'(i15)') NObsPoints
-write (*,*) 'Attempt 21'
+! write (*,*) 'Attempt 21'
 write (out,*)
-write (*,*) 'Attempt 22'
+! write (*,*) 'Attempt 22'
 DataNo=0
-write (*,*) 'Attempt 23'
+! write (*,*) 'Attempt 23'
 do ObsPointNo=1,NObsPoints
-  write (*,*) 'Attempt 24'
+  ! write (*,*) 'Attempt 24'
   write (out,'(i15,1x,i15)') ObsPointNo,ObsPoint(ObsPointNo)%Property
-  write (*,*) 'Attempt 25'
+  ! write (*,*) 'Attempt 25'
   write (out,'(e15.5,1x,e15.5)') ObsPoint(ObsPointNo)%Position%x(1),ObsPoint(ObsPointNo)%DataOffset
-  write (*,*) 'Attempt 26'
+  ! write (*,*) 'Attempt 26'
   write (out,'(i15,1x,e15.5)') ObsPoint(ObsPointNo)%NData,ObsPoint(ObsPointNo)%Error
-  write (*,*) 'Attempt 27'
+  ! write (*,*) 'Attempt 27'
   do i=1,ObsPoint(ObsPointNo)%NData
-    write (*,*) 'Attempt 28'
+    ! write (*,*) 'Attempt 28'
     DataNo=DataNo+1
-    write (*,*) 'Attempt 29'
+    ! write (*,*) 'Attempt 29'
     write (out,'(e30.25,1x,e30.25)') TestData(DataNo)%time,TestData(DataNo)%ModelledValue
   end do
 
 end do
-write (*,*) 'Attempt 30'
+! write (*,*) 'Attempt 30'
 close(out)
 
 stop
