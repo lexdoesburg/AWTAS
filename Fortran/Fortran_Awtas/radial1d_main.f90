@@ -88,24 +88,22 @@ module radial1d_main
         ReadData(DataNo)%time=t
         ObsPoint(1)%NData=ObsPoint(1)%NData+1
       else
-        ! write (*,'(a,i5)') 'Too many data- can handle only',MaxTotalNData
+        write (*,'(a,i5)') 'Too many data- can handle only',MaxTotalNData
         stop
       end if
     end do
-    
-    TotalNData=TotalNData+ObsPoint(ObsPointNo)%NData
 
+    TotalNData=TotalNData+ObsPoint(1)%NData
     allocate(TestData(TotalNData))
     TestData=ReadData(1:TotalNData)
 
     ! Assign ObsPoint errors to TestData:
     ObsPoint%Weight=1.0_dp
     TestData%Weight=1.0_dp
-
     lower=ObsPoint(1)%DataIndex
     upper=lower+ObsPoint(1)%NData-1
     TestData(lower:upper)%error=ObsPoint(1)%error
-
+    
     ! Generate modelled values:
     TestData%ModelledValue=model(variable,updatemodelprogress)
     pressure = TestData%ModelledValue
