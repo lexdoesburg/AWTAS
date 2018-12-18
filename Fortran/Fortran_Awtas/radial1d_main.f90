@@ -14,12 +14,14 @@ module radial1d_main
 
   subroutine radial1d(phi,k,Pressure0,X0,rw,thick,CR,COND,RHOR,&
                       COMP,ConstRate,distFromWell,numData,t0,dt,t1,pressure)
+                
     ! Arguments
     real(DP), intent(in) :: phi,k,Pressure0,X0,rw,thick,CR,COND,RHOR,COMP,ConstRate,distFromWell
     real(DP), intent(in) :: t0,dt,t1
     integer(I4B), intent(in) :: numData
     real(DP), dimension(numData), intent(out) :: pressure
-    ! Global variables:
+
+    ! Local variables:
     integer(I4B) :: MaxTotalNData
     integer(I4B) :: ObsPointNo,i,DataNo,t
     real(DP), allocatable :: variable(:)
@@ -47,6 +49,7 @@ module radial1d_main
     allocate(PumpSchemeParams(1,1)) ! added by  lex
 
     Pump(1)%NData=1
+    Pump(1)%Scheme=1 ! Constant rate of flow
 
     variable(1)=k
     variable(2)=phi
@@ -59,12 +62,13 @@ module radial1d_main
     FixedParameter(5)=COND
     FixedParameter(6)=RHOR
     FixedParameter(7)=COMP
+    ! StepRate deleted
     Pump(1)%Enthalpy=0
     PumpSchemeParams(1,1)=ConstRate ! lex added
 	  Pump(1)%StepFlows=.true.
 
-    Pump(1)%Scheme=1 ! Constant rate of flow
-    Pump(1)%NData=numData
+
+    ! Pump(1)%NData=numData
 
     DataNo=0
     TotalNData=0
@@ -76,18 +80,19 @@ module radial1d_main
     ObsPoint(1)%Position%x(3)=0.0  ! Not used.
     ObsPoint(1)%Error=0.0
     ObsPoint(1)%DataIndex=1
-    ObsPoint(1)%NData=numData
+    ObsPoint(1)%NData=0
 
     do t=t0,t1,dt
       DataNo=DataNo+1
       if (DataNo<=MaxTotalNData) then
         ReadData(DataNo)%time=t
-        ! ObsPoint(1)%NData=ObsPoint(1)%NData+1
+        ObsPoint(1)%NData=ObsPoint(1)%NData+1
       else
         ! write (*,'(a,i5)') 'Too many data- can handle only',MaxTotalNData
         stop
       end if
     end do
+    
     TotalNData=TotalNData+ObsPoint(ObsPointNo)%NData
 
     allocate(TestData(TotalNData))
