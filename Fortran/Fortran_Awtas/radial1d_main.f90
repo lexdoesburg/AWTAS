@@ -13,12 +13,14 @@ module radial1d_main
   contains
 
   subroutine radial1d(phi,k,Pressure0,X0,rw,thick,CR,COND,RHOR,&
-                      COMP,ConstRate,distFromWell,numData,t0,dt,t1,pressure)
-                
+                      COMP,ConstRate,distFromWell,numData,time,pressure)
+            ! radial1d(phi,k,Pressure0,X0,rw,thick,CR,COND,RHOR,&
+                                ! COMP,ConstRate,distFromWell,numData,t0,dt,t1,pressure)
     ! Arguments
     real(DP), intent(in) :: phi,k,Pressure0,X0,rw,thick,CR,COND,RHOR,COMP,ConstRate,distFromWell
-    real(DP), intent(in) :: t0,dt,t1
+    ! real(DP), intent(in) :: t0,dt,t1
     integer(I4B), intent(in) :: numData
+    real(DP), dimension(numData), intent(in) :: time
     real(DP), dimension(numData), intent(out) :: pressure
 
     ! Local variables:
@@ -82,13 +84,23 @@ module radial1d_main
     ObsPoint(1)%DataIndex=1
     ObsPoint(1)%NData=0
 
-    do t=t0,t1,dt
+    ! do t=t0,t1,dt
+    !   DataNo=DataNo+1
+    !   if (DataNo<=MaxTotalNData) then
+    !     ReadData(DataNo)%time=t
+    !     ObsPoint(1)%NData=ObsPoint(1)%NData+1
+    !   else
+    !     write (*,'(a,i5)') 'Too many data- can handle only',MaxTotalNData
+    !     stop
+    !   end if
+    ! end do
+    do i=1,numData
       DataNo=DataNo+1
       if (DataNo<=MaxTotalNData) then
-        ReadData(DataNo)%time=t
+        ReadData(DataNo)%time=time(i)
         ObsPoint(1)%NData=ObsPoint(1)%NData+1
       else
-        write (*,'(a,i5)') 'Too many data- can handle only',MaxTotalNData
+        ! write (*,'(a,i5)') 'Too many data- can handle only',MaxTotalNData
         stop
       end if
     end do
@@ -103,7 +115,7 @@ module radial1d_main
     lower=ObsPoint(1)%DataIndex
     upper=lower+ObsPoint(1)%NData-1
     TestData(lower:upper)%error=ObsPoint(1)%error
-    
+
     ! Generate modelled values:
     TestData%ModelledValue=model(variable,updatemodelprogress)
     pressure = TestData%ModelledValue

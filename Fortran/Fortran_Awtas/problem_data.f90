@@ -79,151 +79,151 @@ module problem_data
 			integer(I4B) :: IntervalsPerCycle,i
 		real(DP)     :: NumCycles,Amplitude,Period,Offset,Phase
 		real(DP)     :: ConstantFlow,Duration,SamplingInterval,time
-		  write (*,*) 'Inside GetPumpingData 1'
+		!   write (*,*) 'Inside GetPumpingData 1'
 			if (RunToSS) then
-						  write (*,*) 'Inside GetPumpingData 2'
+						!   write (*,*) 'Inside GetPumpingData 2'
 			NFLOWS=1
-					  write (*,*) 'Inside GetPumpingData 3'
+					!   write (*,*) 'Inside GetPumpingData 3'
 		else
-					  write (*,*) 'Inside GetPumpingData 4'
+					!   write (*,*) 'Inside GetPumpingData 4'
 	!     Determine total number of pumping times:
-	write (*,*) 'Inside GetPumpingData 5'
+	! write (*,*) 'Inside GetPumpingData 5'
 			select case (Pump(1)%Scheme)
 			case(0) ! Measured flows:
-						  write (*,*) 'Inside GetPumpingData 6'
+						!   write (*,*) 'Inside GetPumpingData 6'
 					NFLOWS=Pump(1)%NData
-							  write (*,*) 'Inside GetPumpingData 7'
+							!   write (*,*) 'Inside GetPumpingData 7'
 			case(1) ! Constant rate:
-						  write (*,*) 'Inside GetPumpingData 8'
+						!   write (*,*) 'Inside GetPumpingData 8'
 				ConstantFlow=PumpSchemeParams(1,1)
-						  write (*,*) 'Inside GetPumpingData 9'
+						!   write (*,*) 'Inside GetPumpingData 9'
 					NFLOWS=1
-							  write (*,*) 'Inside GetPumpingData 10'
+							!   write (*,*) 'Inside GetPumpingData 10'
 				Pump(1)%StepFlows=.true.
-						  write (*,*) 'Inside GetPumpingData 11'
+						!   write (*,*) 'Inside GetPumpingData 11'
 			case(2) ! Sinusoidal:
-						  write (*,*) 'Inside GetPumpingData 12'
+						!   write (*,*) 'Inside GetPumpingData 12'
 					IntervalsPerCycle=20 ! Number of points generated per cycle of sinusoidal data
-							  write (*,*) 'Inside GetPumpingData 13'
+							!   write (*,*) 'Inside GetPumpingData 13'
 				Amplitude=PumpSchemeParams(1,1)
-						  write (*,*) 'Inside GetPumpingData 14'
+						!   write (*,*) 'Inside GetPumpingData 14'
 				Period=PumpSchemeParams(1,2)
-						  write (*,*) 'Inside GetPumpingData 15'
+						!   write (*,*) 'Inside GetPumpingData 15'
 				Offset=0.0_dp
-						  write (*,*) 'Inside GetPumpingData 16'
+						!   write (*,*) 'Inside GetPumpingData 16'
 				Phase=0.0_dp
-						  write (*,*) 'Inside GetPumpingData 17'
+						!   write (*,*) 'Inside GetPumpingData 17'
 				NumCycles=TestEndTime/Period
-						  write (*,*) 'Inside GetPumpingData 18'
+						!   write (*,*) 'Inside GetPumpingData 18'
 					NFLOWS=IntervalsPerCycle*NumCycles+1
-							  write (*,*) 'Inside GetPumpingData 19'
+							!   write (*,*) 'Inside GetPumpingData 19'
 				Pump(1)%StepFlows=.false.
-						  write (*,*) 'Inside GetPumpingData 20'
+						!   write (*,*) 'Inside GetPumpingData 20'
 				case(3) ! Offset sinusoidal:
-							  write (*,*) 'Inside GetPumpingData 21'
+							!   write (*,*) 'Inside GetPumpingData 21'
 					IntervalsPerCycle=20
-							  write (*,*) 'Inside GetPumpingData 22'
+							!   write (*,*) 'Inside GetPumpingData 22'
 				Amplitude=PumpSchemeParams(1,1)
-						  write (*,*) 'Inside GetPumpingData 23'
+						!   write (*,*) 'Inside GetPumpingData 23'
 				Period=PumpSchemeParams(1,2)
-						  write (*,*) 'Inside GetPumpingData 24'
+						!   write (*,*) 'Inside GetPumpingData 24'
 				Offset=PumpSchemeParams(1,3)
-						  write (*,*) 'Inside GetPumpingData 25'
+						!   write (*,*) 'Inside GetPumpingData 25'
 				Phase=PumpSchemeParams(1,4)
-						  write (*,*) 'Inside GetPumpingData 26'
+						!   write (*,*) 'Inside GetPumpingData 26'
 				NumCycles=TestEndTime/Period
-						  write (*,*) 'Inside GetPumpingData 27'
+						!   write (*,*) 'Inside GetPumpingData 27'
 					NFLOWS=IntervalsPerCycle*NumCycles+1
-							  write (*,*) 'Inside GetPumpingData 28'
+							!   write (*,*) 'Inside GetPumpingData 28'
 				Pump(1)%StepFlows=.false.
-						  write (*,*) 'Inside GetPumpingData 29'
+						!   write (*,*) 'Inside GetPumpingData 29'
 			case(4) ! Step flow:
-						  write (*,*) 'Inside GetPumpingData 30'
+						!   write (*,*) 'Inside GetPumpingData 30'
 				ConstantFlow=PumpSchemeParams(1,1)
-						  write (*,*) 'Inside GetPumpingData 31'
+						!   write (*,*) 'Inside GetPumpingData 31'
 				Duration=PumpSchemeParams(1,2)
-						  write (*,*) 'Inside GetPumpingData 32'
+						!   write (*,*) 'Inside GetPumpingData 32'
 				NFLOWS=2
-						  write (*,*) 'Inside GetPumpingData 33'
+						!   write (*,*) 'Inside GetPumpingData 33'
 				Pump(1)%StepFlows=.true.
-						  write (*,*) 'Inside GetPumpingData 34'
+						!   write (*,*) 'Inside GetPumpingData 34'
 			end select
-					  write (*,*) 'Inside GetPumpingData 35'
+					!   write (*,*) 'Inside GetPumpingData 35'
 		end if
-				  write (*,*) 'Inside GetPumpingData 36'
+				!   write (*,*) 'Inside GetPumpingData 36'
 
 		allocate(TIM(NFLOWS),FLO(NFLOWS),ENT(NFLOWS))
-				  write (*,*) 'Inside GetPumpingData 37'
+				!   write (*,*) 'Inside GetPumpingData 37'
 
 			if (RunToSS) then ! Turn off pump for steady state run
-						  write (*,*) 'Inside GetPumpingData 38'
+						!   write (*,*) 'Inside GetPumpingData 38'
 			TIM(1)=0.0_dp
-					  write (*,*) 'Inside GetPumpingData 39'
+					!   write (*,*) 'Inside GetPumpingData 39'
 			FLO(1)=0.0_dp
-					  write (*,*) 'Inside GetPumpingData 40'
+					!   write (*,*) 'Inside GetPumpingData 40'
 		else
-					  write (*,*) 'Inside GetPumpingData 41'
-					  write (*,*) 'Inside GetPumpingData 42'
+					!   write (*,*) 'Inside GetPumpingData 41'
+					!   write (*,*) 'Inside GetPumpingData 42'
 	!     Fill the local arrays:
 			select case (Pump(1)%Scheme)
 			case(0) ! Measured flows:
-						  write (*,*) 'Inside GetPumpingData 43'
+						!   write (*,*) 'Inside GetPumpingData 43'
 					TIM=PumpData(1,1:NFLOWS)%time
-							  write (*,*) 'Inside GetPumpingData 44'
+							!   write (*,*) 'Inside GetPumpingData 44'
 				FLO=PumpData(1,1:NFLOWS)%rate
-						  write (*,*) 'Inside GetPumpingData 45'
+						!   write (*,*) 'Inside GetPumpingData 45'
 			case(1) ! Constant rate:
-						  write (*,*) 'Inside GetPumpingData 46'
+						!   write (*,*) 'Inside GetPumpingData 46'
 					TIM(1)=0.0_dp
-							  write (*,*) 'Inside GetPumpingData 47'
+							!   write (*,*) 'Inside GetPumpingData 47'
 				FLO(1)=ConstantFlow
-						  write (*,*) 'Inside GetPumpingData 48'
+						!   write (*,*) 'Inside GetPumpingData 48'
 			case(2,3) ! Sinusoidal:
-						  write (*,*) 'Inside GetPumpingData 49'
+						!   write (*,*) 'Inside GetPumpingData 49'
 					SamplingInterval=Period/IntervalsPerCycle
-							  write (*,*) 'Inside GetPumpingData 50'
+							!   write (*,*) 'Inside GetPumpingData 50'
 					time=0.0_dp
-							  write (*,*) 'Inside GetPumpingData 51'
+							!   write (*,*) 'Inside GetPumpingData 51'
 				do i=1,NFLOWS
-							  write (*,*) 'Inside GetPumpingData 52'
+							!   write (*,*) 'Inside GetPumpingData 52'
 					TIM(i)=time
-							  write (*,*) 'Inside GetPumpingData 53'
+							!   write (*,*) 'Inside GetPumpingData 53'
 				FLO(i)=Offset+Amplitude*dsin(2.0_dp*PI_d*time/Period+Phase)
-						  write (*,*) 'Inside GetPumpingData 54'
+						!   write (*,*) 'Inside GetPumpingData 54'
 				time=time+SamplingInterval
-						  write (*,*) 'Inside GetPumpingData 55'
+						!   write (*,*) 'Inside GetPumpingData 55'
 				end do
-						  write (*,*) 'Inside GetPumpingData 56'
+						!   write (*,*) 'Inside GetPumpingData 56'
 				case(4) ! Step:
-							  write (*,*) 'Inside GetPumpingData 57'
+							!   write (*,*) 'Inside GetPumpingData 57'
 				TIM(1)=0.0_dp
-						  write (*,*) 'Inside GetPumpingData 58'
+						!   write (*,*) 'Inside GetPumpingData 58'
 				FLO(1)=ConstantFlow
-						  write (*,*) 'Inside GetPumpingData 59'
+						!   write (*,*) 'Inside GetPumpingData 59'
 				TIM(2)=Duration
-						  write (*,*) 'Inside GetPumpingData 60'
+						!   write (*,*) 'Inside GetPumpingData 60'
 				FLO(2)=0.0_dp
-						  write (*,*) 'Inside GetPumpingData 61'
+						!   write (*,*) 'Inside GetPumpingData 61'
 			end select
-					  write (*,*) 'Inside GetPumpingData 62'
+					!   write (*,*) 'Inside GetPumpingData 62'
 			end if
-					  write (*,*) 'Inside GetPumpingData 63'
+					!   write (*,*) 'Inside GetPumpingData 63'
 
 	!   Fill enthalpy array- just one value:
 		ENT=Pump(1)%Enthalpy
-				  write (*,*) 'Inside GetPumpingData 64'
+				!   write (*,*) 'Inside GetPumpingData 64'
 
 	!   Flag for flow interpolation type:
 		StepFlows=Pump(1)%StepFlows
-				  write (*,*) 'Inside GetPumpingData 65'
+				!   write (*,*) 'Inside GetPumpingData 65'
 
 	!   Deliverability parameters:
 			OnDeliv=Pump(1)%OnDeliverability
-					  write (*,*) 'Inside GetPumpingData 66'
+					!   write (*,*) 'Inside GetPumpingData 66'
 			ProdIndex=Pump(1)%ProdIndex
-					  write (*,*) 'Inside GetPumpingData 67'
+					!   write (*,*) 'Inside GetPumpingData 67'
 		PCutoff=Pump(1)%CutoffPressure
-				  write (*,*) 'Inside GetPumpingData 68'
+				!   write (*,*) 'Inside GetPumpingData 68'
 
 		return
 		end subroutine GetPumpingData

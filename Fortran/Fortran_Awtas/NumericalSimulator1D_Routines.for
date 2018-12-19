@@ -15,7 +15,6 @@ cc
 !       New version for temp/pressure-dependent porosity & permeability (11/99).
 !       Deliverability added 8/00.
 !       Variable compressibility added 4/02.
- 
       IMPLICIT REAL*8 (A-H,O-Z)       
       DIMENSION P(M),T(M),SV(M),X(M)
       DIMENSION A(M),V(M),DELR(M),COMP(M)

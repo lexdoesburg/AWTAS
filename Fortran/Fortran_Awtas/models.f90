@@ -47,7 +47,7 @@ module models
         !   model=AnalyticalSinusoidal(variable)
         end select
       case (1)  ! Homogeneous porous layer- numerical:
-          write (*,*) 'Calling homogeneousporous from model'
+          ! write (*,*) 'Calling homogeneousporous from model'
 		      model=HomogeneousPorous(variable,updatemodelprogress)
 	  ! case (2)  ! Numerical fractional dimension model:
 		! model=Fractional(variable,updatemodelprogress)

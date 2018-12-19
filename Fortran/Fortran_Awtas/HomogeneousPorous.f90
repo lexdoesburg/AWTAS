@@ -45,7 +45,7 @@ module HomogeneousPorousSimulator
     real(DP)    :: k,phi
 
     external updatemodelprogress
-    write (*,*) 'Inside hp1'
+    ! write (*,*) 'Inside hp1'
 !   Unpack fixed parameters:
     LayerThickness=FixedParameter(2)
 	ActionWellRadius=FixedParameter(3)
@@ -63,12 +63,12 @@ module HomogeneousPorousSimulator
 !   Unpack variable parameters:
     k=variable(1)
     phi=variable(2)
-    write (*,*) 'Inside hp2 - call setupgrid'
+    ! write (*,*) 'Inside hp2 - call setupgrid'
 
 	call SetupGrid(LayerThickness,ActionWellRadius)
-  write (*,*) 'Inside hp3 - call AssignBlockProperties'
+  ! write (*,*) 'Inside hp3 - call AssignBlockProperties'
     call AssignBlockProperties(k,phi,Skin,ActionWellRadius,RechargeCoef,Compressibility)
-    write (*,*) 'Inside hp4 - call numericalsolution1D'
+    ! write (*,*) 'Inside hp4 - call numericalsolution1D'
     HomogeneousPorous=NumericalSolution1D(CR,COND,RHOR,AAA,&
 	   InitialPressure,InitialX,updatemodelprogress,LayerThickness)
 

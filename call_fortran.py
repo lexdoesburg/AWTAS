@@ -33,7 +33,16 @@
 
 # time_array = np.linspace(0,54000,10000)
 # # fm_pressure = theis(k, nu, phi, rho, c, b, Q0, P0, r, t0, dt, t1, numData)
-# # fm_pressure = theis(k, nu, phi, rho, c, b, Q0, P0, r, len(time_array), time_array)
+# print('Entering for loop')
+# for i in range(100,10000,250):    
+#     time_array = np.linspace(0,54000,i)
+#     start = time.time()
+#     fm_pressure = theis(k, nu, phi, rho, c, b, Q0, P0, r, len(time_array), time_array)
+#     end = time.time()
+#     with open('fortran_theis_scaling.txt', 'a') as file:
+#         file.write('{},{}\n'.format(i,end-start))
+# print('Exiting for loop')
+
 # fm_end = time.time()
 # # print(fm_pressure)
 
@@ -117,15 +126,35 @@
 # # end = time.time()
 
 # # print('Fortran Time elapsed: {}'.format(end-start))
+
 import numpy as np
 import matplotlib.pyplot as plt
-time, pressure_1d = np.genfromtxt('1d_radial1.txt', delimiter=',', skip_header=0).T
-time2, pressure_1d2 = np.genfromtxt('1d_radial2.txt', delimiter=',', skip_header=0).T
+# time, pressure_1d = np.genfromtxt('1d_radial1.txt', delimiter=',', skip_header=0).T
+# time2, pressure_1d2 = np.genfromtxt('1d_radial2.txt', delimiter=',', skip_header=0).T
+# # print(time)
+# # print(pressure_1d)
+# plt.plot(time/3600,pressure_1d/1e5,'k-')
+# plt.plot(time2/3600,pressure_1d2/1e5,'r--')
+# plt.xlabel('Time [Hours]')
+# plt.ylabel('Pressure [Bar]')
+# plt.title('Homogeneous Porous Simulator Solution')
+# plt.show()
+
+time, pressure_1d = np.genfromtxt('radial_tester.txt', delimiter=',', skip_header=0).T
+pressure_1d2 = np.genfromtxt('radial_tester2.txt', delimiter=',', skip_header=0).T
 # print(time)
 # print(pressure_1d)
-plt.plot(time/3600,pressure_1d/1e5,'k-')
-plt.plot(time2/3600,pressure_1d2/1e5,'r--')
+print(pressure_1d-pressure_1d2)
+
+# plt.plot(time/3600,pressure_1d/1e5,'k-')
+plt.plot(time/3600,pressure_1d2/1e5,'k-')
 plt.xlabel('Time [Hours]')
 plt.ylabel('Pressure [Bar]')
 plt.title('Homogeneous Porous Simulator Solution')
 plt.show()
+
+# import numpy as np
+# import matplotlib.pyplot as plt
+# num, time_vals = np.genfromtxt('fortran_theis_scaling.txt', delimiter=',', skip_header=0).T
+# plt.plot(num,time_vals)
+# plt.show()

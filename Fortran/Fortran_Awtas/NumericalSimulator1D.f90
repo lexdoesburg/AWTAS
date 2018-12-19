@@ -65,195 +65,195 @@ module NumericalSimulator1D
 	real(DP), parameter     :: EPS=1.0E-6_dp  ! A smallish number
 
     external updatemodelprogress
-    write (*,*) 'Inside ns 1'
+    ! write (*,*) 'Inside ns 1'
 	NumModelRuns=NumModelRuns+1
-  write (*,*) 'Inside ns 2'
+  ! write (*,*) 'Inside ns 2'
     TestEndTime=maxval(TestData(:)%time) ! Last observation time
-write (*,*) 'Inside ns 3'
+! write (*,*) 'Inside ns 3'
     call AssignInitialConditions(InitialPressure,InitialX)
-    write (*,*) 'Inside ns 4'
+    ! write (*,*) 'Inside ns 4'
 	call GetPumpingData(TestEndTime,StepFlows,.false.)
-  write (*,*) 'Inside ns 5'
+  ! write (*,*) 'Inside ns 5'
 
 !   Initialise result:
     NumericalSolution1D=TestData%ModelledValue
-    write (*,*) 'Inside ns 6'
+    ! write (*,*) 'Inside ns 6'
 
     IGOOD=0     ! 'ok' parameter passed from thermo subroutines
-    write (*,*) 'Inside ns 7'
+    ! write (*,*) 'Inside ns 7'
 
 !   Read in initial conditions and decide on the phase conditions:
     call INIT1(M,POLD,XOLD,TOLD,SVOLD,IPHOLD)
-    write (*,*) 'Inside ns 8'
+    ! write (*,*) 'Inside ns 8'
 	P0=POLD
-  write (*,*) 'Inside ns 9'
+  ! write (*,*) 'Inside ns 9'
 	T0=TOLD
-  write (*,*) 'Inside ns 10'
+  ! write (*,*) 'Inside ns 10'
 	ModFlowRateOld=FLO(1)
-  write (*,*) 'Inside ns 11'
+  ! write (*,*) 'Inside ns 11'
 
 !   Calculate recharge parameters (PRECH,TRECH):
     call GetLeakyRechargeParameters(POLD(1),TOLD(1),SVOLD(1),IPHOLD(1),PRECH,HRECH)
-    write (*,*) 'Inside ns 12'
+    ! write (*,*) 'Inside ns 12'
 
 	time=0.0_dp
-  write (*,*) 'Inside ns 13'
+  ! write (*,*) 'Inside ns 13'
 	ResetTimeStepSize=.true.
-  write (*,*) 'Inside ns 14'
+  ! write (*,*) 'Inside ns 14'
 	FlowIndex=1
-  write (*,*) 'Inside ns 15'
+  ! write (*,*) 'Inside ns 15'
 	NTimeSteps=0
-  write (*,*) 'Inside ns 16'
+  ! write (*,*) 'Inside ns 16'
 	call UpdateTimeStepSize(time,TestEndTime,0,FlowIndex,ResetTimeStepSize,&
 	  StepFlows,.false.,dt)
-    write (*,*) 'Inside ns 17'
-    write (*,*) 'Inside ns 18'
+    ! write (*,*) 'Inside ns 17'
+    ! write (*,*) 'Inside ns 18'
     UpdateCounter=0
-    write (*,*) 'Inside ns 19'
+    ! write (*,*) 'Inside ns 19'
 
 !   Main time-stepping loop:
     do while (time<TestEndTime)
-      write (*,*) 'Inside ns 20'
+      ! write (*,*) 'Inside ns 20'
 
 !     Calculate the accumulation terms BMOLD(I),BEOLD(I) at the old time:
 	  call INIT2(M,POLD,XOLD,TOLD,SVOLD,IPHOLD,&
                  BMOLD,BEOLD,POR,RHOR,CR,P0,T0,COMP,COMT,AAA)
-                 write (*,*) 'Inside ns 21'
+                !  write (*,*) 'Inside ns 21'
 
       time=time+dt
-      write (*,*) 'Inside ns 22'
+      ! write (*,*) 'Inside ns 22'
 !     Calculate the mass flow rate and enthalpy (injection only) for the given time:
       call GetFlows(time,FlowIndex,QQMM,HIN,.true.,ResetTimeStepSize)
-      write (*,*) 'Inside ns 23'
+      ! write (*,*) 'Inside ns 23'
 
 !     Start of Newton iterations:
 10    IT=0
-write (*,*) 'Inside ns 24'
+! write (*,*) 'Inside ns 24'
 
       if (UpdateCounter<UpdateInterval) then
-        write (*,*) 'Inside ns 25'
+        ! write (*,*) 'Inside ns 25'
 	    UpdateCounter=UpdateCounter+1
-      write (*,*) 'Inside ns 26'
+      ! write (*,*) 'Inside ns 26'
 	  else
-      write (*,*) 'Inside ns 27'
+      ! write (*,*) 'Inside ns 27'
 !       Display progress & reset counter:
         call updatemodelprogress(NumModelRuns,dt,int(100.0*time/TestEndTime), &
 		  analysisstopped)
-      write (*,*) 'Inside ns 28'
+      ! write (*,*) 'Inside ns 28'
 		UpdateCounter=0
-    write (*,*) 'Inside ns 29'
+    ! write (*,*) 'Inside ns 29'
 	  end if
-write (*,*) 'Inside ns 30'
+! write (*,*) 'Inside ns 30'
 !     Terminate the model run if analysis has been stopped:
 	  if (analysisstopped) exit
-    write (*,*) 'Inside ns 31'
+    ! write (*,*) 'Inside ns 31'
 
 !     Initialise:
       P=POLD
-      write (*,*) 'Inside ns 32'
+      ! write (*,*) 'Inside ns 32'
       T=TOLD
-      write (*,*) 'Inside ns 33'
+      ! write (*,*) 'Inside ns 33'
       SV=SVOLD
-      write (*,*) 'Inside ns 34'
+      ! write (*,*) 'Inside ns 34'
       X=XOLD
-      write (*,*) 'Inside ns 35'
+      ! write (*,*) 'Inside ns 35'
       IPH=IPHOLD
-      write (*,*) 'Inside ns 36'
+      ! write (*,*) 'Inside ns 36'
 	  HF=HFOLD
-    write (*,*) 'Inside ns 37'
+    ! write (*,*) 'Inside ns 37'
 
 !     Notation: P,T, ... are new time values, POLD, TOLD, ... are old time values
 !     at the start of each time step, or after a Newton-Raphson failure, new values are set
 !     equal to old values.
 
 11    CONTINUE
-write (*,*) 'Inside ns 38'
+! write (*,*) 'Inside ns 38'
 
 !     Carry out most of one step of the Newton-Raphson process:
       call SOLVE(P,T,SV,X,IPH,HF,M,POR,PER,A,V,CR,RHOR,COND,&
                  QQMM,HIN,XX,RR,DT,DELR,BMOLD,BEOLD,RMAX,&
                  P0,T0,COMP,COMT,AAA,QMM,XLAM,PRECH,HRECH,LayerThickness)
-      write (*,*) 'Inside ns 39'
+      ! write (*,*) 'Inside ns 39'
 
   	  if (IGOOD>0) then  ! Problems... reduce timestep:
-        write (*,*) 'Inside ns 40'
+        ! write (*,*) 'Inside ns 40'
 	    call ReduceTimestep(time,dt,FlowIndex,QQMM,HIN,ResetTimeStepSize)
-      write (*,*) 'Inside ns 41'
+      ! write (*,*) 'Inside ns 41'
 	    IGOOD=0
-      write (*,*) 'Inside ns 42'
+      ! write (*,*) 'Inside ns 42'
         GO TO 10
-        write (*,*) 'Inside ns 43'
+        ! write (*,*) 'Inside ns 43'
       end if
-      write (*,*) 'Inside ns 44'
+      ! write (*,*) 'Inside ns 44'
 
 !     Add on the solution increments XX and make any necessary phase changes:
       call UPDATE(M,IPH,P,T,SV,X,XX,EPS)
-      write (*,*) 'Inside ns 45'
+      ! write (*,*) 'Inside ns 45'
 
 !     Check for convergence:
       if (RMAX>=RTOL) then
-        write (*,*) 'Inside ns 46'
+        ! write (*,*) 'Inside ns 46'
 
         IT=IT+1
-        write (*,*) 'Inside ns 47'
+        ! write (*,*) 'Inside ns 47'
         if (IT.GT.IMAX) then
-          write (*,*) 'Inside ns 48'
+          ! write (*,*) 'Inside ns 48'
 		  call ReduceTimestep(time,dt,FlowIndex,QQMM,HIN,ResetTimeStepSize)
-      write (*,*) 'Inside ns 49'
+      ! write (*,*) 'Inside ns 49'
           GO TO 10
-          write (*,*) 'Inside ns 50'
+          ! write (*,*) 'Inside ns 50'
         end if
-        write (*,*) 'Inside ns 51'
+        ! write (*,*) 'Inside ns 51'
 
         GO TO 11
-        write (*,*) 'Inside ns 52'
+        ! write (*,*) 'Inside ns 52'
 
       end if
-write (*,*) 'Inside ns 53'
+! write (*,*) 'Inside ns 53'
 	  ModFlowRate=QMM
-    write (*,*) 'Inside ns 54'
+    ! write (*,*) 'Inside ns 54'
 
 !     Interpolate model response at observation point locations & times:
       call InterpolateResponse(time,dt,TestEndTime,NumericalSolution1D)
-      write (*,*) 'Inside ns 55'
+      ! write (*,*) 'Inside ns 55'
 
 !     Update 'old' variables:
       POLD=P
-      write (*,*) 'Inside ns 56'
+      ! write (*,*) 'Inside ns 56'
       TOLD=T
-      write (*,*) 'Inside ns 57'
+      ! write (*,*) 'Inside ns 57'
       SVOLD=SV
-      write (*,*) 'Inside ns 58'
+      ! write (*,*) 'Inside ns 58'
       XOLD=X
-      write (*,*) 'Inside ns 59'
+      ! write (*,*) 'Inside ns 59'
       IPHOLD=IPH
-      write (*,*) 'Inside ns 60'
+      ! write (*,*) 'Inside ns 60'
 	  HFOLD=HF
-    write (*,*) 'Inside ns 61'
+    ! write (*,*) 'Inside ns 61'
 	  ModFlowRateOld=ModFlowRate
-    write (*,*) 'Inside ns 62'
+    ! write (*,*) 'Inside ns 62'
 
 	  NTimeSteps=NTimeSteps+1
-    write (*,*) 'Inside ns 63'
+    ! write (*,*) 'Inside ns 63'
 
 !     Update time step size:
       call UpdateTimeStepSize(time,TestEndTime,IT,FlowIndex,ResetTimeStepSize,&
 	  StepFlows,.false.,dt)
-    write (*,*) 'Inside ns 64'
+    ! write (*,*) 'Inside ns 64'
 
     end do  !  End of main time-stepping loop.
-    write (*,*) 'Inside ns 65'
+    ! write (*,*) 'Inside ns 65'
 
     call updatemodelprogress(NumModelRuns,dt,100, analysisstopped)
-    write (*,*) 'Inside ns 66'
+    ! write (*,*) 'Inside ns 66'
 
 !   Deallocate the main local arrays:
 	call DestroyGridArrays
-  write (*,*) 'Inside ns 67'
+  ! write (*,*) 'Inside ns 67'
 	call DestroyInterpolationArrays
-  write (*,*) 'Inside ns 68'
+  ! write (*,*) 'Inside ns 68'
 	deallocate(DoneDataPoints)
-  write (*,*) 'Inside ns 69'
+  ! write (*,*) 'Inside ns 69'
 
     return
 
