@@ -287,15 +287,15 @@ class Theis_Solution(Model):
             p[0] = p0
         return p
 
-import theis_wrapper as theis_fortran
+# import theis_wrapper as theis_fortran
 
-class Theis_Solution_Fortran(Model):
-    def model(self, parameters):
-        p0, qm, h, rho, nu, C, r = self.data.parameters
-        phi, k = parameters
-        num_observations = len(self.data.time)
-        p = theis_fortran.theis(k, nu, phi, rho, C, h, qm, p0, r, num_observations, self.data.time)
-        return p
+# class Theis_Solution_Fortran(Model):
+#     def model(self, parameters):
+#         p0, qm, h, rho, nu, C, r = self.data.parameters
+#         phi, k = parameters
+#         num_observations = len(self.data.time)
+#         p = theis_fortran.theis(k, nu, phi, rho, C, h, qm, p0, r, num_observations, self.data.time)
+#         return p
 
 # import NumericalSimulator1D as radial_1D
 

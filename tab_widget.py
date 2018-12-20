@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QTabWidget, QPushButton, QVBoxLayout
 from PyQt5.QtCore import pyqtSlot
 
+# import plotting_widget1 as plotting_widget
 import plotting_widget
 
 class Tabs(QWidget):
