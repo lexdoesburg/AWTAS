@@ -48,6 +48,7 @@ module models
         end select
       case (1)  ! Homogeneous porous layer- numerical:
           ! write (*,*) 'Calling homogeneousporous from model'
+          print  *, "models: Calling HomogeneousPorousSimulator"
 		      model=HomogeneousPorous(variable,updatemodelprogress)
 	  ! case (2)  ! Numerical fractional dimension model:
 		! model=Fractional(variable,updatemodelprogress)

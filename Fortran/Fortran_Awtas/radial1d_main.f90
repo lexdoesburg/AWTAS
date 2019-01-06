@@ -31,7 +31,7 @@ module radial1d_main
     integer(I4B) :: lower,upper
 
     ! external updatemodelprogress
-
+    print  *, "radial1d_main: Assigning helper values"
     MaxTotalNData=10000
     NObsPoints=1
     ModelType=1
@@ -43,6 +43,7 @@ module radial1d_main
     NFixedParameters=7
     NReservoirConditions=2
 
+    print  *, "radial1d_main: Allocating arrays"
     allocate(Pump(NPumps),ObsPoint(NObsPoints))
     allocate(ReadData(MaxTotalNData))
     allocate(PumpData(NPumps,MaxNPumpTimes))
@@ -50,6 +51,7 @@ module radial1d_main
     allocate(variable(NVariables))
     allocate(PumpSchemeParams(1,1)) ! added by  lex
 
+    print  *, "radial1d_main: Assigning variables/parameters"
     Pump(1)%NData=1
     Pump(1)%Scheme=1 ! Constant rate of flow
 
@@ -71,7 +73,7 @@ module radial1d_main
 
 
     ! Pump(1)%NData=numData
-
+    print  *, "radial1d_main: Assigning observation point data"
     DataNo=0
     TotalNData=0
 
@@ -94,6 +96,7 @@ module radial1d_main
     !     stop
     !   end if
     ! end do
+    print  *, "radial1d_main: Allocating time in do"
     do i=1,numData
       DataNo=DataNo+1
       if (DataNo<=MaxTotalNData) then
@@ -105,11 +108,13 @@ module radial1d_main
       end if
     end do
 
+    print  *, "radial1d_main: Allocate TestData"
     TotalNData=TotalNData+ObsPoint(1)%NData
     allocate(TestData(TotalNData))
     TestData=ReadData(1:TotalNData)
 
     ! Assign ObsPoint errors to TestData:
+    print  *, "radial1d_main: Assign obspoint errors"
     ObsPoint%Weight=1.0_dp
     TestData%Weight=1.0_dp
     lower=ObsPoint(1)%DataIndex
@@ -117,10 +122,12 @@ module radial1d_main
     TestData(lower:upper)%error=ObsPoint(1)%error
 
     ! Generate modelled values:
+    print  *, "radial1d_main: Getting modelled values (call model through model.f90)"
     TestData%ModelledValue=model(variable,updatemodelprogress)
     pressure = TestData%ModelledValue
 
     ! Deallocate arrays
+    print  *, "radial1d_main: Deallocating arrays"
     deallocate(Pump)
     deallocate(ObsPoint)
     deallocate(ReadData)
@@ -143,7 +150,7 @@ module radial1d_main
     integer(I4B), intent(in) :: nummodelruns
     real(DP), intent(in) :: timestepsize,progressfraction
     logical(LGT), intent(inout) :: analysisstopped
-
+    ! print  *, "radial1d_main: Inside updatemodelprogress"
     return
   end subroutine updatemodelprogress
 
