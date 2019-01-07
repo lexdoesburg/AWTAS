@@ -69,7 +69,8 @@ class PlotWidget(QWidget):
         self.layout.addLayout(self.create_parameters_groupbox(),1,1)
 
         # Make the canvas at least 500x500 pixels
-        self.layout.setColumnMinimumWidth(0, 500)
+        # Canvas is good at 500x500 windows. 700x500 mac.
+        self.layout.setColumnMinimumWidth(0, 700)
         self.layout.setRowMinimumHeight(1, 500)
 
         # Prioritise the canvas to stretch over other components
@@ -139,7 +140,7 @@ class PlotWidget(QWidget):
 
         parameters_grid = QGridLayout()
         parameters_grid.addWidget(QLabel('Initial Pressure (Pa): '), 0, 0)
-        parameters_grid.addWidget(QLabel('Mass Flowrate (Kg/s) '), 1, 0)
+        parameters_grid.addWidget(QLabel('Mass Flowrate (Kg/s): '), 1, 0)
         parameters_grid.addWidget(QLabel('Thickness (m): '), 2, 0)
         parameters_grid.addWidget(QLabel('Density (kg/m3): '), 3, 0)
         parameters_grid.addWidget(QLabel('Kinematic Viscosity (m2/s): '), 4, 0)
@@ -168,7 +169,8 @@ class PlotWidget(QWidget):
         fullWidget = QVBoxLayout()
         fullWidget.addWidget(parameters_groupbox)
         fullWidget.addWidget(variables_groupbox)
-        fullWidget.addSpacerItem(QSpacerItem(220, 0, hPolicy=QSizePolicy.Expanding, vPolicy=QSizePolicy.Expanding))
+        # Spaceritem is good at 220, 0 for windows. 300, 0 for mac.
+        fullWidget.addSpacerItem(QSpacerItem(300, 0, hPolicy=QSizePolicy.Expanding, vPolicy=QSizePolicy.Expanding))
         return fullWidget
 
     def update_parameter_labels(self):
