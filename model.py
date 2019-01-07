@@ -104,8 +104,12 @@ class Model():
             k_guess = [initial_guess[1]]
         else:
             # print('No initial guess supplied')
-            k_guess = [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]
-            phi_guess = np.linspace(0.01, 0.2, 10)
+            # Guess' for Theis solution
+            # k_guess = [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]
+            # phi_guess = np.linspace(0.01, 0.2, 10)
+            # Guess' for Radial1d
+            k_guess = [1e-15, 1e-14, 1e-13, 1e-12]
+            phi_guess = np.linspace(0.01, 0.14, 10)
             # phi = 0.105
 
         best_estimate = np.empty(3) # Format, phi, k, chi_sq
@@ -137,6 +141,7 @@ class Model():
         else:
             optimal_parameters = initial_parameters
         self.data.set_unknown_parameters(optimal_parameters)
+        self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
         end_time = time.clock()
         if verbose:
             chi_squared = self.__chi_squared(self.data.error)
@@ -212,7 +217,7 @@ class Model():
         self.calls = 0
         return optimal_parameters
 
-    def generate_data(self, variables, parameters, time, noise = False, sd = 150, save_file=False, filename="{}_testdata.dat".format('theis_soln')):
+    def generate_data(self, variables, parameters, time, noise = False, sd = 150, save_file=False, filename="{}_testdata.dat".format('theis_soln'), model_type='theis'):
         """
         Generate approximated data using the Theis solution for a guess of porosity and permeability.
         """
@@ -232,7 +237,7 @@ class Model():
             print('SD = {}'.format(np.std(noise)))
         self.data.set_observation(p)
         if save_file:
-            self.data.generate_datafile(filename, variables=variables)
+            self.data.generate_datafile(filename, variables=variables, model=model_type)
         # return self.data
     
     # def __generate_datafile(self, filename, measurement):
@@ -297,15 +302,17 @@ class Theis_Solution(Model):
 #         p = theis_fortran.theis(k, nu, phi, rho, C, h, qm, p0, r, num_observations, self.data.time)
 #         return p
 
-# import NumericalSimulator1D as radial_1D
+from radial1d_wrapper import radial1d
 
 class Radial_1D(Model):
     def model(self, parameters):
         # Unpack the parameters which we are trying to find
-
+        phi, k = parameters
+        print('Phi = {} k = {}'.format(phi,k))
         # Get relevant data from data structure
-        
+        p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell = self.data.parameters
         # Run the model to get result
-        # p = radial_1D.NumericalSolution1D(inputs)
-        # return p
-        pass
+        print('Calling radial1d')
+        pressure = radial1d(phi, k, p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, 271, np.linspace(0, 54000, 271))
+        print('Returning pressure')
+        return pressure
