@@ -151,7 +151,7 @@ class Theis_Data(Data):
                 elif parameter_name == "thickness" or parameter_name == "h":
                     self.parameters['Layer Thickness']['Value'] = value
                 elif parameter_name == "density" or parameter_name == "rho":
-                    self.parameters['Density'] = value
+                    self.parameters['Density']['Value'] = value
                 elif parameter_name == "kinematic viscosity" or parameter_name == "nu":
                     self.parameters['Kinematic Viscosity']['Value'] = value
                 elif parameter_name == "compressibility" or parameter_name == "c":

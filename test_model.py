@@ -15,7 +15,7 @@ def setup_model(model_type, parameters, variables, time, test_num, noise=True, s
         test_model = model.Radial_1D()
     elif model_type == 'test':
         test_model = model.Test_Model()
-    test_model.generate_data(variables, parameters, time, noise=noise, sd=sd, save_file=generate_datafile, filename='{}_test{}.dat'.format(type(test_model).__name__, test_num), model_type=model_type)
+    test_model.generate_data(variables, parameters, time, noise=noise, sd=sd, save_file=generate_datafile, filename='{}_test{}.dat'.format(type(test_model).__name__, test_num))
     return test_model
 
 def plot_solution(model, dual_plot=False):
@@ -300,7 +300,7 @@ optimal_parameters = radial_test_1.find_model_parameters2(verbose=True)
 print(radial_test_1.data.approximation)
 
 print('Optimal phi = {} Optimal k = {}'.format(optimal_parameters[0],optimal_parameters[1]))
-plt.plot(radial_test_1.data.time, radial_test_1.data.approximation)
+# plt.plot(radial_test_1.data.time, radial_test_1.data.approximation)
 plot_solution(radial_test_1, dual_plot=True)
 
 # # -----------------------------------------------------------------------------------
