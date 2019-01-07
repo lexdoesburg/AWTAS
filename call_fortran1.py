@@ -18,8 +18,8 @@ from radial1d_wrapper import radial1d
 import numpy as np
 import matplotlib.pyplot as plt
 
-k=1e-13
-phi=0.1
+k=1.0036337151556582e-13
+phi=0.09293594872248502
 Pressure0=40e5
 X0=200
 rw=0.1
