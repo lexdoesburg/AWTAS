@@ -11,11 +11,11 @@ def setup_model(model_type, parameters, variables, time, test_num, noise=True, s
         test_model = model.Theis_Solution()
     elif model_type == 'theis fortran':
         test_model = model.Theis_Solution_Fortran()
-    elif model_type == 'radial 1d':
+    elif model_type == 'radial1d':
         test_model = model.Radial_1D()
     elif model_type == 'test':
         test_model = model.Test_Model()
-    test_model.generate_data(variables, parameters, time, noise=noise, sd=sd, save_file=generate_datafile, filename='{}_test{}.dat'.format(type(test_model).__name__, test_num))
+    test_model.generate_data(variables, parameters, time, noise=noise, sd=sd, save_file=generate_datafile, filename='{}_test{}.dat'.format(type(test_model).__name__, test_num), model_type=model_type)
     return test_model
 
 def plot_solution(model, dual_plot=False):
@@ -206,15 +206,15 @@ theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=
 
 # # -----------------------------------------------------------------------------------
 
-time,pressure = np.genfromtxt('theis_test1.txt', delimiter=' ', skip_header=0).T
-print(time)
-print(pressure)
-# plt.semilogx(np.log(time),pressure,'kx',label='fortran')
-# plt.semilogx(np.log(theis_test_1.data.time), theis_test_1.data.observation, 'ro',label='python')
-plt.plot(time,pressure,'kx',label='fortran')
-plt.plot(theis_test_1.data.time, theis_test_1.data.observation, 'rx',label='python')
-plt.legend(loc='best')
-plt.show()
+# time,pressure = np.genfromtxt('theis_test1.txt', delimiter=' ', skip_header=0).T
+# print(time)
+# print(pressure)
+# # plt.semilogx(np.log(time),pressure,'kx',label='fortran')
+# # plt.semilogx(np.log(theis_test_1.data.time), theis_test_1.data.observation, 'ro',label='python')
+# plt.plot(time,pressure,'kx',label='fortran')
+# plt.plot(theis_test_1.data.time, theis_test_1.data.observation, 'rx',label='python')
+# plt.legend(loc='best')
+# plt.show()
 
 
 # # -----------------------------------------------------------------------------------
@@ -247,9 +247,63 @@ plt.show()
 # parameters = test_model.find_model_parameters()
 # print(parameters)
 # plot_solution(test_model, dual_plot=True)
+
 # # ----------------------------------------------------------------------------------
+# Test Radial1d Model
+k=1e-13
+phi=0.1
+p0=40e5
+X0=200
+rw=0.1
+thick=100
+CR=1000
+COND=2.5
+RHOR=2500
+COMP=0
+ConstRate=5
+distFromWell=0.1 # distance of observation point from action well
+t = 54000
+num_data = 271
 
+time = np.linspace(0, t, num=num_data)
+parameters = [p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell]
+radial1_variables = [phi, k]
 
+# Build model
+# theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=4, sd=3e-5)
+# radial_test_1 = setup_model('radial1d', parameters, radial1_variables, time, test_num=1, sd=15000,generate_datafile=True)
+radial_test_1_data = data_class.Data()
+radial_test_1 = model.Radial_1D(radial_test_1_data)
+
+time,pressure = np.genfromtxt('Radial_1D_test1.dat', delimiter=',', skip_header=6).T
+
+radial_test_1.data.observation = pressure
+radial_test_1.data.time = time
+radial_test_1.data.parameters = parameters
+radial_test_1.data.error = 15000
+
+print(radial_test_1.data.parameters)
+print(radial_test_1.data.time)
+
+# # pressure = radial_test_1.model([0.1, 1e-13])
+# from radial1d_wrapper import radial1d
+# pressure2 = radial1d(0.09293594872248502, 1.0036337151556582e-13, p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, num_data, np.linspace(0, t, num=num_data))
+# # print(time)
+# # print(pressure)
+# plt.plot(time,pressure,'kx')
+# plt.plot(time,pressure2,'r-')
+# plt.show()
+
+print('Start')
+optimal_parameters = radial_test_1.find_model_parameters2(verbose=True)
+
+print(radial_test_1.data.approximation)
+
+print('Optimal phi = {} Optimal k = {}'.format(optimal_parameters[0],optimal_parameters[1]))
+plt.plot(radial_test_1.data.time, radial_test_1.data.approximation)
+plot_solution(radial_test_1, dual_plot=True)
+
+# # -----------------------------------------------------------------------------------
 
 
 
