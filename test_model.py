@@ -251,23 +251,23 @@ theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=
 # # ----------------------------------------------------------------------------------
 # Test Radial1d Model
 
-# k=1e-13
-# phi=0.1
-# p0=40e5
-# X0=200
-# rw=0.1
-# thick=100
-# CR=1000
-# COND=2.5
-# RHOR=2500
-# COMP=0
-# ConstRate=5
-# distFromWell=0.1 # distance of observation point from action well
-# t = 54000
-# num_data = 271
+k=1e-13
+phi=0.1
+p0=40e5
+X0=200
+rw=0.1
+thick=100
+CR=1000
+COND=2.5
+RHOR=2500
+COMP=0
+ConstRate=5
+distFromWell=0.1 # distance of observation point from action well
+t = 54000
+num_data = 271
 
-# time = np.linspace(0, t, num=num_data)
-# parameters = [p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell]
+time = np.linspace(0, t, num=num_data)
+parameters = [p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell]
 # radial1_variables = [phi, k]
 
 # # Build model
@@ -303,6 +303,14 @@ theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=
 # print('Optimal phi = {} Optimal k = {}'.format(optimal_parameters[0],optimal_parameters[1]))
 # # plt.plot(radial_test_1.data.time, radial_test_1.data.approximation)
 # plot_solution(radial_test_1, dual_plot=True)
+
+radial_data = data_class.create_data('radial1d', filename=None, time=None, observation=None, parameters=parameters, error=None)
+print(radial_data.parameters)
+radial_data.generate_datafile('testing_radial1d_data.txt')
+
+new_radial = data_class.create_data('radial1d')
+new_radial.read_file('testing_radial1d_data.txt')
+print(new_radial.parameters)
 
 # # -----------------------------------------------------------------------------------
 
