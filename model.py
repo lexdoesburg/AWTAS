@@ -302,17 +302,17 @@ class Theis_Solution(Model):
 #         p = theis_fortran.theis(k, nu, phi, rho, C, h, qm, p0, r, num_observations, self.data.time)
 #         return p
 
-from radial1d_wrapper import radial1d
+# from radial1d_wrapper import radial1d
 
-class Radial_1D(Model):
-    def model(self, parameters):
-        # Unpack the parameters which we are trying to find
-        phi, k = parameters
-        print('Phi = {} k = {}'.format(phi,k))
-        # Get relevant data from data structure
-        p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell = self.data.parameters
-        # Run the model to get result
-        print('Calling radial1d')
-        pressure = radial1d(phi, k, p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, 271, np.linspace(0, 54000, 271))
-        print('Returning pressure')
-        return pressure
+# class Radial_1D(Model):
+#     def model(self, parameters):
+#         # Unpack the parameters which we are trying to find
+#         phi, k = parameters
+#         print('Phi = {} k = {}'.format(phi,k))
+#         # Get relevant data from data structure
+#         p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell = self.data.parameters
+#         # Run the model to get result
+#         print('Calling radial1d')
+#         pressure = radial1d(phi, k, p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, 271, np.linspace(0, 54000, 271))
+#         print('Returning pressure')
+#         return pressure

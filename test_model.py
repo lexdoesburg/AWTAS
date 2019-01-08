@@ -250,6 +250,7 @@ theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=
 
 # # ----------------------------------------------------------------------------------
 # Test Radial1d Model
+
 k=1e-13
 phi=0.1
 p0=40e5
@@ -267,41 +268,49 @@ num_data = 271
 
 time = np.linspace(0, t, num=num_data)
 parameters = [p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell]
-radial1_variables = [phi, k]
+# radial1_variables = [phi, k]
 
-# Build model
-# theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=4, sd=3e-5)
-# radial_test_1 = setup_model('radial1d', parameters, radial1_variables, time, test_num=1, sd=15000,generate_datafile=True)
-radial_test_1_data = data_class.Data()
-radial_test_1 = model.Radial_1D(radial_test_1_data)
+# # Build model
+# # theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=4, sd=3e-5)
+# # radial_test_1 = setup_model('radial1d', parameters, radial1_variables, time, test_num=1, sd=15000,generate_datafile=True)
+# radial_test_1_data = data_class.Data()
+# radial_test_1 = model.Radial_1D(radial_test_1_data)
 
-time,pressure = np.genfromtxt('Radial_1D_test1.dat', delimiter=',', skip_header=6).T
+# time,pressure = np.genfromtxt('Radial_1D_test1.dat', delimiter=',', skip_header=6).T
 
-radial_test_1.data.observation = pressure
-radial_test_1.data.time = time
-radial_test_1.data.parameters = parameters
-radial_test_1.data.error = 15000
+# radial_test_1.data.observation = pressure
+# radial_test_1.data.time = time
+# radial_test_1.data.parameters = parameters
+# radial_test_1.data.error = 15000
 
-print(radial_test_1.data.parameters)
-print(radial_test_1.data.time)
+# print(radial_test_1.data.parameters)
+# print(radial_test_1.data.time)
 
-# # pressure = radial_test_1.model([0.1, 1e-13])
-# from radial1d_wrapper import radial1d
-# pressure2 = radial1d(0.09293594872248502, 1.0036337151556582e-13, p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, num_data, np.linspace(0, t, num=num_data))
-# # print(time)
-# # print(pressure)
-# plt.plot(time,pressure,'kx')
-# plt.plot(time,pressure2,'r-')
-# plt.show()
+# # # pressure = radial_test_1.model([0.1, 1e-13])
+# # from radial1d_wrapper import radial1d
+# # pressure2 = radial1d(0.09293594872248502, 1.0036337151556582e-13, p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, num_data, np.linspace(0, t, num=num_data))
+# # # print(time)
+# # # print(pressure)
+# # plt.plot(time,pressure,'kx')
+# # plt.plot(time,pressure2,'r-')
+# # plt.show()
 
-print('Start')
-optimal_parameters = radial_test_1.find_model_parameters2(verbose=True)
+# print('Start')
+# optimal_parameters = radial_test_1.find_model_parameters2(verbose=True)
 
-print(radial_test_1.data.approximation)
+# print(radial_test_1.data.approximation)
 
-print('Optimal phi = {} Optimal k = {}'.format(optimal_parameters[0],optimal_parameters[1]))
-# plt.plot(radial_test_1.data.time, radial_test_1.data.approximation)
-plot_solution(radial_test_1, dual_plot=True)
+# print('Optimal phi = {} Optimal k = {}'.format(optimal_parameters[0],optimal_parameters[1]))
+# # plt.plot(radial_test_1.data.time, radial_test_1.data.approximation)
+# plot_solution(radial_test_1, dual_plot=True)
+
+radial_data = data_class.create_data('radial1d', filename=None, time=None, observation=None, parameters=parameters, error=None)
+print(radial_data.parameters)
+radial_data.generate_datafile('testing_radial1d_data.txt')
+
+new_radial = data_class.create_data('radial1d')
+new_radial.read_file('testing_radial1d_data.txt')
+print(new_radial.parameters)
 
 # # -----------------------------------------------------------------------------------
 
