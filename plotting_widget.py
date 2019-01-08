@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout, QFileDialog, QMessageBox, QGroupBox, QGridLayout, QLabel, QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout, QFileDialog, QMessageBox, QGroupBox, QGridLayout, QLabel, QSpacerItem, QSizePolicy, QComboBox
 from PyQt5.QtCore import pyqtSlot
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -32,6 +32,14 @@ class PlotWidget(QWidget):
     
 
     def init_UI(self):
+        # Choose model type combobox
+        self.model_type_combobox = QComboBox(self)
+        self.model_type_combobox.addItems(['Analytical Theis','Homogeneous Porous'])
+        self.model_type_combobox.activated[str].connect(self.onActivation)
+        model_type_label = QLabel('Model Type: ')
+        model_type_layout = QGridLayout()
+        model_type_layout.addWidget(model_type_label,0,0)
+        model_type_layout.addWidget(self.model_type_combobox,0,1)
         # Import data button
         self.import_data_button = QPushButton('Import Data', self)
         self.import_data_button.setToolTip('Import pressure measurements and time data.')
@@ -45,6 +53,7 @@ class PlotWidget(QWidget):
 
         # Group the two buttons together in a single layout
         button_layout = QVBoxLayout()
+        button_layout.addLayout(model_type_layout)
         button_layout.addWidget(self.import_data_button)
         button_layout.addWidget(self.fit_button)
 
@@ -88,6 +97,13 @@ class PlotWidget(QWidget):
     #     if model_type == "Theis Solution":
     #         self.model = model.Theis_Solution(self.data)
 
+    @pyqtSlot(str)
+    def onActivation(self, text):
+        """
+        Function to change what happens when a different model type is selected
+        """
+        print(text)
+
     @pyqtSlot()
     def plot_data(self):
         self.clear_all_parameters()
@@ -123,7 +139,7 @@ class PlotWidget(QWidget):
                 if i != len(self.data.variables)-1:
                     label.setText('{:.6f}'.format(self.data.variables[i]))
                 else:
-                    label.setText('{:.6E}'.format(self.data.variables[i]))
+                    label.setText('{:.6e}'.format(self.data.variables[i]))
         else:
             error_message = QMessageBox()
             error_message.setIcon(QMessageBox.Critical)
@@ -142,8 +158,8 @@ class PlotWidget(QWidget):
         parameters_grid.addWidget(QLabel('Initial Pressure (Pa): '), 0, 0)
         parameters_grid.addWidget(QLabel('Mass Flowrate (Kg/s): '), 1, 0)
         parameters_grid.addWidget(QLabel('Thickness (m): '), 2, 0)
-        parameters_grid.addWidget(QLabel('Density (kg/m3): '), 3, 0)
-        parameters_grid.addWidget(QLabel('Kinematic Viscosity (m2/s): '), 4, 0)
+        parameters_grid.addWidget(QLabel('Density (kg/m<sup>3</sup>): '), 3, 0)
+        parameters_grid.addWidget(QLabel('Kinematic Viscosity (m<sup>2</sup>/s): '), 4, 0)
         parameters_grid.addWidget(QLabel('Compressibility (1/Pa): '), 5, 0)
         parameters_grid.addWidget(QLabel('Radius (m): '), 6, 0)
 
@@ -159,7 +175,7 @@ class PlotWidget(QWidget):
 
         variables_grid = QGridLayout()
         variables_grid.addWidget(QLabel('Porosity: '), 0, 0)
-        variables_grid.addWidget(QLabel('Permeability (m2): '), 1, 0)
+        variables_grid.addWidget(QLabel('Permeability (m<sup>2</sup>): '), 1, 0)
         for i in range(variables_grid.rowCount()):
             new_label = QLabel()
             self.variable_value_labels.append(new_label)
