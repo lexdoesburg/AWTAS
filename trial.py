@@ -1,33 +1,30 @@
-# variables = {}
-# values = [{'Value':0.1, 'Units':'xD'}, {'Value':1e-12, 'Units':'D:'}]
-# variables['Porosity'], variables['Permeability'] = values
-# print(variables)
+import numpy as np
+import matplotlib.pyplot as plt
+from radial1d_wrapper import radial1d
 
-# print(variables['Porosity']['Value'])
-dict_value = dict.fromkeys(['Value', 'Units'])
-parameters = {'Initial Pressure' : dict_value, 'Mass Flowrate' : dict_value, 'Layer Thickness' : dict_value, 'Density' : dict_value,
-              'Kinematic Viscosity' : dict_value, 'Compressibility' : dict_value, 'Radius' : dict_value}
-# print(parameters)
+time, pressure_tough2 = np.genfromtxt('Pwell.dat', delimiter='   ').T
+print(time)
 
-# {'Value' : None, 'Units' : 'Pa'}
-# {'Value' : None, 'Units' : 'Kg/s'}
-# {'Value' : None, 'Units' : 'm'}
-# {'Value' : None, 'Units' : 'Kg/m3'}
-# {'Value' : None, 'Units' : 'm2/s'}
-# {'Value' : None, 'Units' : '1/Pa'}
-# {'Value' : None, 'Units' : 'm'}
+time = [float(t) for t in time]
+print(time)
+time = np.asarray(time)
 
-# parameters=[None]*7
+k=0.1e-13
+phi=0.100000001
+Pressure0=40e5
+X0=200
+rw=0.1
+thick=100
+CR=1000
+COND=2.5
+RHOR=2500
+COMP=0
+ConstRate=-5
+distFromWell=0 # distance of observation point from action well
+numData=len(time)
 
-# if parameters[0]:
-#     print(True)
-# else:
-#     print(False)
+pressure = radial1d(phi, k, Pressure0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, numData, time)
 
-for i, (a, b) in enumerate(parameters.items()):
-    print(i)
-    print(a)
-    print(b)
-    print(b['Units'])
-    # print(a[0])
-    # print(a[1]['Units'])
+plt.plot(time, pressure_tough2, 'k-')
+plt.plot(time, pressure/1e5, 'r--')
+plt.show()
