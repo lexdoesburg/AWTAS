@@ -8,6 +8,14 @@ def create_data(model_type, filename=None, time=None, observation=None, paramete
         data = Radial1d_Data(filename, time, observation, parameters, error)
     return data
 
+class DataPoint():
+    def __init__(self, time, observation, approximation=None, error=None, weight=None):
+        self.time = time
+        self.observation = observation
+        self.approximation = approximation
+        self.error = error
+        self.weight = weight
+
 class Data():
     """
     This is a class which defines the problem data structure (eventually extended for use in all model types).

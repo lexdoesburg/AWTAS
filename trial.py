@@ -1,33 +1,39 @@
-# variables = {}
-# values = [{'Value':0.1, 'Units':'xD'}, {'Value':1e-12, 'Units':'D:'}]
-# variables['Porosity'], variables['Permeability'] = values
-# print(variables)
+import data as datastructure
+import numpy as np
+import matplotlib.pyplot as plt
+import time
 
-# print(variables['Porosity']['Value'])
-dict_value = dict.fromkeys(['Value', 'Units'])
-parameters = {'Initial Pressure' : dict_value, 'Mass Flowrate' : dict_value, 'Layer Thickness' : dict_value, 'Density' : dict_value,
-              'Kinematic Viscosity' : dict_value, 'Compressibility' : dict_value, 'Radius' : dict_value}
-# print(parameters)
 
-# {'Value' : None, 'Units' : 'Pa'}
-# {'Value' : None, 'Units' : 'Kg/s'}
-# {'Value' : None, 'Units' : 'm'}
-# {'Value' : None, 'Units' : 'Kg/m3'}
-# {'Value' : None, 'Units' : 'm2/s'}
-# {'Value' : None, 'Units' : '1/Pa'}
-# {'Value' : None, 'Units' : 'm'}
+# ---------------- Tough2 data
+# logtime, barpressure = np.genfromtxt('Pwell.dat', delimiter='   ', skip_header=0).T
+# logtime2, barpressure2 = np.genfromtxt('Pwell2.dat', delimiter='   ', skip_header=0).T
 
-# parameters=[None]*7
 
-# if parameters[0]:
-#     print(True)
-# else:
-#     print(False)
+# for i in range(len(logtime)):
+#     print(logtime[i], barpressure[i])
 
-for i, (a, b) in enumerate(parameters.items()):
-    print(i)
-    print(a)
-    print(b)
-    print(b['Units'])
-    # print(a[0])
-    # print(a[1]['Units'])
+# plt.plot(logtime,barpressure,'k-')
+# plt.plot(logtime2,barpressure2,'r-')
+
+# # plt.semilogx(logtime,barpressure,'k-')
+# # plt.semilogx(logtime2,barpressure2,'r-')
+
+# plt.show()
+# -----------------
+datapoints = []
+pressure = []
+for i in range(10000):
+    p = np.random.rand()
+    datapoints.append(datastructure.DataPoint(i, p))
+    pressure.append(p)
+    print(datapoints[i].time, datapoints[i].observation)
+
+start = time.clock()
+pressure2 = [p.observation for p in datapoints]
+end = time.clock()
+print(end-start)
+
+start = time.clock()
+pressure2 = pressure
+end = time.clock()
+print(end-start)
