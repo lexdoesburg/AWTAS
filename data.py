@@ -20,17 +20,38 @@ class Data():
     """
     This is a class which defines the problem data structure (eventually extended for use in all model types).
     """
-    def __init__(self, filename=None, time=None, observation=None, parameters=None, error=None):
+    __model_parameters = {
+                         'theis' : ['Initial Pressure', 'Mass Flowrate', 'Layer Thickness', 'Density', 'Kinematic Viscosity', 'Compressibility', 'Radius'],
+                         'radial1d' : ['Initial Pressure', 'Mass Flowrate', 'Layer Thickness', 'Initial Temperature', 'Initial Vapour Saturation', 'Action Well Radius', 'Rock Specific Heat', 'Rock Conductivity', 'Rock Density', 'Rock Compressibility', 'Observation Point Distance']
+                         }
+    
+    __default_parameter_units = {
+                                'Initial Pressure' : {'Units':'Pa', 'Models':['theis', 'radial1d']},
+                                'Mass Flowrate' : {'Units':'Kg/s', 'Models':['theis', 'radial1d']},
+                                'Layer Thickness' : {'Units':'m', 'Models':['theis', 'radial1d']},
+                                'Density' : {'Units':'Kg/m<sup>3</sup>', 'Models':['theis']},
+                                'Kinematic Viscosity' : {'Units':'m<sup>2</sup>/s', 'Models':['theis']},
+                                'Compressibility' : {'Units':'1/Pa', 'Models':['theis']},
+                                'Radius' : {'Units':'m', 'Models':['theis']},
+                                'Initial Temperature' : {'Units':'TODO', 'Models':['radial1d']},
+                                'Initial Vapour Pressure' : {'Units':'TODO', 'Models':['radial1d']},
+                                'Action Well Radius' : {'Units':'TODO', 'Models':['radial1d']},
+                                'Rock Specific Heat' : {'Units':'TODO', 'Models':['radial1d']},
+                                'Rock Conductivity' : {'Units':'TODO', 'Models':['radial1d']},
+                                'Rock Density' : {'Units':'TODO', 'Models':['radial1d']},
+                                'Rock Compressibility' : {'Units':'TODO', 'Models':['radial1d']},
+                                'Observation Point Distance' : {'Units':'TODO', 'Models':['radial1d']}
+                                }
+
+    def __init__(self, filename=None, time=None, observation=None, parameters_list=None, error=None, model_type='Theis'):
+        self.model_type = model_type.lower()
         self.filename = filename # the filename of where the data was imported from
         self.time = time # array of time data
         self.observation = observation # array of observed pressure data
         self.approximation = None # array of approximated pressure data
-        if parameters:
-            self.parameters = parameters # list of the well parameters
-        else:
-            self.parameters = [None]*7
-        # self.phi = None # estimated porosity (float)
-        # self.k = None # estimated permeability (float)
+        self.parameters = self._initialise_parameter_dictionary()
+        if parameters_list:
+            self.fill_parameter_dictionary(parameters_list)
         self.variables = [None]*2
         
         self.error = error # Estimated error in the readings
@@ -39,6 +60,54 @@ class Data():
         if filename:
             self.read_file()
     
+    def _initialise_parameter_dictionary(self):
+        # if hasattr(self, 'parameters'):
+        #     raise ValueError('Parameter dictionary has already been initialised')
+        # else:
+        #     self.parameters = {'Initial Pressure' : {'Value':None, 'Units':'Pa'},
+        #                     'Mass Flowrate' : {'Value':None, 'Units':'Kg/s'},
+        #                     'Layer Thickness' : {'Value':None, 'Units':'m'},
+        #                     'Density' : {'Value':None, 'Units':'Kg/m3'},
+        #                     'Kinematic Viscosity' : {'Value':None, 'Units':'m2/s'},
+        #                     'Compressibility' : {'Value':None, 'Units':'1/Pa'},
+        #                     'Radius' : {'Value':None, 'Units':'m'},
+        #                     'Initial Temperature' : {'Value':None, 'Units':'TODO'},
+        #                     'Initial Vapour Saturation' : {'Value':None, 'Units':'TODO'},
+        #                     'Action Well Radius' : {'Value':None, 'Units':'TODO'},
+        #                     'Rock Specific Heat' : {'Value':None, 'Units':'TODO'},
+        #                     'Rock Conductivity' : {'Value':None, 'Units':'TODO'},
+        #                     'Rock Density' : {'Value':None, 'Units':'TODO'},
+        #                     'Rock Compressibility' : {'Value':None, 'Units':'TODO'},
+        #                     'Observation Point Distance' : {'Value':None, 'Units':'TODO'}}
+        parameters = {}
+        for parameter in self.__model_parameters[self.model_type]:
+            parameters[parameter] = {'Value':None, 'Units':self.__default_parameter_units[parameter]['Units']}
+        return parameters
+
+
+    def fill_parameter_dictionary(self, parameters_list):        
+        if parameters_list:
+            if self.model_type == 'theis':
+                self.parameters['Initial Pressure']['Value'] = parameters_list[0]
+                self.parameters['Mass Flowrate']['Value'] = parameters_list[1]
+                self.parameters['Layer Thickness']['Value'] = parameters_list[2]
+                self.parameters['Density']['Value'] = parameters_list[3]
+                self.parameters['Kinematic Viscosity']['Value'] = parameters_list[4]
+                self.parameters['Compressibility']['Value'] = parameters_list[5]
+                self.parameters['Radius']['Value'] = parameters_list[6]
+            elif self.model_type == 'radial1d':
+                self.parameters['Initial Pressure']['Value'] = parameters_list[0]
+                self.parameters['Initial Temperature']['Value'] = parameters_list[1]
+                self.parameters['Action Well Radius']['Value'] = parameters_list[2]
+                self.parameters['Layer Thickness']['Value'] = parameters_list[3]
+                self.parameters['Rock Specific Heat']['Value'] = parameters_list[4]
+                self.parameters['Rock Conductivity']['Value'] = parameters_list[5]
+                self.parameters['Rock Density']['Value'] = parameters_list[6]
+                self.parameters['Rock Compressibility']['Value'] = parameters_list[7]
+                self.parameters['Mass Flowrate']['Value'] = parameters_list[8]
+                self.parameters['Observation Point Distance']['Value'] = parameters_list[9]
+
+
     def read_file(self, filename=None):
         if filename:
             self.filename = filename
@@ -79,7 +148,8 @@ class Data():
         parameters[5] = compressibility
         parameters[6] = radius
         """
-        self.parameters = parameters
+        # self.parameters = parameters
+        self.fill_parameter_dictionary()
 
     def set_unknown_parameters(self, variables):
         # self.phi = phi

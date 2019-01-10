@@ -20,20 +20,34 @@ import time
 
 # plt.show()
 # -----------------
-datapoints = []
-pressure = []
-for i in range(10000):
-    p = np.random.rand()
-    datapoints.append(datastructure.DataPoint(i, p))
-    pressure.append(p)
-    print(datapoints[i].time, datapoints[i].observation)
+# datapoints = []
+# pressure = []
+# for i in range(10000):
+#     p = np.random.rand()
+#     datapoints.append(datastructure.DataPoint(i, p))
+#     pressure.append(p)
+#     print(datapoints[i].time, datapoints[i].observation)
 
-start = time.clock()
-pressure2 = [p.observation for p in datapoints]
-end = time.clock()
-print(end-start)
+# start = time.clock()
+# pressure2 = [p.observation for p in datapoints]
+# end = time.clock()
+# print(end-start)
 
-start = time.clock()
-pressure2 = pressure
-end = time.clock()
-print(end-start)
+# start = time.clock()
+# pressure2 = pressure
+# end = time.clock()
+# print(end-start)
+
+dictionary = {'Val':None}
+
+dict_of_dicts = {1:dictionary, 2:dictionary, 3:dictionary}
+
+print(dict_of_dicts)
+
+dict_of_dicts[1]['Val'] = 1
+
+print(dict_of_dicts)
+
+name = 'ABc'
+new_name = name.lower()
+print(new_name)

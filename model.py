@@ -262,7 +262,16 @@ class Theis_Solution(Model):
         Output: p(t) - pressure at a given time (or time array).
         """
         phi, k = variables
-        p0, qm, h, rho, nu, C, r = self.data.parameters # Unpack the well parameters
+        # p0, qm, h, rho, nu, C, r = self.data.parameters # Unpack the well parameters
+        # Unpack the well parameters
+        p0 = self.data.parameters['Initial Pressure']['Value']
+        qm = self.data.parameters['Mass Flowrate']['Value']
+        h = self.data.parameters['Layer Thickness']['Value']
+        rho = self.data.parameters['Density']['Value']
+        nu = self.data.parameters['Kinematic Viscosity']['Value']
+        C = self.data.parameters['Compressibility']['Value']
+        r = self.data.parameters['Radius']['Value']
+
         D = k/(nu*phi*rho*C)
         with np.errstate(divide="ignore", invalid="ignore"): # Hides 'RuntimeWarning: invalid value encountered in divide' if t[0] == 0.
             # p = p0 + (qm/(r*np.pi*k*(h/nu)))*exp1((r**2)/(4*D*self.data.time)) 
