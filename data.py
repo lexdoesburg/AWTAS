@@ -157,7 +157,7 @@ class Data():
     def set_error(self, error):
         self.error = error
 
-    
+
     def generate_datafile(self, filename, variables=None):
         # TODO Update this work with the new structure
         with open(filename, 'w') as file:
@@ -174,7 +174,11 @@ class Data():
                 else:
                     file.write('{}\n'.format(self.parameters[parameter]['Value']))
                     if variables:
-                        file.write('Known Porosity : {}, Known Permeability : {}\n'.format(variables[0], variables[1]))
+                        file.write('Known Porosity : {}, Known Permeability : {}, '.format(variables[0], variables[1]))
+                        if self.error:
+                            file.write('Standard Deviation of Errors : {}\n'.format(self.error))
+                        else:
+                            file.write('Standard Deviation of Errors : Unknown\n')
                     else:
                         file.write('\n')
 

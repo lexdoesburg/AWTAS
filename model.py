@@ -10,11 +10,12 @@ import data as data_class
 import time
 
 class Model():
-    def __init__(self, data=None):
+    def __init__(self, data=None, model_type=None):
         """
         Initialise the model
         """
         self.data = data # Data structure containing observed pressure measurements, time of measurements and well parameters
+        self.model_type = model_type
         self.calls = 0
 
     def model(self, variables):
@@ -53,18 +54,18 @@ class Model():
             chi_squared = np.sum(self.data.observation-self.data.approximation)**2
         return chi_squared
 
-    def func(self, t, phi, k):
-        variables = phi, k
-        return self.model(variables)
+    # def func(self, t, phi, k):
+    #     variables = phi, k
+    #     return self.model(variables)
 
 
-    def find_model_params_test(self):
-        xData = self.data.time
-        yData = self.data.observation
-        initial_guess = [0.105, 1e-14]
-        popt, pcov = curve_fit(self.func, xData, yData, p0=initial_guess, diag=(1./xData.mean(),1./yData.mean()) )
-        print(popt)
-        return popt
+    # def find_model_params_test(self):
+    #     xData = self.data.time
+    #     yData = self.data.observation
+    #     initial_guess = [0.105, 1e-14]
+    #     popt, pcov = curve_fit(self.func, xData, yData, p0=initial_guess, diag=(1./xData.mean(),1./yData.mean()) )
+    #     print(popt)
+    #     return popt
 
     def generate_initial_guess(self, initial_guess=None, single_run=False):
         k_range = np.array([1e-16, 1e-12]) # Range of feasible permeabilities
@@ -222,7 +223,7 @@ class Model():
         Generate approximated data using the Theis solution for a guess of porosity and permeability.
         """
         # filename="datafile_{}.txt".format(datetime.now().strftime("%d-%M-%Y_%H:%M") # Argument
-        self.data = data_class.Data()
+        self.data = data_class.Data(model_type=self.model_type)
         self.data.set_time(time)
         self.data.set_known_parameters(parameters)
         p = self.model(variables)
@@ -239,18 +240,15 @@ class Model():
         if save_file:
             self.data.generate_datafile(filename, variables=variables)
         # return self.data
-    
-    # def __generate_datafile(self, filename, measurement):
-    #     with open(filename, 'w') as file:
-    #         file.write('Time(s),Pressure(Pa)\n')
-    #         for i in range(len(self.data.time)):
-    #             if self.data.time[i] >= 1e-7:
-    #                 file.write('{},{}\n'.format(self.data.time[i], measurement[i]))
-    #             else:
-    #                 file.write('{},{}\n'.format(0, measurement[i]))
 
 
 class Theis_Solution(Model):
+    def __init__(self, data=None):
+        """
+        Initialise the model
+        """
+        super().__init__(data=data, model_type='theis')
+
     def model(self, variables):
         """
         Calculate and return the pressure for the given input using the analytical Theis solution.
@@ -281,25 +279,24 @@ class Theis_Solution(Model):
         self.data.approximation = p # Set the approximation for quick estimation of chi_sq
         return p
 
-    
-    def test_model(self, params, t):
-        phi = params['phi']
-        k = params['k']
-        p0 = params['p0']
-        qm = params['qm']
-        rho = params['rho']
-        nu = params['nu']
-        h = params['h']
-        C = params['C']
-        r = params['r']
+    # def test_model(self, params, t):
+    #     phi = params['phi']
+    #     k = params['k']
+    #     p0 = params['p0']
+    #     qm = params['qm']
+    #     rho = params['rho']
+    #     nu = params['nu']
+    #     h = params['h']
+    #     C = params['C']
+    #     r = params['r']
 
-        D = k/(nu*phi*rho*C)
-        with np.errstate(divide="ignore", invalid="ignore"): # Hides 'RuntimeWarning: invalid value encountered in divide' if t[0] == 0.
-            # p = p0 + (qm/(r*np.pi*k*(h/nu)))*exp1((r**2)/(4*D*self.data.time)) 
-            p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*t)) # Same as fortran output
-        if t[0] <= 1e-7: # Check if initial reading is at time 0
-            p[0] = p0
-        return p
+    #     D = k/(nu*phi*rho*C)
+    #     with np.errstate(divide="ignore", invalid="ignore"): # Hides 'RuntimeWarning: invalid value encountered in divide' if t[0] == 0.
+    #         # p = p0 + (qm/(r*np.pi*k*(h/nu)))*exp1((r**2)/(4*D*self.data.time)) 
+    #         p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*t)) # Same as fortran output
+    #     if t[0] <= 1e-7: # Check if initial reading is at time 0
+    #         p[0] = p0
+    #     return p
 
 # import theis_wrapper as theis_fortran
 
@@ -311,17 +308,33 @@ class Theis_Solution(Model):
 #         p = theis_fortran.theis(k, nu, phi, rho, C, h, qm, p0, r, num_observations, self.data.time)
 #         return p
 
-# from radial1d_wrapper import radial1d
+from radial1d_wrapper import radial1d
 
-# class Radial_1D(Model):
-#     def model(self, parameters):
-#         # Unpack the parameters which we are trying to find
-#         phi, k = parameters
-#         print('Phi = {} k = {}'.format(phi,k))
-#         # Get relevant data from data structure
-#         p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell = self.data.parameters
-#         # Run the model to get result
-#         print('Calling radial1d')
-#         pressure = radial1d(phi, k, p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, 271, np.linspace(0, 54000, 271))
-#         print('Returning pressure')
-#         return pressure
+class Radial_1D(Model):
+    def __init__(self, data=None):
+        """
+        Initialise the model
+        """
+        super().__init__(data=data, model_type='radial1d')
+
+    def model(self, parameters):
+        # Unpack the parameters which we are trying to find
+        phi, k = parameters
+        print('Phi = {} k = {}'.format(phi,k))
+        # Get relevant data from data structure
+        # p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell = self.data.parameters
+        p0 = self.data.parameters['Initial Pressure']['Value']
+        X0 = self.data.parameters['Initial Temperature']['Value']
+        rw = self.data.parameters['Action Well Radius']['Value']
+        thick = self.data.parameters['Layer Thickness']['Value']
+        CR = self.data.parameters['Rock Specific Heat']['Value']
+        COND = self.data.parameters['Rock Conductivity']['Value']
+        RHOR = self.data.parameters['Rock Density']['Value']
+        COMP = self.data.parameters['Rock Compressibility']['Value']
+        ConstRate = self.data.parameters['Mass Flowrate']['Value']
+        distFromWell = self.data.parameters['Observation Point Distance']['Value']
+        # Run the model to get result
+        print('Calling radial1d')
+        pressure = radial1d(phi, k, p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, 271, np.linspace(0, 54000, 271))
+        print('Returning pressure')
+        return pressure
