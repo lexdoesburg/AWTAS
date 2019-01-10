@@ -5,7 +5,7 @@ import time as time_module
 import model
 import data as data_class
 
-def setup_model(model_type, parameters, variables, time, test_num, noise=True, sd=1e-5, generate_datafile=True):
+def setup_model(model_type, parameters, variables, time, test_num, noise=True, sd=1e-5, generate_datafile=False):
     model_type = model_type.lower()
     if model_type == 'theis':
         test_model = model.Theis_Solution()
@@ -151,17 +151,17 @@ theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=
 # -----------------------------------------------------------------------------------
 
 # # -----------------------------------------------------------------------------------
-# print_optimal_parameters(theis_test_1, test1_variables, 1)
-# plot_solution(theis_test_1)
+print_optimal_parameters(theis_test_1, test1_variables, 1)
+plot_solution(theis_test_1)
 
-# print_optimal_parameters(theis_test_2, test2_variables, 2)
-# plot_solution(theis_test_2)
+print_optimal_parameters(theis_test_2, test2_variables, 2)
+plot_solution(theis_test_2)
 
-# print_optimal_parameters(theis_test_3, test3_variables, 3)
-# plot_solution(theis_test_3)
+print_optimal_parameters(theis_test_3, test3_variables, 3)
+plot_solution(theis_test_3)
 
-# print_optimal_parameters(theis_test_4, test4_variables, 3)
-# plot_solution(theis_test_4)
+print_optimal_parameters(theis_test_4, test4_variables, 3)
+plot_solution(theis_test_4)
 
 # # ----------- Old find_model_parameters function-------------------------------------
 

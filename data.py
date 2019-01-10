@@ -149,7 +149,7 @@ class Data():
         parameters[6] = radius
         """
         # self.parameters = parameters
-        self.fill_parameter_dictionary()
+        self.fill_parameter_dictionary(parameters)
 
     def set_unknown_parameters(self, variables):
         # self.phi = phi
