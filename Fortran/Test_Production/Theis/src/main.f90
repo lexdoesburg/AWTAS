@@ -8,9 +8,9 @@ program TheisMain
 
   ! Assume 1 pump, and 1 observation point per observation well.
   use variable_types
+  use theis_solution
   use problem_data
   use variable_parameters
-  use models
   use noise
 
   implicit none
@@ -27,9 +27,6 @@ program TheisMain
   real(DP) :: k,nu,phi,rho,c,b,Q0,P0,rw
   type(datapoint),allocatable :: ReadData(:)
   integer(I4B) :: lower,upper
-  character    :: DataFileName*80
-  integer(I4B) :: StepRates
-  real(DP) :: WellRadius
 
   external updatemodelprogress
 
@@ -42,8 +39,7 @@ program TheisMain
   MaxTotalNData=10000
 
   open (unit=out,file=outFile,status='replace')
-  ! write (*,*) ' Number of observation points:'
-  ! read(*,*) NObsPoints
+
   NObsPoints=1
 
   ! ! Get model type:
@@ -58,7 +54,6 @@ program TheisMain
   ModelType=0
   ! Problem dimensions:
   NPumps=1
-
   MaxNPumpTimes=1000
 
   NVariables=2
@@ -93,7 +88,6 @@ program TheisMain
   DataNo=0
   TotalNData=0
 
-
   ObsPoint(1)%Property=1
   ObsPoint(1)%DataOffset=0.0
   ObsPoint(1)%Position%x(2)=0.0  ! Not used.
@@ -127,7 +121,7 @@ program TheisMain
   TestData(lower:upper)%error=ObsPoint(1)%error
 
 
-  TestData%ModelledValue=model(variable,updatemodelprogress)
+  TestData%ModelledValue=AnalyticalTheis(variable)
 
   write (out,'(10(e15.5,1x))') (variable(i),i=1,NVariables)
   write (out,'(i15)') NObsPoints
