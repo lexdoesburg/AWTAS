@@ -5,7 +5,7 @@ import time as time_module
 import model
 import data as data_class
 
-def setup_model(model_type, parameters, variables, time, test_num, noise=True, sd=1e-5, generate_datafile=True):
+def setup_model(model_type, parameters, variables, time, test_num, noise=True, sd=1e-5, generate_datafile=False):
     model_type = model_type.lower()
     if model_type == 'theis':
         test_model = model.Theis_Solution()

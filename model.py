@@ -298,15 +298,22 @@ class Theis_Solution(Model):
     #         p[0] = p0
     #     return p
 
-# import theis_wrapper as theis_fortran
+from theis_wrapper import theis
 
-# class Theis_Solution_Fortran(Model):
-#     def model(self, parameters):
-#         p0, qm, h, rho, nu, C, r = self.data.parameters
-#         phi, k = parameters
-#         num_observations = len(self.data.time)
-#         p = theis_fortran.theis(k, nu, phi, rho, C, h, qm, p0, r, num_observations, self.data.time)
-#         return p
+class Theis_Solution_Fortran(Theis_Solution):
+    def model(self, variables):
+        # p0, qm, h, rho, nu, C, r = self.data.parameters
+        p0 = self.data.parameters['Initial Pressure']['Value']
+        qm = self.data.parameters['Mass Flowrate']['Value']
+        h = self.data.parameters['Layer Thickness']['Value']
+        rho = self.data.parameters['Density']['Value']
+        nu = self.data.parameters['Kinematic Viscosity']['Value']
+        C = self.data.parameters['Compressibility']['Value']
+        r = self.data.parameters['Radius']['Value']
+        phi, k = variables
+        num_observations = len(self.data.time)
+        p = theis(k, nu, phi, rho, C, h, qm, p0, r, num_observations, self.data.time)
+        return p
 
 from radial1d_wrapper import radial1d
 
