@@ -196,7 +196,7 @@ module problem_data
           dt=min(GrowthFactor*dt,MaxTimeStepSize)
         end if
 
-        if (not(RunToSS)) then
+        if (.NOT.RunToSS) then
 !         Cut down to minimum observation data time interval:
           call FindMinObsTimeInterval(MinObsDT)
 	      dt=min(dt,MinObsDT)
@@ -295,7 +295,7 @@ module problem_data
 
 !   Check to see if new flows need to be found:
 
-    if (not(ResetTimeStepSize)) then
+    if (.NOT.ResetTimeStepSize) then
 
      if ((time<TIM(FlowIndex)).or.(time>=TIM(min(FlowIndex+1,NFLOWS)))) then
 
@@ -322,7 +322,7 @@ module problem_data
 	    end if 
 
 	    Found=.false.
-        do while (not(Found))
+        do while (.NOT.Found)
           if((time>=TIM(Index)).and.(time<TIM(Index+1))) then
 		    Found=.true.
 	      else

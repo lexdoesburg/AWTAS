@@ -1,5 +1,5 @@
-! For theis solution
-! gfortran -o pseudodata pseudodata.f90 variable_types.o problem_data.o variable_parameters.o models.o noise.o theis_solution.o utility_functions.o
+! To compile
+! gfortran -o theis main.f90 variable_types.o variable_parameters.o problem_data.o utility_functions.o theis_solution.o
 
 program TheisMain
 
@@ -11,7 +11,6 @@ program TheisMain
   use theis_solution
   use problem_data
   use variable_parameters
-  use noise
 
   implicit none
 
@@ -27,8 +26,6 @@ program TheisMain
   real(DP) :: k,nu,phi,rho,c,b,Q0,P0,rw
   type(datapoint),allocatable :: ReadData(:)
   integer(I4B) :: lower,upper
-
-  external updatemodelprogress
 
   call get_command_argument(1,inFile)
   call get_command_argument(2,outFile)
@@ -65,6 +62,7 @@ program TheisMain
   allocate(PumpData(NPumps,MaxNPumpTimes))
   allocate(FixedParameter(NFixedParameters),ReservoirCondition(NReservoirConditions))
   allocate(variable(NVariables))
+  allocate(PumpSchemeParams(1,1))
 
   Pump(1)%NData=1
   Pump(1)%Scheme=1
@@ -81,7 +79,7 @@ program TheisMain
   FixedParameter(4)=nu
   FixedParameter(5)=rho
   FixedParameter(6)=c
-  PumpData(1,1)%rate=Q0
+  PumpSchemeParams(1,1)=Q0
   ObsPoint(1)%Position%x(1)=rw
   close(dat)
 
@@ -127,10 +125,9 @@ program TheisMain
   write (out,'(i15)') NObsPoints
 
   DataNo=0
+  write (out,*) "Initial Pressure "
 
-  write (out,'(i15,1x,i15)') 1,ObsPoint(1)%Property
-  write (out,'(e15.5,1x,e15.5)') ObsPoint(1)%Position%x(1),ObsPoint(1)%DataOffset
-  write (out,'(i15,1x,e15.5)') ObsPoint(1)%NData,ObsPoint(1)%Error
+  write (out,*) "Time[s],Pressure[Pa]"
   do i=1,ObsPoint(1)%NData
     DataNo=DataNo+1
     write (out,'(e30.25,1x,e30.25)') TestData(DataNo)%time,TestData(DataNo)%ModelledValue
@@ -139,16 +136,3 @@ program TheisMain
 
   stop
 end program TheisMain
-
-!.....................................................................................
-
-subroutine updatemodelprogress(nummodelruns,timestepsize, &
-  progressfraction, analysisstopped)
-! This is a dummy routine to pass into the fast solver.
-  use variable_types
-  integer(I4B), intent(in) :: nummodelruns
-  real(DP), intent(in) :: timestepsize,progressfraction
-  logical(LGT), intent(inout) :: analysisstopped
-
-  return
-end subroutine updatemodelprogress
