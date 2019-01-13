@@ -1,53 +1,30 @@
-import data as datastructure
 import numpy as np
 import matplotlib.pyplot as plt
-import time
+from radial1d_wrapper import radial1d
 
+time, pressure_tough2 = np.genfromtxt('Pwell.dat', delimiter='   ').T
+print(time)
 
-# ---------------- Tough2 data
-# logtime, barpressure = np.genfromtxt('Pwell.dat', delimiter='   ', skip_header=0).T
-# logtime2, barpressure2 = np.genfromtxt('Pwell2.dat', delimiter='   ', skip_header=0).T
+time = [float(t) for t in time]
+print(time)
+time = np.asarray(time)
 
+k=0.1e-13
+phi=0.100000001
+Pressure0=40e5
+X0=200
+rw=0.1
+thick=100
+CR=1000
+COND=2.5
+RHOR=2500
+COMP=0
+ConstRate=-5
+distFromWell=0 # distance of observation point from action well
+numData=len(time)
 
-# for i in range(len(logtime)):
-#     print(logtime[i], barpressure[i])
+pressure = radial1d(phi, k, Pressure0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, numData, time)
 
-# plt.plot(logtime,barpressure,'k-')
-# plt.plot(logtime2,barpressure2,'r-')
-
-# # plt.semilogx(logtime,barpressure,'k-')
-# # plt.semilogx(logtime2,barpressure2,'r-')
-
-# plt.show()
-# -----------------
-# datapoints = []
-# pressure = []
-# for i in range(10000):
-#     p = np.random.rand()
-#     datapoints.append(datastructure.DataPoint(i, p))
-#     pressure.append(p)
-#     print(datapoints[i].time, datapoints[i].observation)
-
-# start = time.clock()
-# pressure2 = [p.observation for p in datapoints]
-# end = time.clock()
-# print(end-start)
-
-# start = time.clock()
-# pressure2 = pressure
-# end = time.clock()
-# print(end-start)
-
-dictionary = {'Val':None}
-
-dict_of_dicts = {1:dictionary, 2:dictionary, 3:dictionary}
-
-print(dict_of_dicts)
-
-dict_of_dicts[1]['Val'] = 1
-
-print(dict_of_dicts)
-
-name = 'ABc'
-new_name = name.lower()
-print(new_name)
+plt.plot(time, pressure_tough2, 'k-')
+plt.plot(time, pressure/1e5, 'r--')
+plt.show()
