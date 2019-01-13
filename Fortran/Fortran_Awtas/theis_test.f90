@@ -28,7 +28,7 @@ integer(I4B) :: MaxTotalNData
 integer(I4B) :: ObsPointNo,i,DataNo
 real(DP) :: t,t0,dt,t1
 real(DP), allocatable :: variable(:)
-real(DP) :: k,nu,phi,rho,c,b,Q0,P0,rw,period
+real(DP) :: k,nu,phi,rho,c,b,Q0,P0,rw,period,r
 real(DP) :: Pressure0,X0,thick,CR,COND,RHOR,COMP,COMT,AAA
 real(DP) :: CRF,CONDF,RHORF,COMPF,COMTF,AAAF
 real(DP) :: CRM,CONDM,RHORM,COMPM,COMTM,AAAM
@@ -120,7 +120,7 @@ select case (ModelType)
     select case (Pump(1)%Scheme)
 	case (1)
       open(unit=dat,file=inFile,status='old')
-      read(dat,*) k,nu,phi,rho,c,b,Q0,P0
+      read(dat,*) k,nu,phi,rho,c,b,Q0,P0,r
       variable(1)=k
       variable(2)=phi
       ReservoirCondition(1)=P0
@@ -273,7 +273,7 @@ do ObsPointNo=1,NObsPoints
 
   ! write (*,*) 'Distance from action well:'
   ! read (*,*) ObsPoint(ObsPointNo)%Position%x(1)
-  ObsPoint(ObsPointNo)%Position%x(1)=0.05
+  ObsPoint(ObsPointNo)%Position%x(1)=r
 
   ObsPoint(ObsPointNo)%Position%x(2)=0.0  ! Not used.
   ObsPoint(ObsPointNo)%Position%x(3)=0.0  ! Not used.
