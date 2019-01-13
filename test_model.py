@@ -5,7 +5,7 @@ import time as time_module
 import model
 import data as data_class
 
-def setup_model(model_type, parameters, variables, time, test_num, noise=True, sd=1e-5, generate_datafile=True):
+def setup_model(model_type, parameters, variables, time, test_num, noise=True, sd=1e-5, generate_datafile=False):
     model_type = model_type.lower()
     if model_type == 'theis':
         test_model = model.Theis_Solution()
@@ -268,15 +268,20 @@ num_data = 271
 
 time = np.linspace(0, t, num=num_data)
 parameters = [p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell]
-# radial1_variables = [phi, k]
+radial1_variables = [phi, k]
 
 # # Build model
 # # theis_test_4 = setup_model('theis', parameters, test4_variables, time, test_num=4, sd=3e-5)
-# # radial_test_1 = setup_model('radial1d', parameters, radial1_variables, time, test_num=1, sd=15000,generate_datafile=True)
-# radial_test_1_data = data_class.Data()
-# radial_test_1 = model.Radial_1D(radial_test_1_data)
+# radial_test_1 = setup_model('radial1d', parameters, radial1_variables, time, test_num=1, sd=15000,generate_datafile=True)
 
-# time,pressure = np.genfromtxt('Radial_1D_test1.dat', delimiter=',', skip_header=6).T
+time,pressure = np.genfromtxt('Radial_1D_test1.dat', delimiter=',', skip_header=6).T
+
+radial_test_1_data = data_class.Data(model_type='radial1d')
+radial_test_1_data.observation = pressure
+radial_test_1_data.error = 15000
+radial_test_1_data.set_known_parameters(parameters)
+radial_test_1_data.set_time(time)
+radial_test_1 = model.Radial_1D(radial_test_1_data)
 
 # radial_test_1.data.observation = pressure
 # radial_test_1.data.time = time
@@ -296,21 +301,22 @@ parameters = [p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell]
 # # plt.show()
 
 # print('Start')
-# optimal_parameters = radial_test_1.find_model_parameters2(verbose=True)
+start = time_module.time()
+optimal_parameters = radial_test_1.find_model_parameters2(verbose=True)
+end = time_module.time()
+print(radial_test_1.data.approximation)
 
-# print(radial_test_1.data.approximation)
-
-# print('Optimal phi = {} Optimal k = {}'.format(optimal_parameters[0],optimal_parameters[1]))
+print('Optimal phi = {} Optimal k = {}'.format(optimal_parameters[0],optimal_parameters[1]))
 # # plt.plot(radial_test_1.data.time, radial_test_1.data.approximation)
-# plot_solution(radial_test_1, dual_plot=True)
+plot_solution(radial_test_1, dual_plot=True)
+print('Time to find solution = ', end-start)
+# radial_data = data_class.create_data('radial1d', filename=None, time=None, observation=None, parameters=parameters, error=None)
+# print(radial_data.parameters)
+# radial_data.generate_datafile('testing_radial1d_data.txt')
 
-radial_data = data_class.create_data('radial1d', filename=None, time=None, observation=None, parameters=parameters, error=None)
-print(radial_data.parameters)
-radial_data.generate_datafile('testing_radial1d_data.txt')
-
-new_radial = data_class.create_data('radial1d')
-new_radial.read_file('testing_radial1d_data.txt')
-print(new_radial.parameters)
+# new_radial = data_class.create_data('radial1d')
+# new_radial.read_file('testing_radial1d_data.txt')
+# print(new_radial.parameters)
 
 # # -----------------------------------------------------------------------------------
 
