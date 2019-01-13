@@ -1,34 +1,31 @@
 import pytest
 import numpy as np
-import time as time_module
 import model
-import data as datastructure
+import data
 
-def get_expected_output(filename):
-    time, pressure = np.genfromtxt(filename, delimiter=',', skip_header=12).T
-    _, values = np.genfromtxt(filename, delimiter=',', skip_footer=len(time)).T
-    parameters = values[:-2]
-    variables = values[-2:]
-    return variables, parameters, time, pressure
+def get_expected_output(test_file):
+    with open(test_file, 'r') as file:
+        file.readline() # Skip header
+        parameters_string = file.readline()
+        parameters = [float(value) for value in parameters_string.split(',')]
+        # print(parameters)
+        file.readline() # Skip more metadata
+        variables_string = file.readline()
+        variables = [float(value) for value in variables_string.split(',')]
+        # print(variables)
+    time, expected_pressure = np.genfromtxt(test_file, delimiter=',', skip_header=5).T
+    return variables, parameters, time, expected_pressure
 
-# def get_model_parameters(filename):
-#     _, values = np.genfromtxt(filename, delimiter=',').T
-#     parameters = values[:-2]
-#     variables = values[-2:]
-#     return variables, parameters
+def get_actual_output(variables, parameters, time):
+    theis_data = data.Data(time=time, parameters=parameters)
+    theis_model = model.Theis_Solution(theis_data)
+    actual_pressure = theis_model.model(variables)
+    return actual_pressure
 
-def setup_model(time, parameters):
-    theis_data = datastructure.Data(time=time, parameters_list=parameters, model_type='theis')
-    theis_model = model.Theis_Solution(data=theis_data)
-    return theis_model
+@pytest.mark.parametrize('test_file', ['theis_testcase1.txt'])
 
-def get_actual_output(model, variables):
-    pressure = model.model(variables)
-    return pressure
-
-def test_theis_output1():
-    variables, parameters, time, expected_pressure = get_expected_output('theis_test1_output.txt')
-    theis_model = setup_model(time, parameters)
-    actual_pressure = get_actual_output(theis_model, variables)
-    assert actual_pressure == expected_pressure
-
+def test_theis_output(test_file):
+    variables, parameters, time, expected_pressure = get_expected_output(test_file)
+    actual_pressure = get_actual_output(variables, parameters, time)
+    # print(actual_pressure - expected_pressure)
+    assert np.allclose(actual_pressure, expected_pressure)
