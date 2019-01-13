@@ -298,50 +298,50 @@ class Theis_Solution(Model):
     #         p[0] = p0
     #     return p
 
-from theis_wrapper import theis
+# from theis_wrapper import theis
 
-class Theis_Solution_Fortran(Theis_Solution):
-    def model(self, variables):
-        # p0, qm, h, rho, nu, C, r = self.data.parameters
-        p0 = self.data.parameters['Initial Pressure']['Value']
-        qm = self.data.parameters['Mass Flowrate']['Value']
-        h = self.data.parameters['Layer Thickness']['Value']
-        rho = self.data.parameters['Density']['Value']
-        nu = self.data.parameters['Kinematic Viscosity']['Value']
-        C = self.data.parameters['Compressibility']['Value']
-        r = self.data.parameters['Radius']['Value']
-        phi, k = variables
-        num_observations = len(self.data.time)
-        p = theis(k, nu, phi, rho, C, h, qm, p0, r, num_observations, self.data.time)
-        return p
+# class Theis_Solution_Fortran(Theis_Solution):
+#     def model(self, variables):
+#         # p0, qm, h, rho, nu, C, r = self.data.parameters
+#         p0 = self.data.parameters['Initial Pressure']['Value']
+#         qm = self.data.parameters['Mass Flowrate']['Value']
+#         h = self.data.parameters['Layer Thickness']['Value']
+#         rho = self.data.parameters['Density']['Value']
+#         nu = self.data.parameters['Kinematic Viscosity']['Value']
+#         C = self.data.parameters['Compressibility']['Value']
+#         r = self.data.parameters['Radius']['Value']
+#         phi, k = variables
+#         num_observations = len(self.data.time)
+#         p = theis(k, nu, phi, rho, C, h, qm, p0, r, num_observations, self.data.time)
+#         return p
 
-from radial1d_wrapper import radial1d
+# from radial1d_wrapper import radial1d
 
-class Radial_1D(Model):
-    def __init__(self, data=None):
-        """
-        Initialise the model
-        """
-        super().__init__(data=data, model_type='radial1d')
+# class Radial_1D(Model):
+#     def __init__(self, data=None):
+#         """
+#         Initialise the model
+#         """
+#         super().__init__(data=data, model_type='radial1d')
 
-    def model(self, parameters):
-        # Unpack the parameters which we are trying to find
-        phi, k = parameters
-        print('Phi = {} k = {}'.format(phi,k))
-        # Get relevant data from data structure
-        # p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell = self.data.parameters
-        p0 = self.data.parameters['Initial Pressure']['Value']
-        X0 = self.data.parameters['Initial Temperature']['Value']
-        rw = self.data.parameters['Action Well Radius']['Value']
-        thick = self.data.parameters['Layer Thickness']['Value']
-        CR = self.data.parameters['Rock Specific Heat']['Value']
-        COND = self.data.parameters['Rock Conductivity']['Value']
-        RHOR = self.data.parameters['Rock Density']['Value']
-        COMP = self.data.parameters['Rock Compressibility']['Value']
-        ConstRate = self.data.parameters['Mass Flowrate']['Value']
-        distFromWell = self.data.parameters['Observation Point Distance']['Value']
-        # Run the model to get result
-        print('Calling radial1d')
-        pressure = radial1d(phi, k, p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, 271, np.linspace(0, 54000, 271))
-        print('Returning pressure')
-        return pressure
+#     def model(self, parameters):
+#         # Unpack the parameters which we are trying to find
+#         phi, k = parameters
+#         print('Phi = {} k = {}'.format(phi,k))
+#         # Get relevant data from data structure
+#         # p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell = self.data.parameters
+#         p0 = self.data.parameters['Initial Pressure']['Value']
+#         X0 = self.data.parameters['Initial Temperature']['Value']
+#         rw = self.data.parameters['Action Well Radius']['Value']
+#         thick = self.data.parameters['Layer Thickness']['Value']
+#         CR = self.data.parameters['Rock Specific Heat']['Value']
+#         COND = self.data.parameters['Rock Conductivity']['Value']
+#         RHOR = self.data.parameters['Rock Density']['Value']
+#         COMP = self.data.parameters['Rock Compressibility']['Value']
+#         ConstRate = self.data.parameters['Mass Flowrate']['Value']
+#         distFromWell = self.data.parameters['Observation Point Distance']['Value']
+#         # Run the model to get result
+#         print('Calling radial1d')
+#         pressure = radial1d(phi, k, p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, 271, np.linspace(0, 54000, 271))
+#         print('Returning pressure')
+#         return pressure
