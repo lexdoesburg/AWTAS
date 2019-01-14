@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from radial1d_wrapper import radial1d
 
 time, pressure_tough2 = np.genfromtxt('Pwell.dat', delimiter='   ').T
+pressure_tough2 = pressure_tough2*100000
 print(time)
 
 time = [float(t) for t in time]
@@ -11,7 +12,7 @@ time = np.asarray(time)
 
 k=0.1e-13
 phi=0.100000001
-Pressure0=40e5
+Pressure0=4e6
 X0=200
 rw=0.1
 thick=100
@@ -26,5 +27,8 @@ numData=len(time)
 pressure = radial1d(phi, k, Pressure0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, numData, time)
 
 plt.plot(time, pressure_tough2, 'k-')
-plt.plot(time, pressure/1e5, 'r--')
+plt.plot(time, pressure, 'r--')
 plt.show()
+
+print(pressure-pressure_tough2)
+print(np.allclose(pressure, pressure_tough2))
