@@ -25,10 +25,13 @@ distFromWell=0 # distance of observation point from action well
 numData=len(time)
 
 pressure = radial1d(phi, k, Pressure0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, numData, time)
+while pressure[-1] == 4000000.:
+    pressure = radial1d(phi, k, Pressure0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, numData, time)
 
 plt.plot(time, pressure_tough2, 'k-')
 plt.plot(time, pressure, 'r--')
 plt.show()
 
 print(pressure-pressure_tough2)
+print(pressure)
 print(np.allclose(pressure, pressure_tough2))
