@@ -35,7 +35,7 @@ class PlotWidget(QWidget):
         # Choose model type combobox
         self.model_type_combobox = QComboBox(self)
         self.model_type_combobox.addItems(['Analytical Theis','Homogeneous Porous'])
-        self.model_type_combobox.activated[str].connect(self.onActivation)
+        self.model_type_combobox.activated[str].connect(self.model_selection)
         model_type_label = QLabel('Model Type: ')
         model_type_layout = QGridLayout()
         model_type_layout.addWidget(model_type_label,0,0)
@@ -57,14 +57,6 @@ class PlotWidget(QWidget):
         button_layout.addWidget(self.import_data_button)
         button_layout.addWidget(self.fit_button)
 
-        # Model Dropdown menu
-        # models_label = QLabel(self)
-        # models_label.setText("Select Model: ")
-        # self.models_dropdown = QComboBox(self)
-        # # models_dropdown.addItem("Select Model")
-        # self.models_dropdown.addItem("Theis Solution")
-        # # models_dropdown.activated[str].connect(self.select_model)
-
         # Define the overall widget layout
         self.layout = QGridLayout()
         self.layout.addWidget(self.plotting_canvas, 1, 0)
@@ -75,7 +67,8 @@ class PlotWidget(QWidget):
         # self.layout.addWidget(self.fit_button, 2, 1)
         self.layout.addLayout(button_layout, 0, 1)
         # layout.addLayout(self.parameters_layout(parameter_names=self.parameter_names, default_values=self.default_values), 1, 1)
-        self.layout.addLayout(self.create_parameters_groupbox(),1,1)
+        self.parameter_sidebar = self.create_parameters_groupbox()
+        self.layout.addLayout(self.parameter_sidebar, 1, 1)
 
         # Make the canvas at least 500x500 pixels
         # Canvas is good at 500x500 windows. 700x500 mac.
@@ -98,36 +91,50 @@ class PlotWidget(QWidget):
     #         self.model = model.Theis_Solution(self.data)
 
     @pyqtSlot(str)
-    def onActivation(self, text):
+    def model_selection(self, text):
         """
         Function to change what happens when a different model type is selected
         """
         print(text)
+        if text == 'Analytical Theis':
+            self.data = data_class.Data(model_type='theis')
+        elif text == 'Homogeneous Porous':
+            self.data = data_class.Data(model_type='radial1d')
+
 
     @pyqtSlot()
     def plot_data(self):
         self.clear_all_parameters()
-        filename, _ = QFileDialog.getOpenFileName(self, 'Load data file', "", '*.dat;*.txt')
-        if filename:
-            start = time.time()
-            if self.data:
-                self.data.read_file(filename=filename)
-            else:
-                self.data = data_class.Data(filename=filename)
-            end = time.time()
-            print('Time elapsed = {}'.format(end - start))
-
+        # filename, _ = QFileDialog.getOpenFileName(self, 'Load data file', "", '*.dat;*.txt')
+        # if filename:
+        #     start = time.time()
+        #     if self.data:
+        #         self.data.read_file(filename=filename)
+        #     else:
+        #         self.data = data_class.Data(filename=filename)
+        #     end = time.time()
+        #     print('Time elapsed = {}'.format(end - start))
+        self.import_data_from_file()
             # self.clear_all_parameters()
 
-            start = time.time()
-            self.plotting_canvas.plot_observed_data(self.data)
-            end = time.time()
-            print('Plotting Observed Data Time Elapsed = {}'.format(end - start))
+        start = time.time()
+        self.plotting_canvas.plot_observed_data(self.data)
+        end = time.time()
+        print('Plotting Observed Data Time Elapsed = {}'.format(end - start))
+        
         self.update_parameter_labels()
         self.data_imported = True
         self.parameters_imported = True
         if self.parameters_imported and self.data_imported:
             self.fit_button.setEnabled(True)
+
+    def import_data_from_file(self):
+        filename, _ = QFileDialog.getOpenFileName(self, 'Load data file', "", '*.dat;*.txt')
+        if filename:
+            start = time.time()
+            self.data.read_file(filename=filename)
+            end = time.time()
+            print('Time elapsed = {}'.format(end - start))
 
     @pyqtSlot()
     def fit_data(self):
@@ -242,106 +249,3 @@ class PlottingCanvas(FigureCanvas):
         self.fitted_lines = self.axes.semilogx(np.log(data.time), data.approximation, 'r-', label='Fitted Approximation')
         self.axes.legend(loc='lower left')
         self.draw()
-
-    # # # Old functions for the PlotWidget class
-    # @pyqtSlot()
-    # def save_parameters(self):
-    #     parameters = []
-    #     parameters.append(float(self.p0_input.text()))
-    #     parameters.append(float(self.qm_input.text()))
-    #     parameters.append(float(self.h_input.text()))
-    #     parameters.append(float(self.rho_input.text()))
-    #     parameters.append(float(self.nu_input.text()))
-    #     parameters.append(float(self.C_input.text()))
-    #     parameters.append(float(self.r_input.text()))
-    #     self.data.set_known_parameters(parameters)
-    #     self.parameters_imported = True
-    #     if self.parameters_imported and self.data_imported:
-    #         self.fit_button.setEnabled(True)
-
-    # @pyqtSlot()
-    # def check_box(self, frame):
-    #     if self.params_checkbox.isChecked:
-    #         frame.show()
-    #     else:
-    #         frame.hide()
-
-    # def parameters_layout(self):
-    #     # phi_label = QLabel('Porosity: ')
-    #     # k_label = QLabel('Permeability: ')
-    #     # phi_input = QLineEdit()
-    #     # k_input = QLineEdit()
-    #     # frame_layout = QGridLayout()
-    #     # frame_layout.addWidget(phi_label, 0, 0)
-    #     # frame_layout.addWidget(phi_input, 0, 1)
-    #     # frame_layout.addWidget(k_label, 1, 0)
-    #     # frame_layout.addWidget(k_input, 1, 1)
-
-    #     # frame = QFrame()
-    #     # frame.hide()
-    #     # frame.setLayout(frame_layout)
-    #     # self.params_checkbox = QCheckBox('Enter Porosity and Permeability Estimates')
-    #     # self.params_checkbox.stateChanged.connect(lambda: self.check_box(frame))
-
-    #     p0_label = QLabel('Initial Pressure')
-    #     self.p0_input = QLineEdit()
-    #     self.p0_input.setText('3.6e6')
-    #     qm_label = QLabel('Mass Flowrate')
-    #     self.qm_input = QLineEdit()
-    #     self.qm_input.setText('-0.005')
-    #     h_label = QLabel('Thickness')
-    #     self.h_input = QLineEdit()
-    #     self.h_input.setText('100')
-    #     rho_label = QLabel('Density')
-    #     self.rho_input = QLineEdit()
-    #     self.rho_input.setText('813.37')
-    #     nu_label = QLabel('Kinematic Viscosity')
-    #     self.nu_input = QLineEdit()
-    #     self.nu_input.setText('0.0001111')
-    #     C_label = QLabel('Compressibility')
-    #     self.C_input = QLineEdit()
-    #     self.C_input.setText('0.001303')
-    #     r_label = QLabel('Radius')
-    #     self.r_input = QLineEdit()
-    #     self.r_input.setText('0.05')
-        
-    #     input_button = QPushButton('Save Parameters', self)
-    #     input_button.setToolTip('Import the above entered parameters')
-    #     input_button.clicked.connect(self.save_parameters)
-
-    #     layout = QGridLayout()
-    #     # layout.addWidget(self.params_checkbox, 0, 0)
-    #     # layout.addWidget(frame, 1, 0)
-    #     # layout.addLayout(k_widget, 1, 1)
-    #     layout.addWidget(p0_label, 2, 0)
-    #     layout.addWidget(self.p0_input, 2, 1)
-    #     layout.addWidget(qm_label, 3, 0)
-    #     layout.addWidget(self.qm_input, 3, 1)
-    #     layout.addWidget(h_label, 4, 0)
-    #     layout.addWidget(self.h_input, 4, 1)
-    #     layout.addWidget(rho_label, 5, 0)
-    #     layout.addWidget(self.rho_input, 5, 1)
-    #     layout.addWidget(nu_label, 6, 0)
-    #     layout.addWidget(self.nu_input, 6, 1)
-    #     layout.addWidget(C_label, 7, 0)
-    #     layout.addWidget(self.C_input, 7, 1)
-    #     layout.addWidget(r_label, 8, 0)
-    #     layout.addWidget(self.r_input, 8, 1)
-    #     layout.addWidget(input_button, 9, 1)
-
-    #     # layout = QGridLayout()
-    #     # layout.setVerticalSpacing(1)
-    #     # row = 0
-    #     # for parameter, default_value in zip(parameter_names, default_values):
-    #     #     label = QLabel(parameter)
-    #     #     input_box = QLineEdit()
-    #     #     if default_value:
-    #     #         input_box.setText(str(default_value))
-    #     #     layout.addWidget(label, row, 0)
-    #     #     layout.addWidget(input_box, row, 1)
-    #     #     row += 1
-    #     # input_button = QPushButton('Save Parameters', self)
-    #     # input_button.setToolTip('Import the above entered parameters')
-    #     # input_button.clicked.connect(self.save_parameters)
-    #     # layout.addWidget(input_button, row, 0)
-    #     return layout
