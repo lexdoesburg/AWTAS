@@ -155,19 +155,11 @@ class PlotWidget(QWidget):
         # parameters_groupbox.setChecked(False)
 
         parameters_grid = QGridLayout()
-        parameters_grid.addWidget(QLabel('Initial Pressure (Pa): '), 0, 0)
-        parameters_grid.addWidget(QLabel('Mass Flowrate (Kg/s): '), 1, 0)
-        parameters_grid.addWidget(QLabel('Thickness (m): '), 2, 0)
-        parameters_grid.addWidget(QLabel('Density (kg/m<sup>3</sup>): '), 3, 0)
-        parameters_grid.addWidget(QLabel('Kinematic Viscosity (m<sup>2</sup>/s): '), 4, 0)
-        parameters_grid.addWidget(QLabel('Compressibility (1/Pa): '), 5, 0)
-        parameters_grid.addWidget(QLabel('Radius (m): '), 6, 0)
-
-        for i in range(parameters_grid.rowCount()):
+        for i, (parameter, info) in enumerate(self.data.parameters.items()):
+            parameters_grid.addWidget(QLabel('{} [{}]: '.format(parameter, info['Units'])), i, 0)
             new_label = QLabel()
             self.parameter_value_labels.append(new_label)
             parameters_grid.addWidget(new_label, i, 1)
-        
         parameters_groupbox.setLayout(parameters_grid)
 
         variables_groupbox = QGroupBox('Unknown Parameters')
@@ -175,7 +167,7 @@ class PlotWidget(QWidget):
 
         variables_grid = QGridLayout()
         variables_grid.addWidget(QLabel('Porosity: '), 0, 0)
-        variables_grid.addWidget(QLabel('Permeability (m<sup>2</sup>): '), 1, 0)
+        variables_grid.addWidget(QLabel('Permeability [m<sup>2</sup>]: '), 1, 0)
         for i in range(variables_grid.rowCount()):
             new_label = QLabel()
             self.variable_value_labels.append(new_label)
@@ -190,8 +182,11 @@ class PlotWidget(QWidget):
         return fullWidget
 
     def update_parameter_labels(self):
-        for i, label in enumerate(self.parameter_value_labels):
-            label.setText(str(self.data.parameters[i]))
+        # for i, label in enumerate(self.parameter_value_labels):
+        #     label.setText(str(self.data.parameters[i]))
+        for i, info in enumerate(self.data.parameters.values()):
+            self.parameter_value_labels[i].setText(str(info['Value']))
+        # pass
     
     def clear_all_parameters(self):
         for label in self.parameter_value_labels + self.variable_value_labels:
