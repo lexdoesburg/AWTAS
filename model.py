@@ -9,6 +9,20 @@ import data as data_class
 
 import time
 
+def create_model(model_type, data=None):
+    model_type = model_type.lower()
+    if model_type == 'theis':
+        model = Theis_Solution(data)
+    elif model_type == 'theis_fortran':
+        # model = Theis_Solution_Fortran(data)
+        pass
+    elif model_type == 'radial1d':
+        # model = Radial_1D(data)
+        pass
+    else:
+        raise ValueError('Error that model type does not exist.')
+    return model
+
 class Model():
     def __init__(self, data=None, model_type=None):
         """
