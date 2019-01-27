@@ -1,1 +1,0 @@
-extern void c_radial1d(double* phi, double* k, double* Pressure0, double* X0, double* rw, double* thick, double* CR, double* COND, double* RHOR, double* COMP, double* ConstRate, double* distFromWell, int* numData, double* time, double* pressure);
