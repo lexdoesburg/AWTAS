@@ -26,9 +26,9 @@ cc
 	DIMENSION POR(M),PER(M)
 	DIMENSION BMOLD(M),BEOLD(M)
       DIMENSION P0(M),T0(M)
-      COMMON/WRIT/IWRIT,IT
-	CHARACTER*6 NAME
-      DATA FACP,FACT,FACS,SCALE /1.0E-8,1.0E-8,1.0E-8,1.0E-6/
+      ! COMMON/WRIT/IWRIT,IT
+	! CHARACTER*6 NAME
+      DATA FACP,FACT,FACS,EnergyScale /1.0E-8,1.0E-8,1.0E-8,1.0E-6/
 	real*8, parameter:: small=1.0D-5
 
 cc
@@ -334,22 +334,22 @@ cc
 cc
 cc  energy residual
       ! Added QERB*CCD terms to next 2 lines for recharge:
-      R(J1)=-SCALE*(BEB-BEOLD(1)+(FEP*AP-QEM)*CCB+QERB*CCD)
-      RR(J1)=-SCALE*(BEB-BEOLD(1)+(FEP*AP-QEM)*CCB+QERB*CCD)
+      R(J1)=-EnergyScale*(BEB-BEOLD(1)+(FEP*AP-QEM)*CCB+QERB*CCD)
+      RR(J1)=-EnergyScale*(BEB-BEOLD(1)+(FEP*AP-QEM)*CCB+QERB*CCD)
       RRR=ABS(R(J1))
       RMAX=MAX(RMAX,RRR)
 cc  derivatives for energy equation
       C1(J1)=0.0D0
       C2(J1)=0.0D0
       C7(J1)=0.0D0
-      C3(J1)=BEB_PB*SCALE
-      C4(J1)=BEB_XB*SCALE
-      C3(J1)=C3(J1)+(AP*FEP_PB*CCB)*SCALE
-      C4(J1)=C4(J1)+(AP*FEP_XB*CCB)*SCALE
-      C5(J1)=(AP*FEP_PC*CCB)*SCALE
-      C6(J1)=(AP*FEP_XC*CCB)*SCALE
-      C3(J1)=C3(J1)-(QEM_PB*CCB)*SCALE+QERB_PB*CCD*SCALE
-      C4(J1)=C4(J1)-(QEM_XB*CCB)*SCALE+QERB_XB*CCD*SCALE
+      C3(J1)=BEB_PB*EnergyScale
+      C4(J1)=BEB_XB*EnergyScale
+      C3(J1)=C3(J1)+(AP*FEP_PB*CCB)*EnergyScale
+      C4(J1)=C4(J1)+(AP*FEP_XB*CCB)*EnergyScale
+      C5(J1)=(AP*FEP_PC*CCB)*EnergyScale
+      C6(J1)=(AP*FEP_XC*CCB)*EnergyScale
+      C3(J1)=C3(J1)-(QEM_PB*CCB)*EnergyScale+QERB_PB*CCD*EnergyScale
+      C4(J1)=C4(J1)-(QEM_XB*CCB)*EnergyScale+QERB_XB*CCD*EnergyScale
 cc
 cc  iterate over internal blocks
       do I=2,M-1
@@ -547,23 +547,23 @@ cc  derivatives for mass equation
       C4(J)=C4(J)-AM*FMM_PB*CCB+CCD*QMRB_PB
       C5(J)=C5(J)-AM*FMM_XB*CCB+CCD*QMRB_XB
 cc  energy residual (recharge terms added AC 15/12/00): 
-      R(J1)=-(BEB-BEOLD(I)+(FEP*AP-FEM*AM)*CCB+QERB*CCD)*SCALE
-      RR(J1)=-(BEB-BEOLD(I)+(FEP*AP-FEM*AM)*CCB+QERB*CCD)*SCALE
+      R(J1)=-(BEB-BEOLD(I)+(FEP*AP-FEM*AM)*CCB+QERB*CCD)*EnergyScale
+      RR(J1)=-(BEB-BEOLD(I)+(FEP*AP-FEM*AM)*CCB+QERB*CCD)*EnergyScale
 	RRR=ABS(R(J1))
 	RMAX=MAX(RMAX,RRR)
 cc  derivatives for energy equation
       C7(J1)=0.0D0
-      C3(J1)=BEB_PB*SCALE
-      C4(J1)=BEB_XB*SCALE
+      C3(J1)=BEB_PB*EnergyScale
+      C4(J1)=BEB_XB*EnergyScale
 	! Recharge terms added (AC 15/12/00):
-      C3(J1)=C3(J1)+(AP*FEP_PB*CCB+CCD*QERB_PB)*SCALE
-      C4(J1)=C4(J1)+(AP*FEP_XB*CCB+CCD*QERB_XB)*SCALE
-      C5(J1)=(AP*FEP_PC*CCB)*SCALE
-      C6(J1)=(AP*FEP_XC*CCB)*SCALE
-      C1(J1)=(-AM*FEM_PA*CCB)*SCALE
-      C2(J1)=(-AM*FEM_XA*CCB)*SCALE
-      C3(J1)=C3(J1)-(AM*FEM_PB*CCB)*SCALE
-      C4(J1)=C4(J1)-(AM*FEM_XB*CCB)*SCALE
+      C3(J1)=C3(J1)+(AP*FEP_PB*CCB+CCD*QERB_PB)*EnergyScale
+      C4(J1)=C4(J1)+(AP*FEP_XB*CCB+CCD*QERB_XB)*EnergyScale
+      C5(J1)=(AP*FEP_PC*CCB)*EnergyScale
+      C6(J1)=(AP*FEP_XC*CCB)*EnergyScale
+      C1(J1)=(-AM*FEM_PA*CCB)*EnergyScale
+      C2(J1)=(-AM*FEM_XA*CCB)*EnergyScale
+      C3(J1)=C3(J1)-(AM*FEM_PB*CCB)*EnergyScale
+      C4(J1)=C4(J1)-(AM*FEM_XB*CCB)*EnergyScale
       end do
 cc
 cc set up the i=m equation
@@ -641,8 +641,8 @@ cc  derivatives for mass equation
       C4(J)=C4(J)-AM*FMM_PB*CCB+CCD*QMRB_PB
       C5(J)=C5(J)-AM*FMM_XB*CCB+CCD*QMRB_XB
 cc  energy residual (recharge terms added AC 15/12/00):
-      R(J1)=-(BEB-BEOLD(M) - FEM*AM*CCB+CCD*QERB)*SCALE
-      RR(J1)=-(BEB-BEOLD(M) - FEM*AM*CCB+CCD*QERB)*SCALE
+      R(J1)=-(BEB-BEOLD(M) - FEM*AM*CCB+CCD*QERB)*EnergyScale
+      RR(J1)=-(BEB-BEOLD(M) - FEM*AM*CCB+CCD*QERB)*EnergyScale
 	RRR=ABS(R(J1))
 	RMAX=MAX(RMAX,RRR)
 cc  derivatives for energy equation
@@ -654,12 +654,12 @@ cc  derivatives for energy equation
       C6(J1)=0.0D0
       C7(J1)=0.0D0
 	! Recharge terms added (AC 15/12/00): 
-      C3(J1)=(BEB_PB+CCD*QERB_PB)*SCALE
-      C4(J1)=(BEB_XB+CCD*QERB_XB)*SCALE
-      C1(J1)=(-AM*FEM_PA*CCB)*SCALE
-      C2(J1)=(-AM*FEM_XA*CCB)*SCALE
-      C3(J1)=C3(J1)-(AM*FEM_PB*CCB)*SCALE
-      C4(J1)=C4(J1)-(AM*FEM_XB*CCB)*SCALE
+      C3(J1)=(BEB_PB+CCD*QERB_PB)*EnergyScale
+      C4(J1)=(BEB_XB+CCD*QERB_XB)*EnergyScale
+      C1(J1)=(-AM*FEM_PA*CCB)*EnergyScale
+      C2(J1)=(-AM*FEM_XA*CCB)*EnergyScale
+      C3(J1)=C3(J1)-(AM*FEM_PB*CCB)*EnergyScale
+      C4(J1)=C4(J1)-(AM*FEM_XB*CCB)*EnergyScale
       M2=2*M
 
       CALL SEVEN1(C1,C2,C3,C4,C5,C6,C7,R,XX,M2)
@@ -775,6 +775,9 @@ cc
       do I=1,M
          PP=POLD(I)
          XP=XOLD(I)
+         IF(I==1) THEN ! Added to fix issue of TZERO being unintialised
+           TZERO=0.0 
+         END IF
 	   CALL TSAT(PP,TZERO,TS)
          IF(XP<1.0) THEN
 cc  2-phase conditions
@@ -821,10 +824,10 @@ cc
          TP=TOLD(I)
          P0P=P0(I)
          T0P=T0(I)
-	   SVP=SVOLD(I)
-	   PORP=POR(I)
+	       SVP=SVOLD(I)
+	       PORP=POR(I)
          IPHP=IPHOLD(I)
-	   COMPP=COMP(I)
+	       COMPP=COMP(I)
          CALL THERMO(PP,TP,SVP,IPHP,RHOL,RHOV,HL,HV,VISL,VISV)
          CALL ACCUM(BM,BE,IPHP,PP,TP,SVP,RHOL,RHOV,HL,HV,PORP,RHOR,CR,
      1              P0P,T0P,COMPP,COMT,AAA,PERFAC)
