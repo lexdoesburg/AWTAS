@@ -1,13 +1,18 @@
 import pytest
 import numpy as np
-import model
-import data
+import os
+
+from awtas.logic import model
+from awtas.logic import data
 
 #----------------------------------
 #   To run this test: Type in command line interface
 #       [Windows]   python -m pytest -v -s H:\\Summer_Project\\AWTAS\\auto_test_theis.py
-#       [Mac]       python -m pytest -v -s /Users/lexdoesburg/Documents/Uni2018/Summer_Research/Summer_Project/AWTAS/auto_test_theis.py
+#       [Mac]       python -m pytest -v -s /Users/lexdoesburg/Documents/Uni2018/Summer_Research/Summer_Project/AWTAS/tests/auto_test_theis.py
 #----------------------------------
+
+test_file_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test_datafiles')
+theis_testcases = ['theis_testcase1.txt', 'theis_testcase2.txt']
 
 def get_expected_output(testfile):
     with open(testfile, 'r') as file:
@@ -32,7 +37,7 @@ def get_actual_output(variables, parameters, time, model_type):
     actual_pressure = test_model.model(variables)
     return actual_pressure
 
-@pytest.mark.parametrize('theis_testfile', ['theis_testcase1.txt', 'theis_testcase2.txt'])
+@pytest.mark.parametrize('theis_testfile', [os.path.join(test_file_dir, testcase) for testcase in theis_testcases])
 
 def test_theis_output(theis_testfile):
     variables, parameters, time, expected_pressure = get_expected_output(theis_testfile)

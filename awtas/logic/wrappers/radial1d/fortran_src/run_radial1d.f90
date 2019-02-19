@@ -1,4 +1,7 @@
 program run_radial1d
+  !
+  ! This program is used to test that the wrapper actually works as expected before moving on to use cython to wrap the code into python.
+  !
     use variable_types
     ! use call_radial1d
     use radial1d_wrapper

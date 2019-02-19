@@ -16,7 +16,6 @@ source_files = ['variable_types.f90',
                 'numericalsimulator1d_routines.for',
                 'numericalsimulator1d.f90',
                 'homogeneousporoussimulator.f90',
-                # 'radial1d_main.f90',
                 'call_radial1d.f90',
                 'radial1d_wrapper.f90']
 
@@ -26,26 +25,29 @@ file_prefixes = [file.split('.')[0] for file in source_files]
 object_files = [file_prefix + '.o' for file_prefix in file_prefixes]
 
 # compile the fortran modules (mac)
-for i, file in enumerate(source_files):
-    print('gfortran {source} -c -o {obj} {extra_flags}'.format(source=file, obj=object_files[i], extra_flags=flags))
-    os.system('gfortran {source} -c -o {obj} {extra_flags}'.format(source=file, obj=object_files[i], extra_flags=flags))
+fortran_source_dir = os.path.join(os.getcwd(), 'fortran_src')
 
-ext_modules = [Extension(# module name:
+for i, file in enumerate(source_files):
+#     print('gfortran {source} -c -o {obj} {extra_flags}'.format(source=file, obj=object_files[i], extra_flags=flags))
+#     os.system('gfortran {source} -c -o {obj} {extra_flags}'.format(source=file, obj=object_files[i], extra_flags=flags))
+    print('gfortran {source} -c -o {obj} {extra_flags}'.format(source=os.path.join(fortran_source_dir, file), obj=object_files[i], extra_flags=flags))
+    os.system('gfortran {source} -c -o {obj} {extra_flags}'.format(source=os.path.join(fortran_source_dir, file), obj=object_files[i], extra_flags=flags))
+
+ext_modules = [Extension(# Module name
                          'radial1d_wrapper',
-                         # source file:
+                         # Cython source
                          ['radial1d_wrapper.pyx'],
-                         # other compile args for gcc
-                         extra_compile_args=['-Ofast', '-fPIC'],
-                        #  library_dirs=['/Users/lexdoesburg/Documents/Uni2018/Summer_Research/Summer_Project/AWTAS/wrappers/radial1d/'],
+                         # Extra compile arguments for gcc
+                         extra_compile_args=['-Ofast', '-fPIC', '-mmacosx-version-min=10.12'],
+                         # library_dirs=['/Users/lexdoesburg/Documents/Uni2018/Summer_Research/Summer_Project/AWTAS/wrappers/radial1d/'],
                          libraries=['gfortran'],
-                         # other files to link to
-                         extra_link_args=object_files + ['-mmacosx-version-min=10.12'])]
+                         # Other arguments and files to link
+                         extra_link_args=object_files)]
 
 setup(name = 'radial1d_wrapper',
       cmdclass = {'build_ext': build_ext},
       include_dirs = [get_include()], # include numpy headers
       ext_modules = ext_modules)
-
 
 #-----------------------------------------------------------
 # To build extension run the following line in command line

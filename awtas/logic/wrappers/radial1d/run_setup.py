@@ -12,9 +12,11 @@ os.system('python3 setup.py build_ext --inplace')
 
 
 # Remove the compiled object & mod files
-# target_dir = os.path.join(os.getcwd(), 'fortran_src')
-target_dir = os.getcwd()
+current_dir = os.getcwd()
 
 for file_extension in ('*.o', '*.mod', '*.c'):
-    for file in glob(os.path.join(target_dir, file_extension)):
+    for file in glob(os.path.join(current_dir, file_extension)):
         os.remove(file)
+
+if os.path.isdir('build'):
+    shutil.rmtree('build')

@@ -7,8 +7,10 @@ from matplotlib.figure import Figure
 
 import numpy as np
 
-import data as data_class
-import model
+import awtas.logic.data as data_class
+import awtas.logic.model as model
+# import data as data_class
+# import model
 
 import time
 

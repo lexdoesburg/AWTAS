@@ -6,3 +6,4 @@ AWTAS.code-workspace
 
 bash.exe.stackdump
 
+.pytest_cache/

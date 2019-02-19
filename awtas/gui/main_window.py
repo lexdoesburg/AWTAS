@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
-import tab_widget
+import awtas.gui.tab_widget as tab_widget
 
 class MainWindow(QMainWindow):
     def __init__(self):
