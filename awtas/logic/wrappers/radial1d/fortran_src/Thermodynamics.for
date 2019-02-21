@@ -96,7 +96,10 @@ cc
 cc  First calculate the basic terms
 cc
       CALL THERMO(PX,TX,SVX,IPHX,RHOL,RHOV,HL,HV,VISL,VISV)
-	if (IGOOD>0) return
+	if (IGOOD>0) then
+	!   print *, 'IGOOD 1'
+	  return
+	end if
       CALL ACCUM(BMX,BEX,IPHX,PX,TX,SVX,
      1	       RHOL,RHOV,HL,HV,PORX,RHOR,CR,
      2         P0X,T0X,COMP,COMT,AAA,PERFAC)
@@ -117,7 +120,10 @@ cc
         PX1=PX+DELPX
 	  TX1=TX
         CALL THERMO(PX1,TX,SVX,IPHX,RHOL1,RHOV1,HL1,HV1,VISL1,VISV1)
-	  if (IGOOD>0) return
+	  if (IGOOD>0) then
+	!     print *, 'IGOOD 2'
+	    return
+	  end if
         CALL ACCUM(BMX1,BEX1,IPHX,PX1,TX,SVX,
      1             RHOL1,RHOV1,HL1,HV1,PORX,RHOR,CR,
      2             P0X,T0X,COMP,COMT,AAA,PERFAC1)
@@ -128,7 +134,10 @@ cc  make sure it stays liquid - decrease temperature
         DELXX=-FACT*TX
         TX2=TX+DELXX
         CALL THERMO(PX,TX2,SVX,IPHX,RHOL2,RHOV2,HL2,HV2,VISL2,VISV2)
-        if (IGOOD>0) return
+        if (IGOOD>0) then
+      !     print *, 'IGOOD 3'
+          return
+        end if
         CALL ACCUM(BMX2,BEX2,IPHX,PX,TX2,SVX,
      1             RHOL2,RHOV2,HL2,HV2,PORX,RHOR,CR,
      2             P0X,T0X,COMP,COMT,AAA,PERFAC2)
@@ -147,9 +156,15 @@ cc  increase pressure
 	  T0=0.0D0
         CALL TSAT(PX1,T0,TX1)
 	! Added in case of problems in TSAT (AC 8/00):
-	  if (IGOOD>0) return
+	  if (IGOOD>0) then
+	!     print *, 'IGOOD 4'
+	    return
+	  end if
         CALL THERMO(PX1,TX1,SVX,IPHX,RHOL1,RHOV1,HL1,HV1,VISL1,VISV1)
-	  if (IGOOD>0) return
+	  if (IGOOD>0) then
+	!     print *, 'IGOOD 5'
+	    return
+	  end if
         CALL ACCUM(BMX1,BEX1,IPHX,PX1,TX1,SVX,
      1             RHOL1,RHOV1,HL1,HV1,PORX,RHOR,CR,
      2             P0X,T0X,COMP,COMT,AAA,PERFAC1)
@@ -242,11 +257,13 @@ C
       Y=1.-SA1*TKR2-SA2/TKR6
       ZP=SA3*Y*Y-2.*SA4*TKR+2.*SA5*PNMR
       if (ZP<0.D0) then
+      ! print *, 'IGOOD 6'
 	  IGOOD=2
 	  return
 	end if
       Z=Y+ DSQRT(ZP)
       if (Z<0.D0) then ! Added AC (8/00)
+      ! print *, 'IGOOD 7'
 	  IGOOD=2
 	  return
 	end if
@@ -528,18 +545,20 @@ cc
 
       subroutine TSAT(PX,TX00,TS)
 
-	implicit none
-!     Arguments:
-	real(DP),intent(in):: PX,TX00
-	real(DP),intent(out)::TS
-!     Local variables:
-	real(DP):: TX0,DT,PSD,CC,ACC,SIGN,PS,RelTol
-	integer(I4B):: i
-	real(DP):: Residual
-	real(DP),parameter:: PTol=1.0d-10 ! Pressure tolerance for Newton iteration
-	integer(I4B),parameter:: MaxIt=15  ! Max iterations for Newton
-	real(DP),parameter:: MinP=0.5d5 ! MinP,MaxP are the pressure bounds
-	real(DP),parameter:: MaxP=1000.d5
+      implicit none
+    !     Arguments:
+      real(DP),intent(in):: PX,TX00
+      real(DP),intent(out)::TS
+    !     Local variables:
+      real(DP):: TX0,DT,PSD,CC,ACC,SIGN,PS,RelTol
+      integer(I4B):: i
+      real(DP):: Residual
+      real(DP),parameter:: PTol=1.0d-10 ! Pressure tolerance for Newton iteration
+      integer(I4B),parameter:: MaxIt=15  ! Max iterations for Newton
+!      real(DP),parameter:: MinP=0.5d5 ! MinP,MaxP are the pressure bounds
+!      real(DP),parameter:: MaxP=1000.d5
+      real(DP),parameter:: MinP=1.d3 ! MinP,MaxP are the pressure bounds
+      real(DP),parameter:: MaxP=2212.d4
 
 !     FIND SATURATION TEMPERATURE TS AT PRESSURE PX.
 !     TX0 IS STARTING TEMPERATURE FOR ITERATION.
@@ -547,6 +566,8 @@ cc
 
 !     Screen input pressure:
       if ((PX<MinP).or.(PX>MaxP)) then
+      ! print *, 'IGOOD 8'
+      ! print *, PX, MinP, MaxP
 	  IGOOD=2
 	else
         TX0=TX00
@@ -576,7 +597,10 @@ cc
           TS=TS+(PX-PS)*DT/(PSD-PS)
 	    Residual=abs(PX-PS)
 	    i=i+1
-	    if (i>MaxIt) IGOOD=2 ! Too many iterations
+	    if (i>MaxIt) then
+	      ! print *, 'IGOOD 9'
+	      IGOOD=2 ! Too many iterations
+	    end if
         end do
 
 	end if
@@ -726,7 +750,10 @@ cc
 cc       single phase liquid water
          CALL SAT(TX,PS)
          CALL COWAT(TX,PX,DW,UW)
-	   if (IGOOD>0) return
+	   if (IGOOD>0) then
+	!     print *, 'IGOOD 10'
+	    return
+	   end if
          RHOL=DW
          HL=UW+PX/RHOL
          RHOV=0.0
@@ -737,7 +764,10 @@ cc       single phase liquid water
 	case(1)
 cc       2-phase 
          CALL COWAT(TX,PX,DW,UW)
-	   if (IGOOD>0) return
+	   if (IGOOD>0) then
+	!     print *, 'IGOOD 11'
+	    return
+	   end if
          CALL SUPST(TX,PX,DS,US)
          RHOL=DW
          HL=UW+PX/RHOL

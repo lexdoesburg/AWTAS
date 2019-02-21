@@ -64,9 +64,14 @@ module problem_data
   logical(LGT) :: OnDeliv
   real(DP) :: ProdIndex,PCutoff
 
-  ! ! Added for debugging
-  integer(I4B) :: num_iterations
+  ! Added for debugging
+  integer(I4B) :: NumIterations
+
+  ! Explicit switch to only do recharge calculations if it is true
   logical(LGT) :: Recharge
+
+  ! Execution flag which returns the state of the run
+  integer(I4B) :: ExecutionFlag ! 0 if successful run, 1 if failure due to thermodynamics, 2 if failure due to too many time step reductions
 
 contains
 
@@ -201,7 +206,7 @@ contains
           dt=min(GrowthFactor*dt,MaxTimeStepSize)
         end if
 
-        if (.NOT.RunToSS) then ! Changed from not() to .NOT. to compile
+        if (.NOT.RunToSS) then ! Changed from not() to .NOT. to compile with gfortran
           !         Cut down to minimum observation data time interval:
           call FindMinObsTimeInterval(MinObsDT)
           dt=min(dt,MinObsDT)
@@ -300,7 +305,7 @@ contains
 
     !   Check to see if new flows need to be found:
 
-    if (.NOT.ResetTimeStepSize) then ! Changed from not() to .NOT. to compile
+    if (.NOT.ResetTimeStepSize) then ! Changed from not() to .NOT. to compile with gfortran
 
       if ((time<TIM(FlowIndex)).or.(time>=TIM(min(FlowIndex+1,NFLOWS)))) then
 
@@ -327,7 +332,7 @@ contains
           end if
 
           Found=.false.
-          do while (.NOT.Found) ! Changed from not() to .NOT. to compile
+          do while (.NOT.Found) ! Changed from not() to .NOT. to compile with gfortran
             if((time>=TIM(Index)).and.(time<TIM(Index+1))) then
               Found=.true.
             else

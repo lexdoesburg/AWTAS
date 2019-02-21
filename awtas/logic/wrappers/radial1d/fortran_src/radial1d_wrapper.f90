@@ -53,7 +53,9 @@ module radial1d_wrapper
     ! ! Locals
     ! logical(4) :: InjectionWell_logical
     ! logical(4) :: Deliverability_logical
-    ! integer(c_int) :: i
+    integer(c_int) :: i
+    real(c_double) :: start_time1, end_time, start_time2
+    call cpu_time(start_time1)
     ! if (InjectionWell == 0) then
     !   InjectionWell_logical = .False.
     ! else
@@ -103,6 +105,7 @@ module radial1d_wrapper
     ! print *, CutoffPressure
     ! print *, 'Inside fortran wrapper'
     
+    ! ! Check the time array was imported through cython correctly
     ! print *, 'Printing time'
     ! do i=1,TotalNumData
     !   print *, Time(i)
@@ -123,6 +126,7 @@ module radial1d_wrapper
     ! print *, ProductionIndex
     ! print *, CutoffPressure
 
+    call cpu_time(start_time2)
     call radial1d(Porosity, Permeability, LayerThickness,&
         ActionWellRadius, RockSpecificHeat, RockHeatConductivity, RockDensity,&
         RockCompressibility, InitialPressure, InitialX, InjectionWell,&
@@ -131,7 +135,9 @@ module radial1d_wrapper
         Time, ObsPointRadialLocation, ObsPointNumData, ObsPointProperty,&
         Deliverability, ProductionIndex, CutoffPressure,&
         ModelledValue)
-
+    call cpu_time(end_time)
+    print *, 'Overall radial1d function call time: ', end_time-start_time2
+    print *, 'Overall radial1d_wrapper (inside) time: ', end_time-start_time1
   end subroutine c_radial1d
 
 end module radial1d_wrapper

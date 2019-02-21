@@ -30,6 +30,9 @@ module NumericalSimulator1D
   ! QQMM is the modelled value of flow rate:
   real(DP):: QQMM,ModFlowRate,ModFlowRateOld
 
+  ! Counter of how many times the timestep is reduced between two measured times (added to terminate the program if its iterating too much)
+  integer(I4B) :: NumTimeReductions 
+
 contains
 
   ! ------------------------------------------------------------------------------------
@@ -59,13 +62,18 @@ contains
     logical(LGT):: ResetTimeStepSize, StepFlows
     integer(I4B):: UpdateCounter
     real(DP)    :: PRECH,HRECH
+    integer(I4B) :: NumThermoErrors ! Counter of how many consecutive thermodynamic errors occur at very small time steps
     integer(I4B), parameter :: UpdateInterval=20 ! #iterations before updating progress
     real(DP), parameter     :: RTOL=1.E-6_dp  ! Newton-Raphson iteration tolerance
     integer(I4B), parameter :: IMAX=8         ! Max permitted no. of iterations
     real(DP), parameter     :: EPS=1.0E-6_dp  ! A smallish number
+    integer(I4B), parameter :: MaxNumTimeReductions=400 ! The max permitted timestep reductions to occur between two different measurement times (added to terminate the program if its iterating too much)
 
     external updatemodelprogress
-    num_iterations = 0 ! Lex added for debugging
+    ! Initialise
+    NumIterations = 0 ! Added for debugging
+    NumThermoErrors = 0 
+    NumTimeReductions = 0
     NumModelRuns=NumModelRuns+1
 
     TestEndTime=maxval(TestData(:)%time) ! Last observation time
@@ -74,7 +82,9 @@ contains
     call GetPumpingData(TestEndTime,StepFlows,.false.)
 
     !   Initialise result:
-    NumericalSolution1D=TestData%ModelledValue
+    ! NumericalSolution1D=TestData%ModelledValue
+    NumericalSolution1D=-1.0_dp ! initialise to a negative number so if failure occurs we know which data is wrong
+
 
     IGOOD=0     ! 'ok' parameter passed from thermo subroutines
 
@@ -114,6 +124,13 @@ contains
   
       !     Start of Newton iterations:
 10    IT=0
+      if (NumTimeReductions > MaxNumTimeReductions) then
+        ! This termination condition could be improved/changed for something else, but currently it works like a time out
+        ! to stop the simulator if it has gotten stuck and is reducing the time step a lot.
+        ExecutionFlag = 2
+        GO TO 12 ! Terminate simulator early due to too many iterations occuring
+      end if
+
 
       if (UpdateCounter<UpdateInterval) then
         UpdateCounter=UpdateCounter+1
@@ -140,14 +157,29 @@ contains
     !     equal to old values.
 
 11  CONTINUE
-    num_iterations = num_iterations + 1
+    NumIterations = NumIterations + 1
     !     Carry out most of one step of the Newton-Raphson process:
     call SOLVE(P,T,SV,X,IPH,HF,M,POR,PER,A,V,CR,RHOR,COND,&
       QQMM,HIN,XX,RR,DT,DELR,BMOLD,BEOLD,RMAX,&
       P0,T0,COMP,COMT,AAA,QMM,XLAM,PRECH,HRECH,LayerThickness)
 
     if (IGOOD>0) then  ! Problems... reduce timestep:
+      ! print *, 'Reducing timestep due to IGOOD>0'
+      ! Check if thermodynamic error occurred during a small time step.
+      if (dt < 1.d-2) then ! Could change 1.d-2 to be more meaningful such as a fraction of the time between the last measured time and the next measured time
+        NumThermoErrors = NumThermoErrors + 1
+      else
+        NumThermoErrors = 0
+      end if
+      ! Terminate simulator early if there are two consecutive thermodynamic errors with small time steps.
+      if (NumThermoErrors > 1) then 
+        ! This termination condition could be improved/changed for something else with the idea of terminating if there
+        ! are repeated thermo errors signaling that the simulator cannot continue.
+        ExecutionFlag = 1
+        GO TO 12
+      end if
       call ReduceTimestep(time,dt,FlowIndex,QQMM,HIN,ResetTimeStepSize)
+      NumTimeReductions = NumTimeReductions + 1
       IGOOD=0
       GO TO 10
     end if
@@ -156,11 +188,14 @@ contains
     call UPDATE(M,IPH,P,T,SV,X,XX,EPS)
 
     !     Check for convergence:
+    ! print *, time, ntimesteps, NumIterations
     if (RMAX>=RTOL) then
 
       IT=IT+1
       if (IT.GT.IMAX) then
+        ! print *, 'Reducing timestep due to IT > IMAX'
         call ReduceTimestep(time,dt,FlowIndex,QQMM,HIN,ResetTimeStepSize)
+        NumTimeReductions = NumTimeReductions + 1
         GO TO 10
       end if
 
@@ -191,11 +226,13 @@ contains
   end do  !  End of main time-stepping loop.
 
   call updatemodelprogress(NumModelRuns,dt,100, analysisstopped)
-
+  ExecutionFlag = 0 ! Successful execution
   !   Deallocate the main local arrays:
-  call DestroyGridArrays
+  12 call DestroyGridArrays
   call DestroyInterpolationArrays
   deallocate(DoneDataPoints)
+
+  print *, 'Execution: ', ExecutionFlag
 
   return
     
@@ -278,11 +315,13 @@ subroutine InterpolateResponse(NewTime,dt,TestEndTime,Response)
         SimulatedValue=OneMinusTheta*OldValue+theta*NewValue
         Response(DataIndex)=SimulatedValue-DataOffset
 
-        ! Added by Lex for debugging purposes
+        ! ! Added for debugging purposes
         ! write(*,'("Time: ", f13.7, " Sim Value: ", f15.5)', advance='no') obstime, Response(DataIndex)
         ! write(*,'(" Actual: ",f12.2," Error: ",f11.2)') TestData(DataIndex)%value,(TestData(DataIndex)%value-Response(DataIndex))
 
         DoneDataPoints(i)=DoneDataPoints(i)+1
+        ! Reset time reduction counter as a measured time has been passed
+        NumTimeReductions = 0
 
       else ! theta>=1:
 
@@ -355,7 +394,7 @@ subroutine SetupGrid(LayerThickness,ActionWellRadius)
   !   Work out observation point positions on the grid:
   call GetObsPointGridPositions(ActionWellRadius)
   !   Calculate weighting factors for sandface interpolation:
-  if (.NOT.WellBlockIncl) call CalculateSandfaceWeights ! Lex changed from not() to .NOT.
+  if (.NOT.WellBlockIncl) call CalculateSandfaceWeights ! Changed from not() to .NOT. to compile with gfotran
 
   return
 end subroutine SetupGrid
@@ -392,13 +431,10 @@ subroutine SetupBlockSizes(ActionWellRadius)
   implicit none
   real(DP), intent(in)   :: ActionWellRadius
   !   Local variables:
-  real(DP),parameter     :: ConstDR=0.01_dp ! Changed from 0.05 to 0.01 (TOUGH2)
+  real(DP),parameter     :: ConstDR=0.1_dp ! Changed from 0.05 to 0.01 (TOUGH2)
   real(DP),parameter     :: GrowthFactor=1.2_dp
-  integer(I4B),parameter :: NConstBlocks=20 ! Changed from 10 to 20 (TOUGH2)
+  integer(I4B),parameter :: NConstBlocks=10 ! Changed from 10 to 20 (TOUGH2)
   integer(I4B)           :: i
-
-  ! Added by Lex for debugging
-  real(DP) :: DR_db(1600)
 
   !   No. of blocks (hard-coded for now):
   M=100
@@ -421,13 +457,11 @@ subroutine SetupBlockSizes(ActionWellRadius)
   else ! No well block:
     do i=1,NConstBlocks
       DR(i)=ConstDR
-      DR_db(i)=DR(i) ! Lex
     end do
   end if
 
   do i=1+NConstBlocks,M
     DR(i)=GrowthFactor*DR(i-1)
-    DR_db(i)=DR(i) ! Lex
   end do
 
 
@@ -447,9 +481,6 @@ subroutine CalculateGridGeometryParameters(rw,b)
   real(DP):: R0,R1
   integer(I4B):: i
 
-  ! added by Lex for debug
-  real(DP) :: V_db(M), A_db(M), DELR_db(M)
-
   if (WellBlockIncl) then
     R1=0._dp
   else
@@ -460,12 +491,9 @@ subroutine CalculateGridGeometryParameters(rw,b)
     R0=R1
     R1=R0+DR(i)
     V(i)=PI_D*(R1+R0)*(R1-R0)*b
-    V_db(i) = V(i) ! Lex
     if (i<M) then
       A(i)=2.0_dp*PI_D*R1*b
       DELR(i)=0.5_dp*(DR(i)+DR(i+1))
-      A_db(i)=A(i) ! Lex
-      DELR_db(i) = DELR(i) ! Lex
     end if
   end do
 
@@ -552,15 +580,6 @@ subroutine GetObsPointGridPositions(rw)
         R0=R1
         R1=R0+DR(block)
         if ((R0<=ObsPointR).and.(ObsPointR<R1)) then
-          print *, 'R0'
-          print *, R0
-          print *, 'R1'
-          print *, R1
-          print *, 'ObspointR'
-          print *, ObspointR
-          print *, 'block'
-          print *, block
-
           ObsPointGridBlock(i)=block
           exit
         end if
@@ -610,11 +629,11 @@ subroutine AssignBlockProperties(k,phi,SkinFactor,ActionWellRadius,RechargeCoef,
       exit
     end if
   end do
-  if (ActionWellRadius > 0.0_dp) then ! added by Lex
+  if (ActionWellRadius > 0.0_dp) then ! If-else added to catch errors when the well radius is 0, could be a better solution here
     Ks=k/(1.0_dp+SkinFactor/dlog(Rs/ActionWellRadius))
-  else ! added by Lex
-    Ks=k ! added by Lex
-  end if ! added by Lex
+  else 
+    Ks=k
+  end if
 
   !   Assign permeabilities:
   do i=1,NumSkinBlocks

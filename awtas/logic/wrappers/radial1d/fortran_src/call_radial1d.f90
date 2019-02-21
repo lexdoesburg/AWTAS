@@ -46,7 +46,7 @@ module call_radial1d
     integer(I4B) :: i
     real(DP), allocatable :: variable(:)
     real(DP) :: start_time, end_time
-    print *, 'Inside caller'
+    ! print *, 'Inside caller'
     ! print *, Porosity
     ! print *, Permeability
     ! print *, LayerThickness
@@ -55,15 +55,15 @@ module call_radial1d
     ! print *, RockHeatConductivity
     ! print *, RockDensity
     ! print *, RockCompressibility
-    print *, InitialPressure
-    print *, InitialX
+    ! print *, InitialPressure
+    ! print *, InitialX
     ! print *, InjectionWell
     ! print *, InjectionEnthalpy
     ! print *, NumPumpTimes
     ! print *, NumObservationPoints
     ! print *, TotalNumData
     ! print *, PumpingScheme
-    print *, MassFlowrate
+    ! print *, MassFlowrate
     ! print *, FlowDuration
     ! do i=1,NumPumpTimes
     !   print *, PumpTime(i)
@@ -71,12 +71,12 @@ module call_radial1d
     ! do i=1,NumPumpTimes
     !   print *, PumpRate(i)
     ! end do
-    print *, 'Obs point location'
-    print *, ObsPointRadialLocation(1)
-    do i=1,NumObservationPoints
-      print *, 'Obs point location'
-      print *, ObsPointRadialLocation(i)
-    end do
+    ! print *, 'Obs point location'
+    ! print *, ObsPointRadialLocation(1)
+    ! do i=1,NumObservationPoints
+    !   print *, 'Obs point location'
+    !   print *, ObsPointRadialLocation(i)
+    ! end do
     ! do i=1,NumObservationPoints
     !   print *, ObsPointNumData(i)
     ! end do
@@ -90,23 +90,23 @@ module call_radial1d
 
     ! ! External subroutines
     ! external updatemodelprogress
-    print *, 'Call radial1d - 1'
+    ! print *, 'Call radial1d - 1'
     ! Assign key variables in problem_data module
     NPumps = 1 ! Only one pump (ask Mike if you can have more in this model) Could change to an input of number of pumps
     MaxNPumpTimes = NumPumpTimes
     NObsPoints = NumObservationPoints
     TotalNData = TotalNumData
-    print *, 'Call radial1d - 2'
+    ! print *, 'Call radial1d - 2'
     if (PumpingScheme == 4) then
       MaxNPumpSchemeParams = 2
     else  ! PumpingScheme == 1 (don't really need it if not)
       MaxNPumpSchemeParams = 1
     end if
-    print *, 'Call radial1d - 3'
+    ! print *, 'Call radial1d - 3'
 
     ModelType = 1
     call SetWellBlockIncl
-    print *, 'Call radial1d - 4'
+    ! print *, 'Call radial1d - 4'
 
     select case(ModelType)
     case(1) ! Homogeneous porous layer model
@@ -114,7 +114,7 @@ module call_radial1d
       NFixedParameters = 7
       NReservoirConditions = 2
     end select
-    print *, 'Call radial1d - 5'
+    ! print *, 'Call radial1d - 5'
 
     ! Allocate arrays declared in problem_data
     allocate(Pump(NPumps))
@@ -125,7 +125,7 @@ module call_radial1d
     allocate(FixedParameter(NFixedParameters))
     allocate(TestData(TotalNData))
     allocate(variable(NVariables))
-    print *, 'Call radial1d - 6'
+    ! print *, 'Call radial1d - 6'
 
     ! Fill variable, parameter and reservoir condition arrays
     variable(1) = Permeability
@@ -139,7 +139,7 @@ module call_radial1d
     FixedParameter(5) = RockHeatConductivity
     FixedParameter(6) = RockDensity
     FixedParameter(7) = RockCompressibility
-    print *, 'Call radial1d - 7'
+    ! print *, 'Call radial1d - 7'
 
     ! Fill pump array
     Pump(1)%Scheme = PumpingScheme
@@ -148,7 +148,7 @@ module call_radial1d
     case default
       ! Should probably check inputs are fine before array allocation
       ! ExecutionFlag = 2
-      print *, 'Incorrect pump scheme'
+      ! print *, 'Incorrect pump scheme'
       return
     case(0) ! Measured flows (flowrates differ at different times)
       Pump(1)%StepFlows = .True.
@@ -158,24 +158,24 @@ module call_radial1d
       end do
     case(1) ! Constant rate
       PumpSchemeParams(1,1) = MassFlowrate
-      print *, PumpSchemeParams(1,1)
+      ! print *, PumpSchemeParams(1,1)
       Pump(1)%StepFlows = .True. ! could be false tbh - since its not actually a step
     case(4) ! Step flow (flow switched off after some time)
       PumpSchemeParams(1,1) = MassFlowrate
       PumpSchemeParams(1,2) = FlowDuration
       Pump(1)%StepFlows = .True.
     end select
-    print *, 'Call radial1d - 8'
+    ! print *, 'Call radial1d - 8'
 
     if (InjectionWell /= 0) then
       Pump(1)%Enthalpy = InjectionEnthalpy
     else
       Pump(1)%Enthalpy = 0.0_dp          
     end if
-    print *, 'Call radial1d - 9'
-    print *, Deliverability
-    print *, ProductionIndex
-    print *, CutoffPressure
+    ! print *, 'Call radial1d - 9'
+    ! print *, Deliverability
+    ! print *, ProductionIndex
+    ! print *, CutoffPressure
 
 
     if (Deliverability /= 0) then
@@ -197,7 +197,7 @@ module call_radial1d
       ProdIndex = 0.0_dp
       PCutoff = 0.0_dp          
     end if
-    print *, 'Call radial1d - 10'
+    ! print *, 'Call radial1d - 10'
 
     ! Observation points
     ObsPoint(:)%Error = 0.0_dp ! could remove from problem data
@@ -221,7 +221,7 @@ module call_radial1d
         ObsPoint(i)%PumpNo = 1 ! We only have one pump currently
       end if
     end do
-    print *, 'Call radial1d - 11'
+    ! print *, 'Call radial1d - 11'
 
     ! Testdata array
     TestData(:)%error = 0.0_dp ! could remove from problem data
@@ -231,13 +231,13 @@ module call_radial1d
     TestData%time = Time ! this is in the structure of observation points stacked on top of each other ! could be improved if observation points themselves just had time arrays possibly
 
     ! Calculate modelled value
-    print *, 'Calling homogeneousporous'
+    ! print *, 'Calling homogeneousporous'
     call cpu_time(start_time)    
     ModelledValue = HomogeneousPorous(variable,updatemodelprogress)
     call cpu_time(end_time)
 
     ! print '("Inside time elapsed = ",f6.3," seconds.")', end_time-start_time
-    print *, 'Time elapsed inside = '
+    print *, 'Time elapsed inside homogeneous porous = '
     print *, end_time - start_time
 
     ! Deallocate arrays
