@@ -200,7 +200,15 @@ contains
 
     if (time<TestEndTime) then
 
-      if (ResetTimeStepSize) then ! Reset back to starting value
+      if ((time == 0.0_dp).and.(.NOT.ResetTimeStepSize)) then ! First time step
+        
+        if ((TestData(1)%time > 0.0_dp).and.(TestData(1)%time < StartTimeStepSize)) then
+          dt=TestData(1)%time
+        else
+          dt=StartTimeStepSize
+        end if
+
+      else if (ResetTimeStepSize) then ! Reset back to starting value
         dt=StartTimeStepSize
         ResetTimeStepSize=.false.
       else

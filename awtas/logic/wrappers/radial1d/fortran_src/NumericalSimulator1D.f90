@@ -104,13 +104,13 @@ contains
     end if
 
     time=0.0_dp
-    ResetTimeStepSize=.true.
+    ResetTimeStepSize=.false. ! Changed to false and added new condition to UpdateTimeStepSize routine for first time step
     FlowIndex=1
     NTimeSteps=0
     call UpdateTimeStepSize(time,TestEndTime,0,FlowIndex,ResetTimeStepSize,&
       StepFlows,.false.,dt)
     UpdateCounter=0
-
+    
     !   Main time-stepping loop:
     do while (time<TestEndTime)
 
