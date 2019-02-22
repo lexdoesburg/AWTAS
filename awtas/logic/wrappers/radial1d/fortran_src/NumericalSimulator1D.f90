@@ -430,14 +430,28 @@ subroutine SetupBlockSizes(ActionWellRadius)
 
   implicit none
   real(DP), intent(in)   :: ActionWellRadius
-  !   Local variables:
-  real(DP),parameter     :: ConstDR=0.1_dp ! Changed from 0.05 to 0.01 (TOUGH2)
-  real(DP),parameter     :: GrowthFactor=1.2_dp
-  integer(I4B),parameter :: NConstBlocks=10 ! Changed from 10 to 20 (TOUGH2)
-  integer(I4B)           :: i
+  ! !   Local variables:
+  ! real(DP),parameter     :: ConstDR=0.1_dp ! Changed from 0.05 to 0.01 (TOUGH2)
+  ! real(DP),parameter     :: GrowthFactor=1.2_dp
+  ! integer(I4B),parameter :: NConstBlocks=10 ! Changed from 10 to 20 (TOUGH2)
+  ! integer(I4B)           :: i
 
-  !   No. of blocks (hard-coded for now):
-  M=100
+  ! !   No. of blocks (hard-coded for now):
+  ! M=100
+
+  ! ! Revised version which allows for the input of block parameters (Variables are defined in problem_data.f90)
+  !   Local variables:
+  real(DP)     :: ConstDR
+  real(DP)     :: GrowthFactor
+  integer(I4B) :: NConstBlocks
+  integer(I4B) :: i
+
+  ConstDR=ConstantBlockSize
+  GrowthFactor=BlockGrowthFactor
+  NConstBlocks=NumConstantBlocks
+  
+  !   No. of blocks:
+  M=NumBlocks
 
   !   Allocate main local arrays:
   allocate(DR(M),PER(M),POR(M),V(M))

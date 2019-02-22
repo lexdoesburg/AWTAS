@@ -111,17 +111,26 @@ cutoff_pressure = 0.0
 # pump_times = np.array([0, 10000, 30000, 50000], dtype=float)
 # pump_rates = np.array([-1, 0, -2, -0.5], dtype=float)
 
+# num_blocks = 100
+# num_constant_blocks = 20
+# print(num_constant_blocks)
+# constant_block_size = 0.01
+# block_growth_factor = 1.2
+
 print('Calling radial1d first time')
 start_time1 = time.time()
-pressure1 = radial1d_wrapper.radial1d(phi, k, layer_thickness, well_radius, rock_specific_heat, rock_heat_conductivity, rock_density, rock_compressibility, initial_pressure,
+pressure1, flag1 = radial1d_wrapper.radial1d(phi, k, layer_thickness, well_radius, rock_specific_heat, rock_heat_conductivity, rock_density, rock_compressibility, initial_pressure,
                         initial_temp1, injection_well, injection_enthalpy, num_pump_times, num_observation_points, total_data1, pumping_scheme, const_flowrate1, flow_duration,
                         pump_times, pump_rates, time1, obs_point_locations, obs_point_num_data1, obs_point_property, deliverability, production_index, cutoff_pressure)
+                        # num_blocks, num_constant_blocks, constant_block_size, block_growth_factor)
+
 end_time1 = time.time()
 print('Calling radial1d second time')
 start_time2 = time.time()
-pressure2 = radial1d_wrapper.radial1d(phi, k, layer_thickness, well_radius, rock_specific_heat, rock_heat_conductivity, rock_density, rock_compressibility, initial_pressure,
+pressure2, flag2 = radial1d_wrapper.radial1d(phi, k, layer_thickness, well_radius, rock_specific_heat, rock_heat_conductivity, rock_density, rock_compressibility, initial_pressure,
                         initial_sv2, injection_well, injection_enthalpy, num_pump_times, num_observation_points, total_data2, pumping_scheme, const_flowrate2, flow_duration,
                         pump_times, pump_rates, time2, obs_point_locations, obs_point_num_data2, obs_point_property, deliverability, production_index, cutoff_pressure)
+                        # num_blocks, num_constant_blocks, constant_block_size, block_growth_factor)
 end_time2 = time.time()
 
 
@@ -139,6 +148,8 @@ end_time2 = time.time()
 
 print('Model 1 runtime = {}'.format(end_time1-start_time1))
 print('Model 2 runtime = {}'.format(end_time2-start_time2))
+
+print('Flag 1 = {} Flag 2 = {}'.format(flag1, flag2))
 
 
 import matplotlib.pyplot as plt

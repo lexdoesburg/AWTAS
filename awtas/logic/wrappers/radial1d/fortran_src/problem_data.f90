@@ -72,6 +72,10 @@ module problem_data
 
   ! Execution flag which returns the state of the run
   integer(I4B) :: ExecutionFlag ! 0 if successful run, 1 if failure due to thermodynamics, 2 if failure due to too many time step reductions
+  
+  ! Grid parameters
+  integer(I4B) :: NumBlocks, NumConstantBlocks
+  real(DP) :: ConstantBlockSize, BlockGrowthFactor
 
 contains
 

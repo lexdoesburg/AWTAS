@@ -7,14 +7,14 @@ module radial1d_wrapper
 
   contains
 
-  subroutine c_radial1d(Porosity, Permeability, LayerThickness,&
-      ActionWellRadius, RockSpecificHeat, RockHeatConductivity, RockDensity,&
-      RockCompressibility, InitialPressure, InitialX, InjectionWell,&
-      InjectionEnthalpy, NumPumpTimes, NumObservationPoints, TotalNumData,&
-      PumpingScheme, MassFlowrate, FlowDuration, PumpTime, PumpRate, &
-      Time, ObsPointRadialLocation, ObsPointNumData, ObsPointProperty,&
-      Deliverability, ProductionIndex, CutoffPressure,&
-      ModelledValue) bind(c)
+  subroutine c_radial1d(Porosity, Permeability, LayerThickness, ActionWellRadius,&
+    RockSpecificHeat, RockHeatConductivity, RockDensity, RockCompressibility,&
+    InitialPressure, InitialX, InjectionWell, InjectionEnthalpy,NumPumpTimes,&
+    NumObservationPoints, TotalNumData, PumpingScheme, MassFlowrate, FlowDuration,&
+    PumpTime, PumpRate, Time, ObsPointRadialLocation, ObsPointNumData,&
+    ObsPointProperty,Deliverability, ProductionIndex, CutoffPressure,&
+    NumGridBlocks, NumConstantGridBlocks, ConstantGridBlockSize,&
+    GridBlockGrowthFactor, ModelledValue, StatusFlag) bind(c)
 
   ! subroutine c_radial1d(Porosity, Permeability, LayerThickness,&
   !   ActionWellRadius, RockSpecificHeat, RockHeatConductivity, RockDensity,&
@@ -45,9 +45,12 @@ module radial1d_wrapper
                                                                    ObsPointProperty ! Observation point info arrays
     integer(c_int), intent(in) :: Deliverability
     real(c_double), intent(in) :: ProductionIndex, CutoffPressure
+    integer(c_int), intent(in) :: NumGridBlocks, NumConstantGridBlocks
+    real(c_double), intent(in) :: ConstantGridBlockSize, GridBlockGrowthFactor
+
 
     ! Outputs
-    ! integer(c_int), intent(out) :: ExecutionFlag ! Flag which signals whether the program executed properly or not. Flag = 1 if everything ran fine, 2 if missing input, 3 if simulator did not run as expected
+    integer(c_int), intent(out) :: StatusFlag ! Flag which signals whether the program executed properly or not. Flag = 0 if successful run, 1 if thermodynamic errors, 2 if failure due to too many timestep reductions.
     real(c_double), intent(out), dimension(TotalNumData) :: ModelledValue
 
     ! ! Locals
@@ -127,14 +130,14 @@ module radial1d_wrapper
     ! print *, CutoffPressure
 
     call cpu_time(start_time2)
-    call radial1d(Porosity, Permeability, LayerThickness,&
-        ActionWellRadius, RockSpecificHeat, RockHeatConductivity, RockDensity,&
-        RockCompressibility, InitialPressure, InitialX, InjectionWell,&
-        InjectionEnthalpy, NumPumpTimes, NumObservationPoints, TotalNumData,&
-        PumpingScheme, MassFlowrate, FlowDuration, PumpTime, PumpRate, &
-        Time, ObsPointRadialLocation, ObsPointNumData, ObsPointProperty,&
-        Deliverability, ProductionIndex, CutoffPressure,&
-        ModelledValue)
+    call radial1d(Porosity, Permeability, LayerThickness, ActionWellRadius,&
+          RockSpecificHeat, RockHeatConductivity, RockDensity, RockCompressibility,&
+          InitialPressure, InitialX, InjectionWell, InjectionEnthalpy,NumPumpTimes,&
+          NumObservationPoints, TotalNumData, PumpingScheme, MassFlowrate, FlowDuration,&
+          PumpTime, PumpRate, Time, ObsPointRadialLocation, ObsPointNumData,&
+          ObsPointProperty,Deliverability, ProductionIndex, CutoffPressure,&
+          NumGridBlocks, NumConstantGridBlocks, ConstantGridBlockSize, GridBlockGrowthFactor,&
+          ModelledValue, StatusFlag)
     call cpu_time(end_time)
     print *, 'Overall radial1d function call time: ', end_time-start_time2
     print *, 'Overall radial1d_wrapper (inside) time: ', end_time-start_time1

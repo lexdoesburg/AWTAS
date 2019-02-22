@@ -548,7 +548,7 @@ rock_specific_heat = 1000
 rock_heat_conductivity = 2.5
 rock_density = 2500
 rock_compressibility = 0.0
-well_radius = 0.0
+well_radius = 0.2
 injection_well = 0
 injection_enthalpy = 0.0
 # time = time_secs[:90]
@@ -562,29 +562,33 @@ mass_flowrate = 0
 flow_duration = 0
 pump_times = flow_times_secs.copy()
 pump_rates = flow_rates.copy()
-obs_point_locations = np.array([0.01], dtype=float)
+obs_point_locations = np.array([well_radius+0.099], dtype=float)
 obs_point_num_data = np.array([total_data], dtype=np.int32)
 obs_point_property = np.array([1], dtype=np.int32)
 obs_point_property2 = np.array([3], dtype=np.int32)
 deliverability = 0
 production_index = 0
 cutoff_pressure = 0
-
+num_blocks = 100
+num_constant_blocks = 10
+constant_block_size = 0.1
+block_growth_factor = 1.2
 
 print(time)
 time_days2 = time/86400
 from time import time as timer
 start1 = timer()
-modelled_pressure = radial1d_wrapper.radial1d(phi, k, layer_thickness, well_radius, rock_specific_heat, rock_heat_conductivity, rock_density, rock_compressibility, initial_pressure,
+modelled_pressure, flag1 = radial1d_wrapper.radial1d(phi, k, layer_thickness, well_radius, rock_specific_heat, rock_heat_conductivity, rock_density, rock_compressibility, initial_pressure,
                                 initial_sv, injection_well, injection_enthalpy, num_pump_times, num_observation_points, total_data, pumping_scheme, mass_flowrate, flow_duration,
-                                pump_times, pump_rates, time, obs_point_locations, obs_point_num_data, obs_point_property, deliverability, production_index, cutoff_pressure)
+                                pump_times, pump_rates, time, obs_point_locations, obs_point_num_data, obs_point_property, deliverability, production_index, cutoff_pressure,
+                                num_blocks, num_constant_blocks, constant_block_size, block_growth_factor)
 end1 = timer()
 
-
 start2 = timer()
-modelled_enthalpy = radial1d_wrapper.radial1d(phi, k, layer_thickness, well_radius, rock_specific_heat, rock_heat_conductivity, rock_density, rock_compressibility, initial_pressure,
+modelled_enthalpy, flag2 = radial1d_wrapper.radial1d(phi, k, layer_thickness, well_radius, rock_specific_heat, rock_heat_conductivity, rock_density, rock_compressibility, initial_pressure,
                                 initial_sv, injection_well, injection_enthalpy, num_pump_times, num_observation_points, total_data, pumping_scheme, mass_flowrate, flow_duration,
-                                pump_times, pump_rates, time, obs_point_locations, obs_point_num_data, obs_point_property2, deliverability, production_index, cutoff_pressure)
+                                pump_times, pump_rates, time, obs_point_locations, obs_point_num_data, obs_point_property2, deliverability, production_index, cutoff_pressure,
+                                num_blocks, num_constant_blocks, constant_block_size, block_growth_factor)
 end2= timer()
 print('Time elapsed 1 = {}'.format(end1-start1))
 print('Time elapsed 2 = {}'.format(end2-start2))

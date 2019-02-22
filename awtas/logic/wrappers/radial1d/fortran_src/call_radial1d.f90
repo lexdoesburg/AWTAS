@@ -17,7 +17,8 @@ module call_radial1d
       NumObservationPoints, TotalNumData, PumpingScheme, MassFlowrate, FlowDuration,&
       PumpTime, PumpRate, Time, ObsPointRadialLocation, ObsPointNumData,&
       ObsPointProperty,Deliverability, ProductionIndex, CutoffPressure,&
-      ModelledValue)
+      NumGridBlocks, NumConstantGridBlocks, ConstantGridBlockSize, GridBlockGrowthFactor,&
+      ModelledValue, StatusFlag)
 
     ! Input arguments
     real(DP), intent(in) :: Porosity, Permeability ! Variables
@@ -37,15 +38,24 @@ module call_radial1d
     integer(I4B), intent(in), dimension(NumObservationPoints) :: ObsPointNumData, ObsPointProperty ! Observation point info arrays
     integer(I4B), intent(in) :: Deliverability
     real(DP), intent(in) :: ProductionIndex, CutoffPressure
+    integer(I4B), intent(in) :: NumGridBlocks, NumConstantGridBlocks
+    real(DP), intent(in) :: ConstantGridBlockSize, GridBlockGrowthFactor
 
     ! Outputs
-    ! integer(I4B), intent(out) :: ExecutionFlag ! Flag which signals whether the program executed properly or not. Flag = 1 if everything ran fine, 2 if missing input, 3 if simulator did not run as expected
+    integer(I4B), intent(out) :: StatusFlag ! Flag which signals whether the program executed properly or not. Flag = 0 if successful run, 1 if thermodynamic errors, 2 if failure due to too many timestep reductions.
     real(DP), intent(out), dimension(TotalNumData) :: ModelledValue
 
     ! Local variables
     integer(I4B) :: i
     real(DP), allocatable :: variable(:)
     real(DP) :: start_time, end_time
+
+    ! Set the grid parameters
+    NumBlocks = NumGridBlocks
+    NumConstantBlocks = NumConstantGridBlocks
+    ConstantBlockSize = ConstantGridBlockSize
+    BlockGrowthFactor = GridBlockGrowthFactor
+
     ! print *, 'Inside caller'
     ! print *, Porosity
     ! print *, Permeability
@@ -239,6 +249,8 @@ module call_radial1d
     ! print '("Inside time elapsed = ",f6.3," seconds.")', end_time-start_time
     print *, 'Time elapsed inside homogeneous porous = '
     print *, end_time - start_time
+
+    StatusFlag = ExecutionFlag
 
     ! Deallocate arrays
     deallocate(Pump)
