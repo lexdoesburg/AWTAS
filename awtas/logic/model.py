@@ -9,19 +9,19 @@ import awtas.logic.data as data_class
 
 import time
 
-def create_model(model_type, data=None):
-    model_type = model_type.lower()
-    if model_type == 'theis':
-        model = Theis_Solution(data)
-    elif model_type == 'theis_fortran':
-        # model = Theis_Solution_Fortran(data)
-        pass
-    elif model_type == 'radial1d':
-        # model = Radial_1D(data)
-        pass
-    else:
-        raise ValueError('Error that model type does not exist.')
-    return model
+# def create_model(model_type, data=None):
+#     model_type = model_type.lower()
+#     if model_type == 'theis':
+#         model = Theis_Solution(data)
+#     elif model_type == 'theis_fortran':
+#         # model = Theis_Solution_Fortran(data)
+#         pass
+#     elif model_type == 'radial1d':
+#         # model = Radial_1D(data)
+#         pass
+#     else:
+#         raise ValueError('Error that model type does not exist.')
+#     return model
 
 class Model():
     def __init__(self, data=None, model_type=None):
@@ -123,8 +123,8 @@ class Model():
             # k_guess = [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]
             # phi_guess = np.linspace(0.01, 0.2, 10)
             # Guess' for Radial1d
-            k_guess = [1e-15, 1e-14, 1e-13, 1e-12]
-            phi_guess = np.linspace(0.01, 0.14, 10)
+            k_guess = [1e-16, 1e-15]
+            phi_guess = np.linspace(0.01, 0.2, 5)
             # phi = 0.105
 
         best_estimate = np.empty(3) # Format, phi, k, chi_sq
@@ -273,44 +273,26 @@ class Theis_Solution(Model):
         
         Output: p(t) - pressure at a given time (or time array).
         """
+        # Unpack the variables
         phi, k = variables
-        # p0, qm, h, rho, nu, C, r = self.data.parameters # Unpack the well parameters
-        # Unpack the well parameters
-        p0 = self.data.parameters['Initial Pressure']['Value']
-        qm = self.data.parameters['Mass Flowrate']['Value']
-        h = self.data.parameters['Layer Thickness']['Value']
-        rho = self.data.parameters['Density']['Value']
-        nu = self.data.parameters['Kinematic Viscosity']['Value']
-        C = self.data.parameters['Compressibility']['Value']
-        r = self.data.parameters['Radius']['Value']
 
+        # Unpack the well parameters
+        p0 = self.data.reservoir_conditions['Initial Pressure']['Value']
+        qm = self.data.fixed_parameters['Mass Flowrate']['Value']
+        h = self.data.fixed_parameters['Layer Thickness']['Value']
+        rho = self.data.fixed_parameters['Density']['Value']
+        nu = self.data.fixed_parameters['Kinematic Viscosity']['Value']
+        C = self.data.fixed_parameters['Compressibility']['Value']
+        r = self.data.fixed_parameters['Action Well Radius']['Value']
+
+        # Perform the calculations
         D = k/(nu*phi*rho*C)
         with np.errstate(divide="ignore", invalid="ignore"): # Hides 'RuntimeWarning: invalid value encountered in divide' if t[0] == 0.
-            # p = p0 + (qm/(r*np.pi*k*(h/nu)))*exp1((r**2)/(4*D*self.data.time)) 
-            p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*self.data.time)) # Same as fortran output
+            p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*self.data.time))
         if self.data.time[0] <= 1e-7: # Check if initial reading is at time 0
             p[0] = p0
         self.data.approximation = p # Set the approximation for quick estimation of chi_sq
         return p
-
-    # def test_model(self, params, t):
-    #     phi = params['phi']
-    #     k = params['k']
-    #     p0 = params['p0']
-    #     qm = params['qm']
-    #     rho = params['rho']
-    #     nu = params['nu']
-    #     h = params['h']
-    #     C = params['C']
-    #     r = params['r']
-
-    #     D = k/(nu*phi*rho*C)
-    #     with np.errstate(divide="ignore", invalid="ignore"): # Hides 'RuntimeWarning: invalid value encountered in divide' if t[0] == 0.
-    #         # p = p0 + (qm/(r*np.pi*k*(h/nu)))*exp1((r**2)/(4*D*self.data.time)) 
-    #         p = p0 + ((qm*nu)/(4*np.pi*k*h))*exp1((r**2)/(4*D*t)) # Same as fortran output
-    #     if t[0] <= 1e-7: # Check if initial reading is at time 0
-    #         p[0] = p0
-    #     return p
 
 # from theis_wrapper import theis
 
@@ -339,26 +321,27 @@ class Radial_1D(Model):
         super().__init__(data=data, model_type='radial1d')
 
     def model(self, variables):
-        # Unpack the parameters which we are trying to find
+        # Unpack the variables
         phi, k = variables
         print('Phi = {} k = {}'.format(phi,k))
-        initial_pressure = self.data.parameters['Initial Pressure']['Value']
-        initial_x = self.data.parameters['Initial Temperature/Saturated Vapour']['Value']
-        well_radius = self.data.parameters['Action Well Radius']['Value']
-        layer_thickness = self.data.parameters['Layer Thickness']['Value']
-        rock_specific_heat = self.data.parameters['Rock Specific Heat']['Value']
-        rock_heat_conductivity = self.data.parameters['Rock Conductivity']['Value']
-        rock_density = self.data.parameters['Rock Density']['Value']
-        rock_compressibility = self.data.parameters['Rock Compressibility']['Value']
-        mass_flowrate = self.data.parameters['Mass Flowrate']['Value']
-        distFromWell = self.data.parameters['Observation Point Distance']['Value']
-        # Run the model to get result
-        print('Calling radial1d')
-        # modelled_value = radial1d_wrapper.radial1d(phi, k, layer_thickness, well_radius, rock_specific_heat, rock_heat_conductivity, rock_density, rock_compressibility, initial_pressure,
-        #                         initial_temp1, injection_well, injection_enthalpy, num_pump_times, num_observation_points, total_data1, pumping_scheme, mass_flowrate, flow_duration,
-        #                         pump_times, pump_rates, time1, obs_point_locations, obs_point_num_data1, obs_point_property, deliverability, production_index, cutoff_pressure)
-        # # pressure = radial1d(phi, k, p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell, 271, np.linspace(0, 54000, 271))
-        # # print('Returning pressure')
-        # return modelled_value
-        pass
 
+        # Unpack the parameters
+        initial_pressure = self.data.reservoir_conditions['Initial Pressure']['Value']
+        initial_x = self.data.reservoir_conditions['Initial X']['Value']
+        well_radius = self.data.fixed_parameters['Action Well Radius']['Value']
+        layer_thickness = self.data.fixed_parameters['Layer Thickness']['Value']
+        rock_specific_heat = self.data.fixed_parameters['Rock Specific Heat']['Value']
+        rock_heat_conductivity = self.data.fixed_parameters['Rock Heat Conductivity']['Value']
+        rock_density = self.data.fixed_parameters['Rock Density']['Value']
+        rock_compressibility = self.data.fixed_parameters['Rock Compressibility']['Value']
+        pump_info = self.data.pump_info
+        observation_points = self.data.observation_points
+        grid_info = self.data.grid_info
+
+        # Run the model to get the result
+        modelled_value, execution_flag = radial1d_wrapper.radial1d(phi, k, layer_thickness, well_radius, rock_specific_heat, rock_heat_conductivity, rock_density, rock_compressibility,
+            initial_pressure, initial_x, pump_info.injection_well, pump_info.injection_enthalpy, pump_info.num_pump_times, observation_points.num_observation_points, self.data.total_num_data, pump_info.pumping_scheme,
+            pump_info.flow_times, pump_info.flow_rates, self.data.time, observation_points.radial_location, observation_points.num_data, observation_points.property, pump_info.deliverability, pump_info.production_index, pump_info.cutoff_pressure,
+            grid_info.num_blocks, grid_info.num_constant_blocks, grid_info.constant_block_size, grid_info.block_growth_factor)
+
+        return modelled_value
