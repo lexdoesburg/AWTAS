@@ -191,14 +191,14 @@ cc
            QERB_PB=(QMRB*TEB1/TMB1 - QERB)/DELPB
            QERB_XB=(QMRB*TEB2/TMB2 - QERB)/DELXB
         end if
-      else
-        QMRB=0.0
-        QMRB1=0.0
-        QMRB_PB=0.0
-        QMRB_XB=0.0
-        QERB=0.0
-        QERB_PB=0.0
-        QERB_XB=0.0
+      else ! No recharge
+        QMRB=0.0D0
+        QMRB1=0.0D0
+        QMRB_PB=0.0D0
+        QMRB_XB=0.0D0
+        QERB=0.0D0
+        QERB_PB=0.0D0
+        QERB_XB=0.0D0
       end if  
 cc
 cc  block 2
@@ -248,13 +248,13 @@ cc
            QERC_XC=(QMRC*TEC2/TMC2 - QERC)/DELXC
         end if
       else
-        QMRC=0.0
-        QMRC1=0.0
-        QMRC_PC=0.0
-        QMRC_XC=0.0
-        QERC=0.0
-        QERC_PC=0.0
-        QERC_XC=0.0
+        QMRC=0.0D0
+        QMRC1=0.0D0
+        QMRC_PC=0.0D0
+        QMRC_XC=0.0D0
+        QERC=0.0D0
+        QERC_PC=0.0D0
+        QERC_XC=0.0D0
       end if
 cc
 cc  calculate flux terms using upstream weighting
@@ -485,7 +485,7 @@ cc
            QERC_PC=(QMRC*TEC1/TMC1 - QERC)/DELPC
            QERC_XC=(QMRC*TEC2/TMC2 - QERC)/DELXC
         end if
-      else
+      else ! No recharge
         QMRC=0.0
         QMRC1=0.0
         QMRC_PC=0.0

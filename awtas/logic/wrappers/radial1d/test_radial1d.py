@@ -92,8 +92,10 @@ num_pump_times = 1
 num_observation_points = 1
 pumping_scheme = 1 # constant rate 1, measured 0
 flow_duration = 0.0
-pump_times = np.zeros(1, dtype=float)
-pump_rates = np.zeros(1, dtype=float)
+pump_times1 = np.zeros(1, dtype=float)
+pump_rates1 = np.zeros(1, dtype=float)
+pump_times2 = np.zeros(1, dtype=float)
+pump_rates2 = np.zeros(1, dtype=float)
 obs_point_locations = np.ndarray(1, dtype=float)
 obs_point_locations[0] = 0.01 - 1e-5 # There appears to be some loss of precision occuring due to types
 obs_point_num_data1 = np.ndarray(1, dtype=np.int32)
@@ -105,8 +107,10 @@ obs_point_property[0] = 1
 deliverability = 0
 production_index = 0.0
 cutoff_pressure = 0.0
-# pump_times[0] = 0.0
-# pump_rates[0] = -2
+pump_times1[0] = 0.0
+pump_rates1[0] = -8
+pump_times2[0] = 0.0
+pump_rates2[0] = -2
 
 # pump_times = np.array([0, 10000, 30000, 50000], dtype=float)
 # pump_rates = np.array([-1, 0, -2, -0.5], dtype=float)
@@ -120,16 +124,16 @@ cutoff_pressure = 0.0
 print('Calling radial1d first time')
 start_time1 = time.time()
 pressure1, flag1 = radial1d_wrapper.radial1d(phi, k, layer_thickness, well_radius, rock_specific_heat, rock_heat_conductivity, rock_density, rock_compressibility, initial_pressure,
-                        initial_temp1, injection_well, injection_enthalpy, num_pump_times, num_observation_points, total_data1, pumping_scheme, const_flowrate1, flow_duration,
-                        pump_times, pump_rates, time1, obs_point_locations, obs_point_num_data1, obs_point_property, deliverability, production_index, cutoff_pressure)
+                        initial_temp1, injection_well, injection_enthalpy, num_pump_times, num_observation_points, total_data1, pumping_scheme,
+                        pump_times1, pump_rates1, time1, obs_point_locations, obs_point_num_data1, obs_point_property, deliverability, production_index, cutoff_pressure)
                         # num_blocks, num_constant_blocks, constant_block_size, block_growth_factor)
 
 end_time1 = time.time()
 print('Calling radial1d second time')
 start_time2 = time.time()
 pressure2, flag2 = radial1d_wrapper.radial1d(phi, k, layer_thickness, well_radius, rock_specific_heat, rock_heat_conductivity, rock_density, rock_compressibility, initial_pressure,
-                        initial_sv2, injection_well, injection_enthalpy, num_pump_times, num_observation_points, total_data2, pumping_scheme, const_flowrate2, flow_duration,
-                        pump_times, pump_rates, time2, obs_point_locations, obs_point_num_data2, obs_point_property, deliverability, production_index, cutoff_pressure)
+                        initial_sv2, injection_well, injection_enthalpy, num_pump_times, num_observation_points, total_data2, pumping_scheme,
+                        pump_times2, pump_rates2, time2, obs_point_locations, obs_point_num_data2, obs_point_property, deliverability, production_index, cutoff_pressure)
                         # num_blocks, num_constant_blocks, constant_block_size, block_growth_factor)
 end_time2 = time.time()
 

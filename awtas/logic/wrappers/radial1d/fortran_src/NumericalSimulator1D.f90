@@ -94,7 +94,6 @@ contains
     T0=TOLD
     ModFlowRateOld=FLO(1)
 
-    Recharge = .False.
     !   Calculate recharge parameters (PRECH,TRECH):
     if (Recharge) then
       call GetLeakyRechargeParameters(POLD(1),TOLD(1),SVOLD(1),IPHOLD(1),PRECH,HRECH)
@@ -158,6 +157,10 @@ contains
 
 11  CONTINUE
     NumIterations = NumIterations + 1
+    if (NumIterations > 5000) then
+      ExecutionFlag = 3 ! Terminate early if too many solve iterations
+      GO TO 12
+    end if
     !     Carry out most of one step of the Newton-Raphson process:
     call SOLVE(P,T,SV,X,IPH,HF,M,POR,PER,A,V,CR,RHOR,COND,&
       QQMM,HIN,XX,RR,DT,DELR,BMOLD,BEOLD,RMAX,&
@@ -322,6 +325,7 @@ subroutine InterpolateResponse(NewTime,dt,TestEndTime,Response)
         DoneDataPoints(i)=DoneDataPoints(i)+1
         ! Reset time reduction counter as a measured time has been passed
         NumTimeReductions = 0
+        NumIterations = 0
 
       else ! theta>=1:
 

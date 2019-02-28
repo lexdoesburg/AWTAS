@@ -10,7 +10,7 @@ module radial1d_wrapper
   subroutine c_radial1d(Porosity, Permeability, LayerThickness, ActionWellRadius,&
     RockSpecificHeat, RockHeatConductivity, RockDensity, RockCompressibility,&
     InitialPressure, InitialX, InjectionWell, InjectionEnthalpy,NumPumpTimes,&
-    NumObservationPoints, TotalNumData, PumpingScheme, MassFlowrate, FlowDuration,&
+    NumObservationPoints, TotalNumData, PumpingScheme,&
     PumpTime, PumpRate, Time, ObsPointRadialLocation, ObsPointNumData,&
     ObsPointProperty,Deliverability, ProductionIndex, CutoffPressure,&
     NumGridBlocks, NumConstantGridBlocks, ConstantGridBlockSize,&
@@ -37,7 +37,7 @@ module radial1d_wrapper
     integer(c_int), intent(in) :: NumObservationPoints
     integer(c_int), intent(in) :: TotalNumData
     integer(c_int), intent(in) :: PumpingScheme
-    real(c_double), intent(in) :: MassFlowrate, FlowDuration ! Flow parameters for step flow and constant flow
+    ! real(c_double), intent(in) :: MassFlowrate, FlowDuration ! Flow parameters for step flow and constant flow
     real(c_double), intent(in), dimension(NumPumpTimes) :: PumpTime, PumpRate ! Flow parameters for measured flows
     real(c_double), intent(in), dimension(TotalNumData) :: Time
     real(c_double), intent(in), dimension(NumObservationPoints) :: ObsPointRadialLocation
@@ -133,7 +133,7 @@ module radial1d_wrapper
     call radial1d(Porosity, Permeability, LayerThickness, ActionWellRadius,&
           RockSpecificHeat, RockHeatConductivity, RockDensity, RockCompressibility,&
           InitialPressure, InitialX, InjectionWell, InjectionEnthalpy,NumPumpTimes,&
-          NumObservationPoints, TotalNumData, PumpingScheme, MassFlowrate, FlowDuration,&
+          NumObservationPoints, TotalNumData, PumpingScheme,&
           PumpTime, PumpRate, Time, ObsPointRadialLocation, ObsPointNumData,&
           ObsPointProperty,Deliverability, ProductionIndex, CutoffPressure,&
           NumGridBlocks, NumConstantGridBlocks, ConstantGridBlockSize, GridBlockGrowthFactor,&

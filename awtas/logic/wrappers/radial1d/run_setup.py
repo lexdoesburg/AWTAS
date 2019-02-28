@@ -3,7 +3,7 @@ import shutil
 from glob import glob
 
 """
-This script should be run from within the same directory that it is in for no errors
+This script should be run from the directory that it is in for no errors
 """
 
 # Remove old wrapper file

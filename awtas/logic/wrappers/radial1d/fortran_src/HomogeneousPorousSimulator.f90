@@ -57,6 +57,7 @@ contains
     AAA=0.0_dp
     Skin=0.0_dp
     RechargeCoef=0.0_dp
+    Recharge = .False. ! Explicit switch
     !   Unpack reservoir conditions:
     InitialPressure=ReservoirCondition(1) 
     InitialX=ReservoirCondition(2)

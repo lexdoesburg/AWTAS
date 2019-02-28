@@ -71,7 +71,7 @@ module problem_data
   logical(LGT) :: Recharge
 
   ! Execution flag which returns the state of the run
-  integer(I4B) :: ExecutionFlag ! 0 if successful run, 1 if failure due to thermodynamics, 2 if failure due to too many time step reductions
+  integer(I4B) :: ExecutionFlag ! 0 if successful run, 1 if failure due to thermodynamics, 2 if failure due to too many time step reductions, 3 if too many solve iterations
   
   ! Grid parameters
   integer(I4B) :: NumBlocks, NumConstantBlocks

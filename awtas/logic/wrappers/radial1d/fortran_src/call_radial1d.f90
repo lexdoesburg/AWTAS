@@ -14,7 +14,7 @@ module call_radial1d
   subroutine radial1d(Porosity, Permeability, LayerThickness, ActionWellRadius,&
       RockSpecificHeat, RockHeatConductivity, RockDensity, RockCompressibility,&
       InitialPressure, InitialX, InjectionWell, InjectionEnthalpy,NumPumpTimes,&
-      NumObservationPoints, TotalNumData, PumpingScheme, MassFlowrate, FlowDuration,&
+      NumObservationPoints, TotalNumData, PumpingScheme,&
       PumpTime, PumpRate, Time, ObsPointRadialLocation, ObsPointNumData,&
       ObsPointProperty,Deliverability, ProductionIndex, CutoffPressure,&
       NumGridBlocks, NumConstantGridBlocks, ConstantGridBlockSize, GridBlockGrowthFactor,&
@@ -31,7 +31,7 @@ module call_radial1d
     integer(I4B), intent(in) :: NumObservationPoints
     integer(I4B), intent(in) :: TotalNumData
     integer(I4B), intent(in) :: PumpingScheme
-    real(DP), intent(in) :: MassFlowrate, FlowDuration ! Flow parameters for step flow and constant flow
+    ! real(DP), intent(in) :: MassFlowrate, FlowDuration ! Flow parameters for step flow and constant flow
     real(DP), intent(in), dimension(NumPumpTimes) :: PumpTime, PumpRate ! Flow parameters for measured flows
     real(DP), intent(in), dimension(TotalNumData) :: Time
     real(DP), intent(in), dimension(NumObservationPoints) :: ObsPointRadialLocation
@@ -167,12 +167,12 @@ module call_radial1d
         PumpData(1,i)%rate = PumpRate(i)
       end do
     case(1) ! Constant rate
-      PumpSchemeParams(1,1) = MassFlowrate
+      PumpSchemeParams(1,1) = PumpRate(1)
       ! print *, PumpSchemeParams(1,1)
       Pump(1)%StepFlows = .True. ! could be false tbh - since its not actually a step
     case(4) ! Step flow (flow switched off after some time)
-      PumpSchemeParams(1,1) = MassFlowrate
-      PumpSchemeParams(1,2) = FlowDuration
+      PumpSchemeParams(1,1) = PumpRate(1)
+      PumpSchemeParams(1,2) = PumpTime(1)
       Pump(1)%StepFlows = .True.
     end select
     ! print *, 'Call radial1d - 8'
