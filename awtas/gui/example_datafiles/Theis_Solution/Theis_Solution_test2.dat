@@ -1,4 +1,4 @@
-Initial Pressure,Mass Flowrate,Layer Thickness,Density,Kinematic Viscosity,Compressibility,Radius
+Initial Pressure,Mass Flowrate,Layer Thickness,Density,Kinematic Viscosity,Compressibility,Action Well Radius
 3600000.0,-0.015,100,527.59,6.03e-05,0.03748,0.05
 -------- Actual Porosity = 0.01 --- Actual Permeability = 4e-12 --------
 Time (s),Pressure Observation (Pa)
