@@ -1,110 +1,247 @@
 import numpy as np
 
-# def create_data(model_type, filename=None, time=None, observation=None, parameters=None, error=None):
-#     model_type = model_type.lower()
-#     if model_type == 'theis':
-#         data = Data(filename, time, observation, parameters, error)
-#     elif model_type == 'radial1d':
-#         data = Radial1d_Data(filename, time, observation, parameters, error)
-#     return data
 
-# class DataPoint():
-#     def __init__(self, time, observation, approximation=None, error=None, weight=None):
-#         self.time = time
-#         self.observation = observation
-#         self.approximation = approximation
-#         self.error = error
-#         self.weight = weight
+class Grid:
+    """
+    Holds information about the grid. Could be updated to use existing grids (volumes, areas etc).
+    """
+    def __init__(self, num_blocks=100, num_constant_blocks=20, constant_block_size=0.01, block_growth_factor=1.2):
+        assert num_blocks >= num_constant_blocks, 'Number of constant blocks cannot exceed the total number of blocks.'
+        self.num_blocks = num_blocks
+        self.num_constant_blocks = num_constant_blocks
+        self.constant_block_size = constant_block_size
+        self.block_growth_factor = block_growth_factor
 
-_model_parameters = {
-                     'theis' : ['Initial Pressure', 'Mass Flowrate', 'Layer Thickness', 'Density', 'Kinematic Viscosity', 'Compressibility', 'Radius'],
-                     'radial1d' : ['Initial Pressure', 'Mass Flowrate', 'Layer Thickness', 'Initial Temperature', 'Action Well Radius', 'Rock Specific Heat', 'Rock Conductivity', 'Rock Density', 'Rock Compressibility', 'Observation Point Distance']
-                     # Radial1d could have an initial temperature or an initial vapour saturation - currently only initial temperature is allowed
-                     }
+
+# Type of measurement data that was recorded at the observation point (mapping readable names to the fortran equivalent flags)
+_observation_point_properties = {
+    'deliverability' : 0,
+    'pressure' : 1,
+    'temperature' : 2,
+    'enthalpy' : 3
+    }
+
+
+class ObservationPoints:
+    def __init__(self, radial_location=[], property=[], num_data=[]):
+        if type(radial_location) is float:
+            radial_location = [radial_location]
+        if type(property) is str:
+            property = [property]
+        if type(num_data) is int:
+            num_data = [num_data]
+        assert len(radial_location) == len(property) == len(num_data), 'Trying to add multiple observation points but insufficent information supplied.'
+        
+        if property:
+            self.property = [_observation_point_properties[p] for p in property]
+        else:
+            self.property = property
+
+        self.num_observation_points = len(radial_location)
+        self.radial_location = np.fromiter(radial_location, dtype=float)
+        self.num_data = np.fromiter(num_data, dtype=np.int32)
+        self.property = np.fromiter(self.property, dtype=np.int32)
+        self.units = {
+            'Radial location' : 'm'
+        }
+
     
+    def add_observation_points(self, radial_location, property, num_data):
+        """
+        Add observation point(s). Either takes three lists each in identical order, or three individual values.
+        """
+        if type(radial_location) is list and type(property) is list and type(num_data) is list:
+            assert len(radial_location) == len(property) == len(num_data), 'Trying to add multiple observation points but insufficent information supplied.'
+            np.append(self.radial_location, radial_location)
+            np.append(self.property, [_observation_point_properties[property_type] for property_type in property])
+            np.append(self.num_data, num_data)
+        elif type(radial_location) is float and type(property) is str and type(num_data) is int:
+            np.append(self.radial_location, radial_location)
+            np.append(self.property, _observation_point_properties[property])
+            np.append(self.num_data, num_data)
+
+
+# Type of flow that is occurring (mapping readable names to the fortran equivalent flags)
+_pump_schemes = {
+    'measured' : 0, # Measured flows (flowrate changes at different times)
+    'constant' : 1, # Constant flow (flowrate constant through the whole time period)
+    'step' : 4      # Step flow (flow only active for a certain amount of time)
+    }
+
+
+class Pump:
+    def __init__(self, pumping_scheme, flow_rates, flow_times, injection_well, injection_enthalpy, deliverability, production_index, cutoff_pressure):
+        self.pumping_scheme = _pump_schemes[pumping_scheme]
+
+        # If input rates and times are not iterable, convert to iterables
+        if type(flow_rates) is float:
+            flow_rates = [flow_rates]
+        if type(flow_times) is float:
+            flow_times = [flow_times]
+
+        self.flow_rates = np.fromiter(flow_rates, dtype=float)
+        self.flow_times = np.fromiter(flow_times, dtype=float)
+        assert len(flow_rates) == len(flow_times), 'Flow rate and flow time array lengths do not match.'
+        self.num_pump_times = len(flow_rates)
+
+        if injection_well:
+            self.injection_well = 1
+        else:
+            self.injection_well = 0
+
+        self.injection_enthalpy = injection_enthalpy
+
+        if deliverability:
+            self.deliverability = 1
+        else:
+            self.deliverability = 0
+        
+        self.production_index = production_index
+        self.cutoff_pressure = cutoff_pressure
+
+        self.units = {
+            'Mass flux' : 'kg/s',
+            'Flow time' : 's',
+            'Injection Enthalpy' : 'J',
+            'Cutoff Pressure' : 'Pa',
+            'Production Index' : 'TODO'
+        }
+
+
+# Parameters used in each model - the key is the model_type (update when new models are added)
+_model_parameters = {
+    'theis' : 
+        {
+            'Reservoir Conditions' : ['Initial Pressure'],
+            'Fixed Parameters' : ['Mass Flowrate', 'Layer Thickness', 'Density', 'Kinematic Viscosity', 'Compressibility', 'Action Well Radius'],
+            'Variables' : ['Porosity', 'Permeability']
+        },
+    'radial1d' :
+        {
+            'Reservoir Conditions' : ['Initial Pressure', 'Initial X'],
+            'Fixed Parameters' : ['Layer Thickness', 'Action Well Radius', 'Rock Specific Heat', 'Rock Heat Conductivity', 'Rock Density', 'Rock Compressibility'],
+            'Variables' : ['Porosity', 'Permeability']
+        }
+    }
+
+
+# Default units for each parameter. Can look to implement changing units via combo box later.
 _default_parameter_units = {
-                            'Initial Pressure' : {'Units':'Pa', 'Models':['theis', 'radial1d']},
-                            'Mass Flowrate' : {'Units':'Kg/s', 'Models':['theis', 'radial1d']},
-                            'Layer Thickness' : {'Units':'m', 'Models':['theis', 'radial1d']},
-                            'Density' : {'Units':'Kg/m<sup>3</sup>', 'Models':['theis']},
-                            'Kinematic Viscosity' : {'Units':'m<sup>2</sup>/s', 'Models':['theis']},
-                            'Compressibility' : {'Units':'1/Pa', 'Models':['theis']},
-                            'Radius' : {'Units':'m', 'Models':['theis']},
-                            'Initial Temperature' : {'Units':'TODO', 'Models':['radial1d']},
-                            'Initial Vapour Saturation' : {'Units':'TODO', 'Models':['radial1d']},
-                            'Action Well Radius' : {'Units':'TODO', 'Models':['radial1d']},
-                            'Rock Specific Heat' : {'Units':'TODO', 'Models':['radial1d']},
-                            'Rock Conductivity' : {'Units':'TODO', 'Models':['radial1d']},
-                            'Rock Density' : {'Units':'TODO', 'Models':['radial1d']},
-                            'Rock Compressibility' : {'Units':'TODO', 'Models':['radial1d']},
-                            'Observation Point Distance' : {'Units':'TODO', 'Models':['radial1d']}
-                            }
+    # The units are formatted so they will look better when displayed in the GUI
+    'Reservoir Conditions' : 
+        {
+        'Initial Pressure' : {'Units':'Pa'},
+        'Initial X' : {'Units': {'Initial Temperature':'°C', 
+                                 'Initial Vapour Saturation':'Dimensionless'}}
+        },
+    'Fixed Parameters' : 
+        {
+        'Mass Flowrate' : {'Units':'kg/s'},
+        'Layer Thickness' : {'Units':'m'},
+        'Density' : {'Units':'kg/m<sup>3</sup>'},
+        'Kinematic Viscosity' : {'Units':'m<sup>2</sup>/s'},
+        'Compressibility' : {'Units':'1/Pa'},
+        'Action Well Radius' : {'Units':'m'},
+        'Rock Specific Heat' : {'Units':'J/kgK'},
+        'Rock Heat Conductivity' : {'Units':'W/mK'},
+        'Rock Density' : {'Units':'kg/m<sup>3</sup>'},
+        'Rock Compressibility' : {'Units':'1/Pa'}
+        },
+    'Variables' :
+        {
+        'Porosity' : {'Units':'Dimensionless'},
+        'Permeability' : {'Units':'m<sup>2</sup>'}
+        }    
+    }
+
 
 class Data():
     """
-    This is a class which defines the problem data structure (eventually extended for use in all model types).
+    This is a class which defines the data structure which contains (eventually extended for use in all model types).
     """
-    def __init__(self, filename=None, time=None, observation=None, parameters_list=None, error=None, model_type='Theis'):
+    def __init__(self, model_type, filename=None, time=None, observation=None, parameters_list=None, pump_info=None, observation_points=None, grid_info=Grid(), error=None):
         self.model_type = model_type.lower()
-        self.filename = filename # the filename of where the data was imported from
         self.time = time # array of time data
         self.observation = observation # array of observed pressure data
         self.approximation = None # array of approximated pressure data
-        self.parameters = self._initialise_parameter_dictionary()
+        self.reservoir_conditions, self.fixed_parameters, self.variables = self._initialise_parameter_dictionaries()
+        self.pump_info = pump_info
+        self.observation_points = observation_points
+        self.grid_info = grid_info
+        self.initial_x = None # String that states if initial x is temperature or vapour saturation (for use within the GUI)
+
+        if model_type == 'radial1d' and observation_points:
+            self.total_num_data = sum(observation_points.num_data)
+        elif model_type == 'theis' and time:
+            self.total_num_data = len(time)
+        else:
+            self.total_num_data = 0
+
         if parameters_list:
-            self.fill_parameter_dictionary(parameters_list)
-        self.variables = [None]*2
+            self._fill_parameter_dictionaries(parameters_list)
         
-        self.error = error # Estimated error in the readings
+        self.error = error # Estimated error in the readings # Move the error to observation points (each could have different errors
 
         # If a filename is given read the data in
         if filename:
-            self.read_file()
+            self.read_file(filename)
     
 
-    def _initialise_parameter_dictionary(self):
-        parameters = {}
-        for parameter in _model_parameters[self.model_type]:
-            parameters[parameter] = {'Value':None, 'Units':_default_parameter_units[parameter]['Units']}
-        return parameters
+    def _initialise_parameter_dictionaries(self):
+        reservoir_conditions = {}
+        fixed_parameters = {}
+        variables = {}
+        for reservoir_condition in _model_parameters[self.model_type]['Reservoir Conditions']:
+            reservoir_conditions[reservoir_condition] = {'Value':None, 'Units':_default_parameter_units['Reservoir Conditions'][reservoir_condition]['Units']}
+        for parameter in _model_parameters[self.model_type]['Fixed Parameters']:
+            fixed_parameters[parameter] = {'Value':None, 'Units':_default_parameter_units['Fixed Parameters'][parameter]['Units']}
+        for variable in _model_parameters[self.model_type]['Variables']:
+            variables[variable] = {'Value':None, 'Units':_default_parameter_units['Variables'][variable]['Units']}
+        return reservoir_conditions, fixed_parameters, variables
 
 
-    def fill_parameter_dictionary(self, parameters_list):        
+    def _fill_parameter_dictionaries(self, parameters_list):        
         if parameters_list:
             if self.model_type == 'theis':
-                self.parameters['Initial Pressure']['Value'] = parameters_list[0]
-                self.parameters['Mass Flowrate']['Value'] = parameters_list[1]
-                self.parameters['Layer Thickness']['Value'] = parameters_list[2]
-                self.parameters['Density']['Value'] = parameters_list[3]
-                self.parameters['Kinematic Viscosity']['Value'] = parameters_list[4]
-                self.parameters['Compressibility']['Value'] = parameters_list[5]
-                self.parameters['Radius']['Value'] = parameters_list[6]
+                self.reservoir_conditions['Initial Pressure']['Value'] = parameters_list[0]
+                self.fixed_parameters['Mass Flowrate']['Value'] = parameters_list[1]
+                self.fixed_parameters['Layer Thickness']['Value'] = parameters_list[2]
+                self.fixed_parameters['Density']['Value'] = parameters_list[3]
+                self.fixed_parameters['Kinematic Viscosity']['Value'] = parameters_list[4]
+                self.fixed_parameters['Compressibility']['Value'] = parameters_list[5]
+                self.fixed_parameters['Action Well Radius']['Value'] = parameters_list[6]
             elif self.model_type == 'radial1d':
-                self.parameters['Initial Pressure']['Value'] = parameters_list[0]
-                self.parameters['Initial Temperature']['Value'] = parameters_list[1]
-                self.parameters['Action Well Radius']['Value'] = parameters_list[2]
-                self.parameters['Layer Thickness']['Value'] = parameters_list[3]
-                self.parameters['Rock Specific Heat']['Value'] = parameters_list[4]
-                self.parameters['Rock Conductivity']['Value'] = parameters_list[5]
-                self.parameters['Rock Density']['Value'] = parameters_list[6]
-                self.parameters['Rock Compressibility']['Value'] = parameters_list[7]
-                self.parameters['Mass Flowrate']['Value'] = parameters_list[8]
-                self.parameters['Observation Point Distance']['Value'] = parameters_list[9]
+                self.reservoir_conditions['Initial Pressure']['Value'] = parameters_list[0]
+                self.reservoir_conditions['Initial X']['Value'] = parameters_list[1]
+                self.fixed_parameters['Action Well Radius']['Value'] = parameters_list[2]
+                self.fixed_parameters['Layer Thickness']['Value'] = parameters_list[3]
+                self.fixed_parameters['Rock Specific Heat']['Value'] = parameters_list[4]
+                self.fixed_parameters['Rock Heat Conductivity']['Value'] = parameters_list[5]
+                self.fixed_parameters['Rock Density']['Value'] = parameters_list[6]
+                self.fixed_parameters['Rock Compressibility']['Value'] = parameters_list[7]
+                if self.reservoir_conditions['Initial X']['Value'] < 1.0:
+                    self.initial_x = 'Initial Vapour Saturation'
+                else:
+                    self.initial_x = 'Initial Temperature'
+               
 
-
-    def read_file(self, filename=None):
+    def read_file(self, filename):
         # TODO Update this work with the new structure
-        if filename:
-            self.filename = filename
+
         # self.time, self.observation = np.genfromtxt(self.filename, delimiter=',', skip_header=1).T
-        with open(self.filename, 'r') as file:
+        with open(filename, 'r') as file:
             metadata = file.readline()
             metadata = metadata.rstrip().split(',') # Convert string to list of strings
             parameter_values = file.readline() 
             parameter_values = [float(value) for value in parameter_values.split(',')] # Convert string to list of floats
             for parameter_name, value in zip(metadata, parameter_values):
-                self.parameters[parameter_name]['Value'] = value # This works only if the file uses the same parameter names as the dictionary key.
-        self.time, self.observation = np.genfromtxt(self.filename, delimiter=',', skip_header=4).T
+                if parameter_name in self.reservoir_conditions.keys():
+                    self.reservoir_conditions[parameter_name]['Value'] = value # This works only if the file uses the same parameter names as the dictionary key.
+                elif parameter_name in self.fixed_parameters.keys():
+                    self.fixed_parameters[parameter_name]['Value'] = value # This works only if the file uses the same parameter names as the dictionary key.
+                else:
+                    raise ValueError('Parameter name "{}" not recognised from input data file.'.format(parameter_name))
+        self.time, self.observation = np.genfromtxt(filename, delimiter=',', skip_header=4).T
 
     
     def set_known_parameters(self, parameters):
@@ -118,33 +255,31 @@ class Data():
             parameters[3] = density
             parameters[4] = kinematic viscosity
             parameters[5] = compressibility
-            parameters[6] = radius
+            parameters[6] = action well radius
 
         Radial 1D Model List Ordering:
             parameters[0] = intial pressure
-            parameters[1] = initial temperature or initial vapour saturation (not implemented)
+            parameters[1] = initial temperature/vapour saturation
             parameters[2] = action well radius
             parameters[3] = layer thickness
             parameters[4] = rock specific heat
-            parameters[5] = rock conductivity
+            parameters[5] = rock heat conductivity
             parameters[6] = rock density    
             parameters[7] = rock compressibility    
-            parameters[8] = mass flowrate    
-            parameters[9] = observation point distance
         """
-        # self.parameters = parameters
-        self.fill_parameter_dictionary(parameters)
+        self._fill_parameter_dictionaries(parameters)
 
 
     def set_unknown_parameters(self, variables):
-        # self.phi = phi
-        # self.k = k
         self.variables = variables
 
 
     def set_time(self, time):
+        if self.observation and len(self.observation) == len(time):
+            self.total_num_data = len(time)
+        else:
+            print('Number of recorded observations is not equal to the number of recorded times.')
         self.time = time
-
 
     def set_observation(self, observation):
         self.observation = observation
@@ -156,6 +291,18 @@ class Data():
 
     def set_error(self, error):
         self.error = error
+    
+
+    def create_pump_info(self, pumping_scheme, flow_rates, flow_times, injection_well, injection_enthalpy, deliverability, production_index, cutoff_pressure):
+        self.pump_info = Pump(pumping_scheme, flow_rates, flow_times, injection_well, injection_enthalpy, deliverability, production_index, cutoff_pressure)
+    
+
+    def create_observation_points(self, radial_location, property, num_data):
+        self.observation_points = ObservationPoints(radial_location, property, num_data)
+
+
+    def create_grid_info(self, num_blocks, num_constant_blocks, constant_block_size, block_growth_factor):
+        self.grid_info = Grid(num_blocks, num_constant_blocks, constant_block_size, block_growth_factor)
 
 
     def generate_datafile(self, filename, variables=None):
@@ -163,16 +310,22 @@ class Data():
         with open(filename, 'w') as file:
             # Write known well parameters first:
             # file.write('Initial Pressure,Mass Flowrate,Thickness,Density,Kinematic Viscosity,Compressibility,Radius\n')
-            for parameter in _model_parameters[self.model_type]:
-                if parameter != _model_parameters[self.model_type][-1]:
+            for parameter in _model_parameters[self.model_type]['Reservoir Conditions'] + _model_parameters[self.model_type]['Fixed Parameters']:
+                if parameter != _model_parameters[self.model_type]['Fixed Parameters'][-1]:
                     file.write('{},'.format(parameter))
                 else:
                     file.write('{}\n'.format(parameter))
-            for parameter in _model_parameters[self.model_type]:
-                if parameter != _model_parameters[self.model_type][-1]:
-                    file.write('{},'.format(self.parameters[parameter]['Value']))
+            for parameter in _model_parameters[self.model_type]['Reservoir Conditions'] + _model_parameters[self.model_type]['Fixed Parameters']:
+                if parameter != _model_parameters[self.model_type]['Fixed Parameters'][-1]:
+                    if parameter in _model_parameters[self.model_type]['Reservoir Conditions']:
+                        file.write('{},'.format(self.reservoir_conditions[parameter]['Value']))
+                    else:
+                        file.write('{},'.format(self.fixed_parameters[parameter]['Value']))
                 else:
-                    file.write('{}\n'.format(self.parameters[parameter]['Value']))
+                    if parameter in _model_parameters[self.model_type]['Reservoir Conditions']:
+                        file.write('{},'.format(self.reservoir_conditions[parameter]['Value']))
+                    else:
+                        file.write('{},'.format(self.fixed_parameters[parameter]['Value']))
                     if variables:
                         file.write('Known Porosity : {}, Known Permeability : {}, '.format(variables[0], variables[1]))
                         if self.error:
@@ -201,244 +354,3 @@ class Data():
                 # else:
                 file.write('{},{}\n'.format(self.time[i], self.observation[i]))
                 # j -= 1
-
-
-# class Radial1d_Data():
-#     """
-#     This is a class which defines the problem data structure (eventually extended for use in all model types).
-#     """
-#     def __init__(self, filename=None, time=None, observation=None, parameters=None, error=None):
-#         self.parameter_names = ['Initial Pressure', 'Temperature', 'Action Well Radius', 'Layer Thickness', 'Rock Specific Heat', 'Rock Conductivity', 'Rock Density', 'Rock Compressibility', 'Flow Rate', 'Observation Point Distance']
-#         self.filename = filename # the filename of where the data was imported from
-#         self.time = time # array of time data
-#         self.observation = observation # array of observed pressure data
-#         self.approximation = None # array of approximated pressure data
-#         if parameters:
-#             self.parameters = parameters # list of the well parameters
-#         else:
-#             self.parameters = [None]*10
-#         # self.phi = None # estimated porosity (float)
-#         # self.k = None # estimated permeability (float)
-#         self.variables = [None]*2
-        
-#         self.error = error # Estimated error in the readings
-
-#         # If a filename is given read the data in
-#         if filename:
-#             self.read_file()
-    
-#     def read_file(self, filename=None):
-#         if filename:
-#             self.filename = filename
-#         # self.time, self.observation = np.genfromtxt(self.filename, delimiter=',', skip_header=1).T
-#         with open(self.filename, 'r') as file:
-#             metadata = file.readline()
-#             metadata = metadata.rstrip().split(',') # Convert string to list of strings
-#             parameter_values = file.readline() 
-#             parameter_values = [float(value) for value in parameter_values.split(',')] # Convert string to list of floats
-#             for parameter_name, value in zip(metadata, parameter_values):
-#                 parameter_name = parameter_name.lower()
-#                 if parameter_name == "initial pressure" or parameter_name == "p0":
-#                     self.parameters[0] = value
-#                 elif parameter_name in ["temperature", "t", "vapour saturation"]:
-#                     self.parameters[1] = value
-#                 elif parameter_name == "action well radius" or parameter_name == "r":
-#                     self.parameters[2] = value
-#                 elif parameter_name == "layer thickness" or parameter_name == "h":
-#                     self.parameters[3] = value
-#                 elif parameter_name == "rock specific heat" or parameter_name == "cr":
-#                     self.parameters[4] = value
-#                 elif parameter_name == "rock conductivity" or parameter_name == "cond":
-#                     self.parameters[5] = value
-#                 elif parameter_name == "rock density" or parameter_name == "rhor":
-#                     self.parameters[6] = value
-#                 elif parameter_name == "rock compressibility" or parameter_name == "comp":
-#                     self.parameters[7] = value
-#                 elif parameter_name == "flow rate" or parameter_name == "q":
-#                     self.parameters[8] = value
-#                 elif parameter_name == "observation point distance" or parameter_name == "dist":
-#                     self.parameters[9] = value
-        
-#         self.time, self.observation = np.genfromtxt(self.filename, delimiter=',', skip_header=4).T
-
-    
-#     def set_known_parameters(self, parameters):
-#         """
-#         [p0, X0, rw, thick, CR, COND, RHOR, COMP, ConstRate, distFromWell]
-#         parameters = list of parameters
-#         parameters[0] = intial pressure
-#         parameters[1] = temperature / vapour saturation
-#         parameters[2] = action well radius
-#         parameters[3] = layer thickness
-#         parameters[4] = rock specific heat
-#         parameters[5] = rock heat conductivity
-#         parameters[6] = rock density
-#         parameters[7] = rock compressibility
-#         parameters[8] = flow rate
-#         parameters[9] = observation point distance from well
-#         """
-#         self.parameters = parameters
-
-#     def set_unknown_parameters(self, variables):
-#         # self.phi = phi
-#         # self.k = k
-#         self.variables = variables
-
-#     def set_time(self, time):
-#         self.time = time
-    
-#     def set_observation(self, observation):
-#         self.observation = observation
-    
-#     def set_approximation(self, approximation):
-#         self.approximation = approximation
-
-#     def set_error(self, error):
-#         self.error = error
-    
-#     def generate_datafile(self, filename, variables=None):
-#         with open(filename, 'w') as file:
-#             # Write known well parameters first:
-#             file.write('Initial Pressure,Temperature,Action Well Radius,Layer Thickness,Rock Specific Heat,Rock Conductivity,Rock Density,Rock Compressibility,Flow Rate,Observation Point Distance\n')
-#             j = 0
-#             for parameter in self.parameters:
-#                 if j < 9:
-#                     file.write('{},'.format(parameter)) # Comma-separated values
-#                 else:
-#                     file.write('{}\n'.format(parameter)) # Add a blank line separation.
-#                     if variables:
-#                         file.write('-------- Actual Porosity = {} --- Actual Permeability = {} --------\n'.format(variables[0], variables[1]))
-#                     else:
-#                         file.write('\n')
-#                 j = j+1
-#             # Write the time of observation and observed pressure readings:
-#             file.write('Time (s),Pressure Observation (Pa)\n')
-#             # j = len(self.parameters)
-#             if self.time != None and self.observation != None:
-#                 for i in range(len(self.time)):
-#                     # if j > 0:
-#                     #     file.write('{}, {}, {}\n'.format(self.time[i], self.observation[i], self.parameters[i]))
-#                     # else:
-#                     file.write('{},{}\n'.format(self.time[i], self.observation[i]))
-#                     # j -= 1
-#             else:
-#                 file.write('None,None')
-
-
-# class Theis_Data(Data):
-#     def __init__(self, filename=None, time=None, observation=None, parameters=[None]*7, error=None):
-#         self.filename = filename # the filename of where the data was imported from
-#         self.time = time # array of time data
-#         self.observation = observation # array of observed pressure data
-#         self.approximation = None # array of approximated pressure data
-
-#         p0_dict = {'Value':parameters[0], 'Units':'Pa'}
-#         qm_dict = {'Value':parameters[1], 'Units':'Kg/s'}
-#         h_dict = {'Value':parameters[2], 'Units':'m'}
-#         rho_dict = {'Value':parameters[3], 'Units':'Kg/m3'}
-#         nu_dict = {'Value':parameters[4], 'Units':'m2/s'}
-#         c_dict = {'Value':parameters[5], 'Units':'1/Pa'}
-#         r_dict = {'Value':parameters[6], 'Units':'m'}
-
-#         self.parameters = {'Initial Pressure':p0_dict, 'Mass Flowrate':qm_dict, 'Layer Thickness':h_dict, 'Density':rho_dict,
-#               'Kinematic Viscosity':nu_dict, 'Compressibility':c_dict, 'Radius':r_dict}
-
-#         self.variables = dict.fromkeys(['Initial Pressure'])        
-#         # self.variables = dict.fromkeys(['Porosity', 'Permeability'])
-#         self.variables = {'Porosity':{'Value':None, 'Units':''}, 'Permeability':{'Value':None, 'Units':'m2'}}
-
-#         self.error = error # Estimated error in the readings
-
-#         # If a filename is given read the data in
-#         if filename:
-#             self.read_file()
-
-#     def read_file(self, filename=None):
-#         if filename:
-#             self.filename = filename
-#         # self.time, self.observation = np.genfromtxt(self.filename, delimiter=',', skip_header=1).T
-#         with open(self.filename, 'r') as file:
-#             metadata = file.readline()
-#             metadata = metadata.rstrip().split(',') # Convert string to list of strings
-#             parameter_values = file.readline() 
-#             parameter_values = [float(value) for value in parameter_values.split(',')] # Convert string to list of floats
-#             for parameter_name, value in zip(metadata, parameter_values):
-#                 parameter_name = parameter_name.lower()
-#                 if parameter_name == "initial pressure" or parameter_name == "p0":
-#                     self.parameters['Initial Pressure']['Value'] = value
-#                 elif parameter_name == "mass flowrate" or parameter_name == "qm":
-#                     self.parameters['Mass Flowrate']['Value'] = value
-#                 elif parameter_name == "thickness" or parameter_name == "h":
-#                     self.parameters['Layer Thickness']['Value'] = value
-#                 elif parameter_name == "density" or parameter_name == "rho":
-#                     self.parameters['Density']['Value'] = value
-#                 elif parameter_name == "kinematic viscosity" or parameter_name == "nu":
-#                     self.parameters['Kinematic Viscosity']['Value'] = value
-#                 elif parameter_name == "compressibility" or parameter_name == "c":
-#                     self.parameters['Compressibility']['Value'] = value
-#                 elif parameter_name == "radius" or parameter_name == "r":
-#                     self.parameters['Radius']['Value'] = value
-        
-#         self.time, self.observation = np.genfromtxt(self.filename, delimiter=',', skip_header=4).T
-
-    
-#     def set_known_parameters(self, parameters):
-#         """
-#         parameters = list of parameters
-#         parameters[0] = intial pressure
-#         parameters[1] = mass flowrate
-#         parameters[2] = thickness
-#         parameters[3] = density
-#         parameters[4] = kinematic viscosity
-#         parameters[5] = compressibility
-#         parameters[6] = radius
-#         """
-#         self.parameters = parameters
-
-#     def set_unknown_parameters(self, variables):
-#         # self.phi = phi
-#         # self.k = k
-#         self.variables['Porosity']['Value'], self.variables['Permeability']['Value'] = variables
-
-#     def set_time(self, time):
-#         self.time = time
-    
-#     def set_observation(self, observation):
-#         self.observation = observation
-    
-#     def set_approximation(self, approximation):
-#         self.approximation = approximation
-
-#     def set_error(self, error):
-#         self.error = error
-    
-#     def generate_datafile(self, filename, variables=None):
-#         with open(filename, 'w') as file:
-#             # Write known well parameters first:
-#             # file.write('Initial Pressure,Mass Flowrate,Thickness,Density,Kinematic Viscosity,Compressibility,Radius\n')
-#             i = 0
-#             for parameter in self.parameters.keys():
-#                 if i < len(self.parameters)-1:
-#                     file.write('{},'.format(parameter)) # Comma-separated values
-#                 else:
-#                     file.write('{}\n'.format(parameter)) # Add a blank line separation.
-#                 i += 1
-#             i = 0
-#             for value in self.parameters.values():
-#                 if i < len(self.parameters)-1:
-#                     file.write('{},'.format(value)) # Comma-separated values
-#                 else:
-#                     file.write('{}\n'.format(value))
-#                     if variables:
-#                         file.write('-------- Actual Porosity = {} --- Actual Permeability = {} --------\n'.format(variables['Porosity']['Value'], variables['Permeability']['Value']))
-#                     else:
-#                         file.write('\n')
-#             # Write the time of observation and observed pressure readings:
-#             file.write('Time (s),Pressure Observation (Pa)\n')
-#             # j = len(self.parameters)
-#             for i in range(len(self.time)):
-#                 # if j > 0:
-#                 #     file.write('{}, {}, {}\n'.format(self.time[i], self.observation[i], self.parameters[i]))
-#                 # else:
-#                 file.write('{},{}\n'.format(self.time[i], self.observation[i]))
-#                 # j -= 1
