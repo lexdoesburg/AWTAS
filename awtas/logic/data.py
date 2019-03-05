@@ -14,26 +14,43 @@ class Grid:
 
 
 # Type of measurement data that was recorded at the observation point (mapping readable names to the fortran equivalent flags)
-_observation_point_properties = {
-    'deliverability' : 0,
-    'pressure' : 1,
-    'temperature' : 2,
-    'enthalpy' : 3
+_observation_properties = {
+    'Deliverability' : 0,
+    'Pressure' : 1,
+    'Temperature' : 2,
+    'Enthalpy' : 3
     }
 
+_observation_property_from_flag = {
+    # Opposite ordering of the above dictionary to get meaningful name from fortran flag
+    0 : 'Deliverability',
+    1 : 'Pressure',
+    2 : 'Temperature',
+    3 : 'Enthalpy'
+}
 
+"""
+Observation point class isn't highly intuitive. Would be better to have a class and each observation point object 
+is a single observation point. Currently the class is for multiple observation points.
+This way was the quickest way to work best with the fortran code currently - can be improved later to use single object instance of
+the class for each observation point and then combine the required information from each obs point to be passed to fortran.
+"""
 class ObservationPoints:
-    def __init__(self, radial_location=[], property=[], num_data=[]):
+    def __init__(self, radial_location=[], property=[], num_data=[], times=[], observations=[]):
         if type(radial_location) is float:
             radial_location = [radial_location]
         if type(property) is str:
             property = [property]
         if type(num_data) is int:
             num_data = [num_data]
-        assert len(radial_location) == len(property) == len(num_data), 'Trying to add multiple observation points but insufficent information supplied.'
+        if type(times) is np.ndarray:
+            times = [times]
+        if type(observations) is np.ndarray:
+            observations = [observations]
+        assert len(radial_location) == len(property) == len(num_data) == len(times) == len(observations), 'Trying to add multiple observation points but insufficent information supplied.'
         
         if property:
-            self.property = [_observation_point_properties[p] for p in property]
+            self.property = [_observation_properties[p] for p in property]
         else:
             self.property = property
 
@@ -41,36 +58,59 @@ class ObservationPoints:
         self.radial_location = np.fromiter(radial_location, dtype=float)
         self.num_data = np.fromiter(num_data, dtype=np.int32)
         self.property = np.fromiter(self.property, dtype=np.int32)
+        self.times = times
+        self.observations = observations
+        self.modelled_values = []
+
         self.units = {
             'Radial location' : 'm'
         }
 
     
-    def add_observation_points(self, radial_location, property, num_data):
+    def add_observation_points(self, radial_location, property, num_data, times, observations):
         """
         Add observation point(s). Either takes three lists each in identical order, or three individual values.
         """
-        if type(radial_location) is list and type(property) is list and type(num_data) is list:
-            assert len(radial_location) == len(property) == len(num_data), 'Trying to add multiple observation points but insufficent information supplied.'
+        if type(radial_location) is list and type(property) is list and type(num_data) is list and type(times) is list and type(observations) is list:
+            assert len(radial_location) == len(property) == len(num_data) == len(times) == len(observations), 'Trying to add multiple observation points but insufficent information supplied.'
             np.append(self.radial_location, radial_location)
-            np.append(self.property, [_observation_point_properties[property_type] for property_type in property])
+            np.append(self.property, [_observation_properties[property_type] for property_type in property])
             np.append(self.num_data, num_data)
+            self.times.extend(times)
+            self.observations.extend(observations)
         elif type(radial_location) is float and type(property) is str and type(num_data) is int:
             np.append(self.radial_location, radial_location)
-            np.append(self.property, _observation_point_properties[property])
+            np.append(self.property, _observation_properties[property])
             np.append(self.num_data, num_data)
+            assert len(times) == num_data == len(observations), 'Given {} observation times and {} observation values when expecting {}.'.format(len(times), len(observations), num_data)
+            self.times.append(times)
+            self.observations.append(observations)
+    
+    def store_modelled_values(self, modelled_values):
+        current_index = 0
+        for i in range(self.num_observation_points):
+            next_index = current_index + self.num_data[i]
+            self.modelled_values.append(np.fromiter(modelled_values[current_index:next_index], dtype=float))
+            current_index = next_index
 
 
 # Type of flow that is occurring (mapping readable names to the fortran equivalent flags)
 _pump_schemes = {
-    'measured' : 0, # Measured flows (flowrate changes at different times)
-    'constant' : 1, # Constant flow (flowrate constant through the whole time period)
-    'step' : 4      # Step flow (flow only active for a certain amount of time)
+    'Measured Flows' : 0, # Flowrate changes at different times
+    'Constant Flow' : 1,  # Flowrate constant through the whole time period
+    'Step Flows' : 4      # Flow only active for a certain amount of time
+    }
+
+_pump_scheme_from_flag = {
+    # Opposite ordering of the above dictionary to get meaningful name from fortran flag
+    0 : 'Measured Flows', # Flowrate changes at different times
+    1 : 'Constant Flow',  # Flowrate constant through the whole time period
+    4 : 'Step Flows'      # Flow only active for a certain amount of time
     }
 
 
 class Pump:
-    def __init__(self, pumping_scheme, flow_rates, flow_times, injection_well, injection_enthalpy, deliverability, production_index, cutoff_pressure):
+    def __init__(self, pumping_scheme, flow_rates, flow_times, deliverability, production_index, cutoff_pressure, injection_well=None, injection_enthalpy=None):
         self.pumping_scheme = _pump_schemes[pumping_scheme]
 
         # If input rates and times are not iterable, convert to iterables
@@ -84,20 +124,37 @@ class Pump:
         assert len(flow_rates) == len(flow_times), 'Flow rate and flow time array lengths do not match.'
         self.num_pump_times = len(flow_rates)
 
-        if injection_well:
-            self.injection_well = 1
-        else:
-            self.injection_well = 0
+        # if injection_well: 
+        #     self.injection_well = 1
+        #     self.injection_enthalpy = injection_enthalpy
+        # else:
+        #     self.injection_well = 0
+        #     self.injection_enthalpy = 0.0
 
-        self.injection_enthalpy = injection_enthalpy
+        # If a pump can only be production or injection we can infer the pump type based on the sign of the flow rates (-ve for production, +ve for injection)
+        try:
+            min_flow = np.min(self.flow_rates[np.nonzero(self.flow_rates)])
+        except ValueError:
+            raise ValueError('No meaningful flowrate specified (all flowrates are 0).')
+
+        if min_flow > 0: # Injection
+            self.injection_well = 1
+            if injection_enthalpy is None:
+                raise ValueError('No injection enthalpy specified for injection well.')
+            self.injection_enthalpy = injection_enthalpy
+        else: # Production
+            self.injection_well = 0
+            self.injection_enthalpy = 0.0
+
 
         if deliverability:
             self.deliverability = 1
+            self.production_index = production_index
+            self.cutoff_pressure = cutoff_pressure
         else:
             self.deliverability = 0
-        
-        self.production_index = production_index
-        self.cutoff_pressure = cutoff_pressure
+            self.production_index = 0.0
+            self.cutoff_pressure = 0.0
 
         self.units = {
             'Mass flux' : 'kg/s',
@@ -127,7 +184,7 @@ _model_parameters = {
 
 # Default units for each parameter. Can look to implement changing units via combo box later.
 _default_parameter_units = {
-    # The units are formatted so they will look better when displayed in the GUI
+    # The units are formatted to look better when displayed in the GUI
     'Reservoir Conditions' : 
         {
         'Initial Pressure' : {'Units':'Pa'},
@@ -159,16 +216,26 @@ class Data():
     """
     This is a class which defines the data structure which contains (eventually extended for use in all model types).
     """
-    def __init__(self, model_type, filename=None, time=None, observation=None, parameters_list=None, pump_info=None, observation_points=None, grid_info=Grid(), error=None):
+    def __init__(self, model_type, filename=None, time=None, observation=None, parameters_list=None, pump_info=None, observation_points=None, grid_info=None, error=None):
         self.model_type = model_type.lower()
-        self.time = time # array of time data
-        self.observation = observation # array of observed pressure data
+        assert self.model_type_valid(), 'Input model type is invalid try one of {} instead.'.format(_model_parameters.keys())
         self.approximation = None # array of approximated pressure data
         self.reservoir_conditions, self.fixed_parameters, self.variables = self._initialise_parameter_dictionaries()
         self.pump_info = pump_info
         self.observation_points = observation_points
         self.grid_info = grid_info
         self.initial_x = None # String that states if initial x is temperature or vapour saturation (for use within the GUI)
+
+        if self.model_type is not 'theis' and self.observation_points:
+            # if self.observation_points.num_observation_points == 1:
+            #     self.time = self.observation_points.times
+            #     self.observation = self.observation_points.observations
+            # else: # Otherwise multiple observation points.
+            self.time = np.concatenate(self.observation_points.times)
+            self.observation = np.concatenate(self.observation_points.observations)
+        else:
+            self.time = time # array of time data
+            self.observation = observation # array of observed pressure data
 
         if model_type == 'radial1d' and observation_points:
             self.total_num_data = sum(observation_points.num_data)
@@ -226,24 +293,141 @@ class Data():
                
 
     def read_file(self, filename):
-        # TODO Update this work with the new structure
+        # TODO Update theis solution code to work with the improved code used for radial1d
+        if self.model_type == 'theis':
+            # Old code
+            with open(filename, 'r') as file:
+                # Read error
+                file.readline() # Skip first line
+                info_values = file.readline()
+                info_values = info_values.rstrip().split(',') # Convert string to list of strings
+                try:
+                    self.error = float(info_values[0])
+                    if self.error <= 1e-6:
+                        self.error = None
+                except ValueError:
+                    # If the error can't be converted to a float then don't store any error value
+                    self.error = None
+                print('Read error value = {}'.format(self.error))
+                file.readline() # Skip blank line
 
-        # self.time, self.observation = np.genfromtxt(self.filename, delimiter=',', skip_header=1).T
-        with open(filename, 'r') as file:
-            metadata = file.readline()
-            metadata = metadata.rstrip().split(',') # Convert string to list of strings
-            parameter_values = file.readline() 
-            parameter_values = [float(value) for value in parameter_values.split(',')] # Convert string to list of floats
-            for parameter_name, value in zip(metadata, parameter_values):
-                if parameter_name in self.reservoir_conditions.keys():
-                    self.reservoir_conditions[parameter_name]['Value'] = value # This works only if the file uses the same parameter names as the dictionary key.
-                elif parameter_name in self.fixed_parameters.keys():
-                    self.fixed_parameters[parameter_name]['Value'] = value # This works only if the file uses the same parameter names as the dictionary key.
-                else:
-                    raise ValueError('Parameter name "{}" not recognised from input data file.'.format(parameter_name))
-        self.time, self.observation = np.genfromtxt(filename, delimiter=',', skip_header=4).T
+                # Read parameter values
+                parameter_labels = file.readline()
+                parameter_labels = parameter_labels.rstrip().split(',') # Convert string to list of strings
+                parameter_values = file.readline() 
+                parameter_values = [float(value) for value in parameter_values.split(',')] # Convert string to list of floats
+                for parameter_name, value in zip(parameter_labels, parameter_values):
+                    if parameter_name in self.reservoir_conditions.keys():
+                        self.reservoir_conditions[parameter_name]['Value'] = value # This works only if the file uses the same parameter names as the dictionary key.
+                    elif parameter_name in self.fixed_parameters.keys():
+                        self.fixed_parameters[parameter_name]['Value'] = value # This works only if the file uses the same parameter names as the dictionary key.
+                    else:
+                        raise ValueError('Parameter name "{}" not recognised from input data file.'.format(parameter_name))
+            
+            # Read the time and observation values
+            self.time, self.observation = np.genfromtxt(filename, delimiter=',', skip_header=7).T
+        else: 
+            # New code for homogeneous porous (radial1d) and later models
+            obs_point_properties = []
+            obs_point_locations = []
+            obs_point_num_data = []
+            obs_point_times = []
+            obs_point_observations = []
+            with open(filename, 'r') as file:
+                for counter, line in enumerate(file):
+                # for line in file:
+                    print('Line {}: {}'.format(counter, line))
+                    if 'KNOWN WELL PARAMETERS' in line:
+                        labels = file.readline()
+                        labels = labels.rstrip().split(',') # Convert string to list of strings
+                        values = file.readline()
+                        values = [float(value) for value in values.split(',')] # Convert string to list of floats
+                        for label, value in zip(labels, values):
+                            if label in self.reservoir_conditions.keys():
+                                self.reservoir_conditions[label]['Value'] = value # This works only if the file uses the same parameter names as the dictionary key.
+                            elif label in self.fixed_parameters.keys():
+                                self.fixed_parameters[label]['Value'] = value # This works only if the file uses the same parameter names as the dictionary key.
+                            else:
+                                raise ValueError('Parameter name "{}" not recognised from input data file. Try one of {} or {} instead.'.format(label, self.reservoir_conditions.keys(), self.fixed_parameters.keys()))
+                    elif 'GRID INFORMATION' in line:
+                        labels = file.readline()
+                        labels = labels.rstrip().split(',') # Convert string to list of strings
+                        values = file.readline()
+                        values = values.rstrip().split(',') # Convert string to list of strings
+                        for label, value in zip(labels, values):
+                            if label == 'Number of Grid Blocks':
+                                num_blocks = np.int32(value)
+                            elif label == 'Number of Constant Sized Blocks':
+                                num_constant_blocks = np.int32(value)
+                            elif label == 'Constant Block Size':
+                                constant_block_size = float(value)
+                            elif label == 'Block Growth Factor':
+                                block_growth_factor = float(value)
+                        self.grid_info = Grid(num_blocks=num_blocks, num_constant_blocks=num_constant_blocks, constant_block_size=constant_block_size, block_growth_factor=block_growth_factor)
+                    elif 'PUMP INFORMATION' in line:
+                        labels = file.readline()
+                        labels = labels.rstrip().split(',') # Convert string to list of strings
+                        values = file.readline()
+                        values = values.rstrip().split(',') # Convert string to list of strings
+                        injection_enthalpy = None
+                        for label, value in zip(labels, values):
+                            if label == 'Pumping Scheme':
+                                pumping_scheme = value
+                            elif label == 'Number of Pump Times':
+                                num_pump_times = int(value)
+                            elif label == 'Deliverability':
+                                if value.lower() in ['false', 'no']:
+                                    deliverability = False
+                                elif value.lower() in ['true', 'yes']:
+                                    deliverability = True
+                                else:
+                                    deliverability = bool(int(value))
+                            elif label == 'Production Index':
+                                production_index = float(value)
+                            elif label == 'Cutoff Pressure':
+                                cutoff_pressure = float(value)
+                            elif label == 'Injection Enthalpy':
+                                injection_enthalpy = float(value)
+                        file.readline()
+                        file.readline()
+                        pump_times = []
+                        pump_rates = []
+                        for i in range(num_pump_times):
+                            flow_info = file.readline()
+                            flow_info = [float(value) for value in flow_info.split(',')]
+                            pump_times.append(flow_info[0])
+                            pump_rates.append(flow_info[1])
+                        self.pump_info = Pump(pumping_scheme=pumping_scheme,flow_rates=pump_rates, flow_times=pump_times, deliverability=deliverability, production_index=production_index, cutoff_pressure=cutoff_pressure, injection_enthalpy=injection_enthalpy)
+                    elif 'OBSERVATION POINT' in line:
+                        labels = file.readline()
+                        labels = labels.rstrip().split(',') # Convert string to list of strings
+                        values = file.readline()
+                        values = values.rstrip().split(',') # Convert string to list of strings
+                        for label, value in zip(labels, values):
+                            if label == 'Property Observed':
+                                obs_point_properties.append(value)
+                            elif label == 'Radial Location [m]':
+                                obs_point_locations.append(float(value))
+                            elif label == 'Number of Observations':
+                                num_data = int(value)
+                                obs_point_num_data.append(num_data)
+                        file.readline()
+                        file.readline()
+                        times = np.ndarray(shape=num_data, dtype=float)
+                        observations = np.ndarray(shape=num_data, dtype=float)
+                        for i in range(num_data):
+                            observation_info = file.readline()
+                            observation_info = [float(value) for value in observation_info.split(',')]
+                            times[i] = observation_info[0]
+                            observations[i] = observation_info[1]
+                        obs_point_times.append(times)
+                        obs_point_observations.append(observations)
 
-    
+            self.observation_points = ObservationPoints(radial_location=obs_point_locations, property=obs_point_properties, num_data=obs_point_num_data, times=obs_point_times, observations=obs_point_observations)                
+            self.time = np.concatenate(self.observation_points.times)
+            self.observation = np.concatenate(self.observation_points.observations)
+            self.total_num_data = len(self.time)
+
     def set_known_parameters(self, parameters):
         """
         parameters = list of parameters
@@ -281,6 +465,7 @@ class Data():
             print('Number of recorded observations is not equal to the number of recorded times.')
         self.time = time
 
+
     def set_observation(self, observation):
         self.observation = observation
 
@@ -293,64 +478,190 @@ class Data():
         self.error = error
     
 
-    def create_pump_info(self, pumping_scheme, flow_rates, flow_times, injection_well, injection_enthalpy, deliverability, production_index, cutoff_pressure):
-        self.pump_info = Pump(pumping_scheme, flow_rates, flow_times, injection_well, injection_enthalpy, deliverability, production_index, cutoff_pressure)
+    def create_pump_info(self, pumping_scheme, flow_rates, flow_times, deliverability, production_index, cutoff_pressure, injection_well, injection_enthalpy):
+        self.pump_info = Pump(pumping_scheme, flow_rates, flow_times, deliverability, production_index, cutoff_pressure, injection_well, injection_enthalpy)
     
 
-    def create_observation_points(self, radial_location, property, num_data):
-        self.observation_points = ObservationPoints(radial_location, property, num_data)
+    def create_observation_points(self, radial_location, property, num_data, times, observations):
+        self.observation_points = ObservationPoints(radial_location, property, num_data, times, observations)
 
 
     def create_grid_info(self, num_blocks, num_constant_blocks, constant_block_size, block_growth_factor):
         self.grid_info = Grid(num_blocks, num_constant_blocks, constant_block_size, block_growth_factor)
 
 
+    def model_type_valid(self):
+        if self.model_type in _model_parameters.keys():
+            return True
+        else:
+            return False
+
     def generate_datafile(self, filename, variables=None):
-        # TODO Update this work with the new structure
-        with open(filename, 'w') as file:
-            # Write known well parameters first:
-            # file.write('Initial Pressure,Mass Flowrate,Thickness,Density,Kinematic Viscosity,Compressibility,Radius\n')
-            for parameter in _model_parameters[self.model_type]['Reservoir Conditions'] + _model_parameters[self.model_type]['Fixed Parameters']:
-                if parameter != _model_parameters[self.model_type]['Fixed Parameters'][-1]:
-                    file.write('{},'.format(parameter))
+        # TODO Update theis solution code to work with the improved code used for radial1d model
+        if self.model_type == 'theis':
+            # Old code
+            with open(filename, 'w') as file:
+                # Write known errors and variable values
+                info_labels = 'SD of Error,'
+                if self.error:
+                    info_values = '{},'.format(self.error)
                 else:
-                    file.write('{}\n'.format(parameter))
-            for parameter in _model_parameters[self.model_type]['Reservoir Conditions'] + _model_parameters[self.model_type]['Fixed Parameters']:
-                if parameter != _model_parameters[self.model_type]['Fixed Parameters'][-1]:
-                    if parameter in _model_parameters[self.model_type]['Reservoir Conditions']:
-                        file.write('{},'.format(self.reservoir_conditions[parameter]['Value']))
-                    else:
-                        file.write('{},'.format(self.fixed_parameters[parameter]['Value']))
-                else:
-                    if parameter in _model_parameters[self.model_type]['Reservoir Conditions']:
-                        file.write('{},'.format(self.reservoir_conditions[parameter]['Value']))
-                    else:
-                        file.write('{},'.format(self.fixed_parameters[parameter]['Value']))
-                    if variables:
-                        file.write('Known Porosity : {}, Known Permeability : {}, '.format(variables[0], variables[1]))
-                        if self.error:
-                            file.write('Standard Deviation of Errors : {}\n'.format(self.error))
+                    info_values = 'Unknown,'
+                if variables:
+                    for i, (variable, value) in enumerate(variables.items()):
+                        if i != len(variables.keys()) - 1:
+                            info_labels += '{},'.format(variable)
+                            info_values += '{},'.format(value)
                         else:
-                            file.write('Standard Deviation of Errors : Unknown\n')
+                            info_labels += '{}\n'.format(variable)
+                            info_values += '{}\n'.format(value)
+                else:
+                    info_labels += 'Variable Values\n'
+                    info_values += 'Unknown\n'
+                file.write(info_labels)
+                file.write(info_values)
+                file.write('\n')
+
+                # Write known well parameters
+                parameter_labels = ''
+                parameter_values = ''
+                for parameter in _model_parameters[self.model_type]['Reservoir Conditions']:
+                    parameter_labels += '{},'.format(parameter)
+                    parameter_values += '{},'.format(self.reservoir_conditions[parameter]['Value'])
+                for parameter in _model_parameters[self.model_type]['Fixed Parameters']:
+                    if parameter != _model_parameters[self.model_type]['Fixed Parameters'][-1]:
+                        parameter_labels += '{},'.format(parameter)
+                        parameter_values += '{},'.format(self.fixed_parameters[parameter]['Value'])
                     else:
-                        file.write('\n')
+                        parameter_labels += '{}\n'.format(parameter)
+                        parameter_values += '{}\n'.format(self.fixed_parameters[parameter]['Value'])
+                file.write(parameter_labels)
+                file.write(parameter_values)
+                file.write('\n')
+                # if variables:
+                #     for i, (variable, value) in enumerate(variables.items()):
 
-            # for parameter in self.parameters:
-            #     if parameter is not self.parameters[-1]:
-            #         file.write('{},'.format(parameter)) # Comma-separated values
-            #     else:
-            #         file.write('{}\n'.format(parameter)) # Add a blank line separation.
-            #         if variables:
-            #             file.write('-------- Actual Porosity = {} --- Actual Permeability = {} --------\n'.format(variables[0], variables[1]))
-            #         else:
-            #             file.write('\n')
-
-            # Write the time of observation and observed pressure readings:
-            file.write('Time [s],Pressure Observation [Pa]\n')
-            # j = len(self.parameters)
-            for i in range(len(self.time)):
-                # if j > 0:
-                #     file.write('{}, {}, {}\n'.format(self.time[i], self.observation[i], self.parameters[i]))
+                #         if i != len(variables) - 1:
+                #             file.write('{} : {}, '.format(variable, value))
+                #         else:
+                #             file.write('{} : {}'.format(variable, value))
+                #             if self.error:
+                #                 file.write(', Known standard deviation of error : {} [Pa]\n'.format(self.error))
+                #             else:
+                #                 file.write('\n')
                 # else:
-                file.write('{},{}\n'.format(self.time[i], self.observation[i]))
-                # j -= 1
+                #     if self.error:
+                #         file.write('Variable values unknown, Known standard deviation of error : {} [Pa]\n'.format(self.error))
+                #     else:
+                #         file.write('\n')
+                
+                # Write the time of observation and observed pressure readings:
+                file.write('Time [s],Pressure Observation [Pa]\n')
+                for i in range(len(self.time)):
+                    file.write('{},{}\n'.format(self.time[i], self.observation[i]))
+                # for parameter in _model_parameters[self.model_type]:
+                #     if parameter != _model_parameters[self.model_type][-1]:
+                #         file.write('{},'.format(parameter))
+                #     else:
+                #         file.write('{}\n'.format(parameter))
+                # for parameter in _model_parameters[self.model_type]:
+                #     if parameter != _model_parameters[self.model_type][-1]:
+                #         file.write('{},'.format(self.parameters[parameter]['Value']))
+                #     else:
+                #         file.write('{}\n'.format(self.parameters[parameter]['Value']))
+                #         if variables:
+                #             file.write('Known Porosity : {}, Known Permeability : {}, '.format(variables[0], variables[1]))
+                #             if self.error:
+                #                 file.write('Standard Deviation of Errors : {}\n'.format(self.error))
+                #             else:
+                #                 file.write('Standard Deviation of Errors : Unknown\n')
+                #         else:
+                #             file.write('\n')
+        else: 
+            # New code for homogeneous porous (radial 1d) and later models
+            with open(filename, 'w') as file:
+                # If known variable values are specified write them first
+                if variables:
+                    file.write('KNOWN VARIABLE VALUES\n')
+                    variable_labels = ''
+                    variable_values = ''
+                    for i, (variable, value) in enumerate(variables.items()):
+                        if i != len(variables.keys()) - 1:
+                            variable_labels += '{},'.format(variable)
+                            variable_values += '{},'.format(value)
+                        else:
+                            variable_labels += '{}\n'.format(variable)
+                            variable_values += '{}\n'.format(value)
+                    file.write(variable_labels)
+                    file.write(variable_values)
+                    file.write('\n')
+
+                # Write known well parameters
+                file.write('KNOWN WELL PARAMETERS\n')
+                parameter_labels = ''
+                parameter_values = ''
+                for parameter in _model_parameters[self.model_type]['Reservoir Conditions']:
+                    parameter_labels += '{},'.format(parameter)
+                    parameter_values += '{},'.format(self.reservoir_conditions[parameter]['Value'])
+                for parameter in _model_parameters[self.model_type]['Fixed Parameters']:
+                    if parameter != _model_parameters[self.model_type]['Fixed Parameters'][-1]:
+                        parameter_labels += '{},'.format(parameter)
+                        parameter_values += '{},'.format(self.fixed_parameters[parameter]['Value'])
+                    else:
+                        parameter_labels += '{}\n'.format(parameter)
+                        parameter_values += '{}\n'.format(self.fixed_parameters[parameter]['Value'])
+                file.write(parameter_labels)
+                file.write(parameter_values)
+                file.write('\n')
+
+                # Write grid information if grid required for model
+                if self.grid_info:
+                    file.write('GRID INFORMATION\n')
+                    grid_labels = 'Number of Grid Blocks,Number of Constant Sized Blocks,Constant Block Size,Block Growth Factor\n'
+                    grid_values = '{},{},{},{}\n'.format(self.grid_info.num_blocks, self.grid_info.num_constant_blocks,
+                                                        self.grid_info.constant_block_size, self.grid_info.block_growth_factor)
+                    file.write(grid_labels)
+                    file.write(grid_values)
+                    file.write('\n')
+
+                # Write pump information
+                file.write('PUMP INFORMATION\n')
+                # Hard-coded - could think of a better solution
+                pump_info_labels = 'Pumping Scheme,Number of Pump Times,Deliverability,Production Index,Cutoff Pressure'
+                pump_info_values = '{},{},{},{},{}'.format(_pump_scheme_from_flag[self.pump_info.pumping_scheme], self.pump_info.num_pump_times,
+                                                        self.pump_info.deliverability, self.pump_info.production_index,
+                                                        self.pump_info.cutoff_pressure)
+                if self.pump_info.injection_well == 1:
+                    pump_info_labels += ',Injection Enthalpy\n'
+                    pump_info_values += ',{}\n'.format(self.pump_info.injection_enthalpy)
+                else:
+                    pump_info_labels += '\n'
+                    pump_info_values += '\n'
+                file.write(pump_info_labels)
+                file.write(pump_info_values)
+                file.write('\n')
+
+                # Write the pump times and pump rates
+                file.write('Time [s],Mass Flowrate [kg/s]\n')
+                for i in range(self.pump_info.num_pump_times):
+                    file.write('{},{}\n'.format(self.pump_info.flow_times[i], self.pump_info.flow_rates[i]))
+                file.write('\n')
+
+                # Write observation point information
+                for i in range(self.observation_points.num_observation_points):
+                    file.write('OBSERVATION POINT {}\n'.format(i+1))
+                    # Hard-coded - could think of a better solution
+                    observation_point_labels = 'Property Observed,Radial Location [m],Number of Observations\n'
+                    observation_point_values = '{},{},{}\n'.format(_observation_property_from_flag[self.observation_points.property[i]],
+                                                                self.observation_points.radial_location[i],
+                                                                self.observation_points.num_data[i])
+                    file.write(observation_point_labels)
+                    file.write(observation_point_values)
+                    file.write('\n')
+
+                    # Write all observations
+                    file.write('Time [s],Observation\n')
+                    for j in range(self.observation_points.num_data[i]):
+                        file.write('{},{}\n'.format(self.observation_points.times[i][j], self.observation_points.observations[i][j]))
+                    if i != self.observation_points.num_observation_points - 1: # Write a new line between each observation point
+                        file.write('\n')
