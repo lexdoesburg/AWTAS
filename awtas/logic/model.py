@@ -236,12 +236,13 @@ class Model():
         """
         Generate approximated data using the Theis solution for a guess of porosity and permeability.
         """
-        # filename="datafile_{}.txt".format(datetime.now().strftime("%d-%M-%Y_%H:%M") # Argument
+        #TODO this function should be a part of data.py not model.py
         self.data = data_class.Data(model_type=self.model_type)
         self.data.set_time(time)
         self.data.set_known_parameters(parameters)
         p = self.model(variables)
         if noise:
+            self.data.set_error(sd)
             np.random.seed(0) # Set random seed to 0 for consistency in testing
             # magnitude = 10**(np.floor(np.log10(np.average(p))))
             noise = np.random.randn(p.shape[0])
@@ -249,10 +250,10 @@ class Model():
             noise = sd * (noise/np.std(noise))
             p += noise
             # p += sd*np.random.randn(p.shape[0])
-            print('SD = {}'.format(np.std(noise)))
         self.data.set_observation(p)
         if save_file:
-            self.data.generate_datafile(filename, variables=variables)
+            variables_dict = {'Known Porosity' : variables[0], 'Known Permeability' : variables[1]}
+            self.data.generate_datafile(filename, variables=variables_dict)
         # return self.data
 
 
