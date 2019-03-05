@@ -55,7 +55,7 @@ class PlotWidget(QWidget):
         # Create parameter information groupboxes
         self.reservoir_conditions_groupbox, self.reservoir_conditions_groupbox_layout = self.create_info_groupbox('Reservoir Conditions')
         self.fixed_parameters_groupbox, self.fixed_parameters_groupbox_layout = self.create_info_groupbox('Fixed Parameters')
-        self.variables_groupbox, self.variables_groupbox_layout = self.create_info_groupbox('Variables')
+        self.variables_groupbox, self.variables_groupbox_layout = self.create_info_groupbox('Variable Estimations')
 
         # Populate parameter information groupboxes
         self.reservoir_condition_value_labels = self.populate_info_groupbox_layout(self.reservoir_conditions_groupbox_layout, 'Reservoir Conditions')
@@ -163,7 +163,10 @@ class PlotWidget(QWidget):
         self.plotting_canvas.plot_observed_data(self.data)
         end = time.time()
         print('Plotting Observed Data Time Elapsed = {}'.format(end - start))
-        
+        # Update the reservoir condition labels since the initial temperature/vapour saturation label will change depending on the newly imported data
+        self.clear_layout(self.reservoir_conditions_groupbox_layout) # Clear layouts
+        self.reservoir_condition_value_labels = self.populate_info_groupbox_layout(self.reservoir_conditions_groupbox_layout, 'Reservoir Conditions') # Repopulate layouts
+            
         self.update_parameter_labels()
         self.data_imported = True
         self.parameters_imported = True
@@ -270,9 +273,9 @@ class PlotWidget(QWidget):
 
     def update_parameter_labels(self):
         for i, info in enumerate(self.data.fixed_parameters.values()):
-            self.fixed_parameter_value_labels[i].setText(str(info['Value']))
+            self.fixed_parameter_value_labels[i].setText('{}'.format(info['Value']))
         for i, info in enumerate(self.data.reservoir_conditions.values()):
-            self.reservoir_condition_value_labels[i].setText(str(info['Value']))
+            self.reservoir_condition_value_labels[i].setText('{:.2f}'.format(info['Value']))
     
 
     def clear_all_parameters(self):

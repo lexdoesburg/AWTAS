@@ -286,11 +286,16 @@ class Data():
                 self.fixed_parameters['Rock Heat Conductivity']['Value'] = parameters_list[5]
                 self.fixed_parameters['Rock Density']['Value'] = parameters_list[6]
                 self.fixed_parameters['Rock Compressibility']['Value'] = parameters_list[7]
-                if self.reservoir_conditions['Initial X']['Value'] < 1.0:
-                    self.initial_x = 'Initial Vapour Saturation'
-                else:
-                    self.initial_x = 'Initial Temperature'
+                self.set_initial_x()
                
+               
+    def set_initial_x(self):
+        if self.model_type == 'radial1d':
+            if self.reservoir_conditions['Initial X']['Value'] < 1.0:
+                self.initial_x = 'Initial Vapour Saturation'
+            else:
+                self.initial_x = 'Initial Temperature'
+
 
     def read_file(self, filename):
         # TODO Update theis solution code to work with the improved code used for radial1d
@@ -349,6 +354,7 @@ class Data():
                                 self.fixed_parameters[label]['Value'] = value # This works only if the file uses the same parameter names as the dictionary key.
                             else:
                                 raise ValueError('Parameter name "{}" not recognised from input data file. Try one of {} or {} instead.'.format(label, self.reservoir_conditions.keys(), self.fixed_parameters.keys()))
+                        self.set_initial_x()
                     elif 'GRID INFORMATION' in line:
                         labels = file.readline()
                         labels = labels.rstrip().split(',') # Convert string to list of strings
