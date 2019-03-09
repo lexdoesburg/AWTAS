@@ -1,5 +1,10 @@
 import numpy as np
 
+parameter_bounds = {
+    'Porosity' : [0.01, 0.2],
+    'Permeability' : [1e-16, 1e-12]
+}
+
 
 class Grid:
     """
@@ -114,9 +119,9 @@ class Pump:
         self.pumping_scheme = _pump_schemes[pumping_scheme]
 
         # If input rates and times are not iterable, convert to iterables
-        if type(flow_rates) is float:
+        if type(flow_rates) in [float, int]:
             flow_rates = [flow_rates]
-        if type(flow_times) is float:
+        if type(flow_times) in [float, int]:
             flow_times = [flow_times]
 
         self.flow_rates = np.fromiter(flow_rates, dtype=float)
@@ -161,7 +166,7 @@ class Pump:
             'Flow time' : 's',
             'Injection Enthalpy' : 'J',
             'Cutoff Pressure' : 'Pa',
-            'Production Index' : 'TODO'
+            'Production Index' : 'TODO:'
         }
 
 
@@ -288,7 +293,7 @@ class Data():
                 self.fixed_parameters['Rock Compressibility']['Value'] = parameters_list[7]
                 self.set_initial_x()
                
-               
+
     def set_initial_x(self):
         if self.model_type == 'radial1d':
             if self.reservoir_conditions['Initial X']['Value'] < 1.0:
@@ -298,7 +303,7 @@ class Data():
 
 
     def read_file(self, filename):
-        # TODO Update theis solution code to work with the improved code used for radial1d
+        # TODO: Update theis solution code to work with the improved code used for radial1d
         if self.model_type == 'theis':
             # Old code
             with open(filename, 'r') as file:
@@ -461,7 +466,12 @@ class Data():
 
 
     def set_unknown_parameters(self, variables):
-        self.variables = variables
+        """
+            variables[0] = porosity
+            variables[1] = permeability
+        """
+        self.variables['Porosity']['Value'] = variables[0]
+        self.variables['Permeability']['Value'] = variables[1]
 
 
     def set_time(self, time):
@@ -478,6 +488,8 @@ class Data():
 
     def set_approximation(self, approximation):
         self.approximation = approximation
+        if self.model_type == 'radial1d':
+            self.observation_points.store_modelled_values(approximation)
 
 
     def set_error(self, error):
@@ -502,8 +514,53 @@ class Data():
         else:
             return False
 
+
+    def add_noise(self, sd):
+        """
+        sd = standard deviation of noise added
+        """
+        if self.observation is not None:
+            np.random.seed(0) # Set random seed to 0 for consistency in testing
+            # magnitude = 10**(np.floor(np.log10(np.average(p))))
+            noise = np.random.randn(self.observation.shape[0])
+            # noise = (sd*(noise/np.std(noise)))*magnitude
+            noise = sd * (noise/np.std(noise))
+            self.observation += noise
+            self.observation_points.observations = [self.observation]
+
+
+    def write_output_file(self, filename):
+        with open(filename, 'w') as file:
+            file.write('ESTIMATED VARIABLE VALUES\n')
+            variable_labels = ''
+            variable_values = ''
+            for i, (variable, info) in enumerate(self.variables.items()):
+                if i != len(self.variables.keys()) - 1:
+                    variable_labels += '{},'.format(variable)
+                    variable_values += '{},'.format(info['Value'])
+                else:
+                    variable_labels += '{}\n'.format(variable)
+                    variable_values += '{}\n'.format(info['Value'])
+            file.write(variable_labels)
+            file.write(variable_values)
+            file.write('\n')
+            
+            if self.model_type == 'theis':
+                file.write('MODELLED APPROXIMATION\n')
+                file.write('Time [s],Approximated Value\n')
+                for i in range(len(self.time)):
+                    file.write('{},{}\n'.format(self.time[i], self.approximation[i]))
+            else:
+                for i in range(self.observation_points.num_observation_points):
+                    file.write('OBSERVATION POINT {} MODELLED APPROXIMATION\n'.format(i+1))
+                    file.write('Time [s],Approximated Value\n')
+                    for j in range(self.observation_points.num_data[i]):
+                        file.write('{},{}\n'.format(self.observation_points.times[i][j],
+                                                    self.observation_points.modelled_values[i][j]))
+
+
     def generate_datafile(self, filename, variables=None):
-        # TODO Update theis solution code to work with the improved code used for radial1d model
+        # TODO: Update theis solution code to work with the improved code used for radial1d model
         if self.model_type == 'theis':
             # Old code
             with open(filename, 'w') as file:
