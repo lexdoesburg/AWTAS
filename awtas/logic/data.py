@@ -496,6 +496,20 @@ class Data():
         self.error = error
     
 
+    def get_well_type(self):
+        if self.model_type == 'theis':
+            flow_rate = self.fixed_parameters['Mass Flowrate']['Value']
+            if flow_rate > 0:
+                well_type = 'Injection'
+            elif flow_rate < 0:
+                well_type = 'Production'
+        else:
+            if self.pump_info.injection_well == 1:
+                well_type = 'Injection'
+            else:
+                well_type = 'Production' 
+        return well_type
+
     def create_pump_info(self, pumping_scheme, flow_rates, flow_times, deliverability, production_index, cutoff_pressure, injection_well, injection_enthalpy):
         self.pump_info = Pump(pumping_scheme, flow_rates, flow_times, deliverability, production_index, cutoff_pressure, injection_well, injection_enthalpy)
     

@@ -342,31 +342,56 @@ class PlottingCanvas(FigureCanvas):
         if self.figure.get_axes():
             self.figure.clear()
             self.fitted_lines = []
-
         self.axes = self.figure.add_subplot(1,1,1)
         self.axes.yaxis.set_major_formatter(ScalarFormatter(useOffset=False))
+
+        time_scale, x_label = self.get_time_axis_scale(data, log_scale=False)
         # TODO: Update theis solution code so that it uses observation points
         # TODO: Allow plotting of only single observation points in the future
         if data.model_type == 'theis':
-            self.axes.semilogx(np.log(data.time), data.observation*self.observation_scale, 'kx', label='Observed Data')
-            # self.axes.plot(data.time, data.observation*self.observation_scale, 'kx', label='Observed Data')
+            # self.axes.semilogx(np.log(data.time*time_scale), data.observation*self.observation_scale, 'kx', label='Observed Data')
+            self.axes.plot(data.time*time_scale, data.observation*self.observation_scale, 'kx', label='Observed Data')
         elif data.model_type == 'radial1d':
             if data.observation_points.num_observation_points == 1:
                 # observation_scale = self.observation_property_info[data.observation_points.property[0]]['Scale Factor']
-                self.axes.semilogx(np.log(data.observation_points.times[0]), data.observation_points.observations[0]*self.observation_scale, 'kx', label='Observed Data')
-                # self.axes.plot(data.observation_points.times[0], data.observation_points.observations[0]*self.observation_scale, 'kx', label='Observed Data')
+                # self.axes.semilogx(np.log(data.observation_points.times[0]*time_scale), data.observation_points.observations[0]*self.observation_scale, 'kx', label='Observed Data')
+                self.axes.plot(data.observation_points.times[0]*time_scale, data.observation_points.observations[0]*self.observation_scale, 'kx', label='Observed Data')
             else:
                 for i in range(data.observation_points.num_observation_points):
                     # observation_scale = self.observation_property_info[data.observation_points.property[i]]['Scale Factor']
-                    self.axes.semilogx(np.log(data.observation_points.times[i]), data.observation_points.observations[i]*self.observation_scale, 'x', label='Observed Data {}'.format(i+1))
-                    # self.axes.plot(data.observation_points.times[i], data.observation_points.observations[i]*self.observation_scale, 'x', label='Observed Data {}'.format(i+1))
+                    # self.axes.semilogx(np.log(data.observation_points.times[i]*time_scale), data.observation_points.observations[i]*self.observation_scale, 'x', label='Observed Data {}'.format(i+1))
+                    self.axes.plot(data.observation_points.times[i]*time_scale, data.observation_points.observations[i]*self.observation_scale, 'x', label='Observed Data {}'.format(i+1))
 
-        self.axes.set_xlabel('Log Time [s]') # TODO: Allow for either log or linear time plots to plotted
+        title = '{} Well Observed Values'.format(data.get_well_type())
+        self.axes.set_title(title)
+        self.axes.set_xlabel(x_label) # TODO: Allow for either log or linear time plots to plotted
         self.axes.set_ylabel('Pressure [Bar]') # TODO: Change this label adaptively depending on the type of data plotted
         self.axes.legend(loc='best')
         self.figure.tight_layout(pad = 2)
         self.draw()
     
+
+    def get_time_axis_scale(self, data, log_scale=False):
+        if log_scale:
+            if data.time[-1] >= 50*24*3600: # Time series goes to at least 50 days
+                time_scale = 1/3600
+                axis_label = 'Log Time [hours]'
+            else:
+                time_scale = 1
+                axis_label = 'Log Time [seconds]'
+        else:
+            if data.time[-1] < 18000:
+                time_scale = 1
+                axis_label = 'Time [seconds]'
+            elif 18000 <= data.time[-1] <= 432000:
+                time_scale = 1/3600
+                axis_label = 'Time [hours]'
+            else:
+                time_scale = 1/86400
+                axis_label = 'Time [days]'
+        return time_scale, axis_label
+
+
     def clear_fitted_lines(self):
         if self.fitted_lines:
             num_lines = len(self.fitted_lines)
@@ -376,19 +401,22 @@ class PlottingCanvas(FigureCanvas):
 
 
     def plot_fit(self, data):
+        time_scale, _ = self.get_time_axis_scale(data, log_scale=False)
         if data.model_type == 'theis':
-            self.fitted_lines.append(self.axes.semilogx(np.log(data.time), data.approximation*self.observation_scale, 'r-', label='Fitted Approximation'))
-            # self.fitted_lines.append(self.axes.plot(data.time, data.approximation*self.observation_scale, 'r-', label='Fitted Approximation'))
+            # self.fitted_lines.append(self.axes.semilogx(np.log(data.time*time_scale), data.approximation*self.observation_scale, 'r-', label='Fitted Approximation'))
+            self.fitted_lines.append(self.axes.plot(data.time*time_scale, data.approximation*self.observation_scale, 'r-', label='Fitted Approximation'))
         elif data.model_type == 'radial1d':
             if data.observation_points.num_observation_points == 1:
                 # observation_scale = self.observation_property_info[data.observation_points.property[0]]['Scale Factor']
-                self.fitted_lines.append(self.axes.semilogx(np.log(data.observation_points.times[0]), data.observation_points.modelled_values[0]*self.observation_scale, 'r-', label='Fitted Approximation'))
-                # self.fitted_lines.append(self.axes.plot(data.observation_points.times[0], data.observation_points.modelled_values[0]*self.observation_scale, 'r-', label='Fitted Approximation'))
+                # self.fitted_lines.append(self.axes.semilogx(np.log(data.observation_points.times[0]*time_scale), data.observation_points.modelled_values[0]*self.observation_scale, 'r-', label='Fitted Approximation'))
+                self.fitted_lines.append(self.axes.plot(data.observation_points.times[0]*time_scale, data.observation_points.modelled_values[0]*self.observation_scale, 'r-', label='Fitted Approximation'))
             else:
                 for i in range(data.observation_points.num_observation_points):
                     # observation_scale = self.observation_property_info[data.observation_points.property[i]]['Scale Factor']
-                    self.fitted_lines.append(self.axes.semilogx(np.log(data.observation_points.times[i]), data.observation_points.modelled_values[i]*self.observation_scale, '-', label='Fitted Approximation {}'.format(i+1)))
-                    # self.fitted_lines.append(self.axes.plot(data.observation_points.times[i], data.observation_points.modelled_values[i]*self.observation_scale, '-', label='Fitted Approximation {}'.format(i+1)))
-
+                    # self.fitted_lines.append(self.axes.semilogx(np.log(data.observation_points.times[i]*time_scale), data.observation_points.modelled_values[i]*self.observation_scale, '-', label='Fitted Approximation {}'.format(i+1)))
+                    self.fitted_lines.append(self.axes.plot(data.observation_points.times[i]*time_scale, data.observation_points.modelled_values[i]*self.observation_scale, '-', label='Fitted Approximation {}'.format(i+1)))
+        
+        title = '{} Well Observed vs Modelled Values'.format(data.get_well_type())
+        self.axes.set_title(title)
         self.axes.legend(loc='best')
         self.draw()
