@@ -1,4 +1,4 @@
-SD of Error,Known Porosity,Known Permeability
+Error Standard Deviation,Known Porosity,Known Permeability
 0.0005,0.01,1e-14
 
 Initial Pressure,Mass Flowrate,Layer Thickness,Density,Kinematic Viscosity,Compressibility,Action Well Radius

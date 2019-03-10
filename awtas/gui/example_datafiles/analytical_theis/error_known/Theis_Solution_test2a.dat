@@ -1,7 +1,10 @@
+Error Standard Deviation,Known Porosity,Known Permeability
+300,0.01,4e-12
+
 Initial Pressure,Mass Flowrate,Layer Thickness,Density,Kinematic Viscosity,Compressibility,Action Well Radius
 3600000.0,-0.015,100,527.59,6.03e-05,0.03748,0.05
--------- Actual Porosity = 0.01 --- Actual Permeability = 4e-12 --------
-Time (s),Pressure Observation (Pa)
+
+Time [s],Pressure Observation [Pa]
 0.0,3600525.0769190197
 545.4545454545455,3600117.7157691866
 1090.909090909091,3600278.04189503
