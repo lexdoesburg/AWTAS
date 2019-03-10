@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.special import exp1
-from scipy.optimize import curve_fit
+# from scipy.optimize import curve_fit
 from scipy.optimize import leastsq
 
 # import lmfit
@@ -9,19 +9,18 @@ import awtas.logic.data as data_class
 
 import time
 
-# def create_model(model_type, data=None):
-#     model_type = model_type.lower()
-#     if model_type == 'theis':
-#         model = Theis_Solution(data)
-#     elif model_type == 'theis_fortran':
-#         # model = Theis_Solution_Fortran(data)
-#         pass
-#     elif model_type == 'radial1d':
-#         # model = Radial_1D(data)
-#         pass
-#     else:
-#         raise ValueError('Error that model type does not exist.')
-#     return model
+def create_model(model_type, data=None):
+    model_type = model_type.lower()
+    if model_type == 'theis':
+        model = Theis_Solution(data)
+    elif model_type == 'theis_fortran':
+        # model = Theis_Solution_Fortran(data)
+        pass
+    elif model_type == 'radial1d':
+        model = Radial_1D(data)
+    else:
+        raise ValueError('Error that model type does not exist.')
+    return model
 
 class Model():
     def __init__(self, data=None, model_type=None):
@@ -50,12 +49,17 @@ class Model():
         self.calls += 1
         if error is None:
             # Calling without estimated error   
-            # print("Call without estimated error")   
-            residual = self.data.observation - self.model(variables)
+            # print("Call without estimated error") 
+            modelled_value = self.model(variables)  
+            residual = self.data.observation - modelled_value
         else:
             # Calling with estimated error   
-            # print("Call with estimated error")   
-            residual = (self.data.observation - self.model(variables))/error
+            # print("Call with estimated error")  
+            print(error)
+            print(len(error))
+            modelled_value = self.model(variables)
+            residual = (self.data.observation - modelled_value)/error
+            print(residual)
         return residual
 
     def __chi_squared(self, error=None):
@@ -120,11 +124,11 @@ class Model():
         else:
             # print('No initial guess supplied')
             # Guess' for Theis solution
-            # k_guess = [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]
-            # phi_guess = np.linspace(0.01, 0.2, 10)
-            # Guess' for Radial1d
-            k_guess = [1e-16, 1e-15]
-            phi_guess = np.linspace(0.01, 0.2, 5)
+            k_guess = [1e-16, 1e-15, 1e-14, 1e-13, 1e-12]
+            phi_guess = np.linspace(0.01, 0.2, 10)
+            # # Guess' for Radial1d
+            # k_guess = [1e-16, 1e-15]
+            # phi_guess = np.linspace(0.01, 0.2, 5)
             # phi = 0.105
 
         best_estimate = np.empty(3) # Format, phi, k, chi_sq
@@ -135,6 +139,7 @@ class Model():
                 initial_parameters = [phi, k]
                 # optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), epsfcn=None) # if flag is 1 - found a good soln
                 self.data.approximation = self.model(initial_parameters)
+                self.calls += 1
                 chi_squared = self.__chi_squared(self.data.error)
                 print('Phi: {} k: {} Chi squared: {}'.format(phi,k,chi_squared))
                 # chi_squared_magnitude = np.floor(np.log10(chi_squared))
@@ -150,19 +155,27 @@ class Model():
 
     def find_model_parameters2(self, initial_guess=None, verbose=False, single_run=False):
         start_time = time.clock()
-        initial_parameters = self.generate_initial_guess(initial_guess, single_run=single_run)
-        if not single_run:
+        # initial_parameters = self.generate_initial_guess(initial_guess, single_run=single_run)
+        # if not single_run:
+        #     optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), epsfcn=None) # if flag is 1 - found a good soln
+        # else:
+        if not initial_guess:
+            initial_parameters = self.generate_initial_guess(initial_guess, single_run=single_run)
             optimal_parameters, flag = leastsq(self.residual_function, initial_parameters, args=(self.data.error), epsfcn=None) # if flag is 1 - found a good soln
         else:
-            optimal_parameters = initial_parameters
+            optimal_parameters, flag = leastsq(self.residual_function, initial_guess, args=(self.data.error), epsfcn=None) # if flag is 1 - found a good soln
+        # else:
+        #     optimal_parameters = initial_parameters
         self.data.set_unknown_parameters(optimal_parameters)
         self.data.set_approximation(self.model(optimal_parameters)) # Store the approximated data in the data structure
+        self.calls += 1
         end_time = time.clock()
         if verbose:
             chi_squared = self.__chi_squared(self.data.error)
             print('Total model calls: {} Total time spent: {}'.format(self.calls, (end_time-start_time)))
             print('Initial Guess: {}'.format(initial_parameters))
             print('Optimal Phi: {} Optimal k: {} Chi-Squared: {}'.format(optimal_parameters[0], optimal_parameters[1], chi_squared))
+        print('Total model calls: {} Total time spent: {}'.format(self.calls, (end_time-start_time)))        
         self.calls = 0
         return optimal_parameters
 
@@ -236,7 +249,7 @@ class Model():
         """
         Generate approximated data using the Theis solution for a guess of porosity and permeability.
         """
-        #TODO this function should be a part of data.py not model.py
+        #TODO: this function should be a part of data.py not model.py
         self.data = data_class.Data(model_type=self.model_type)
         self.data.set_time(time)
         self.data.set_known_parameters(parameters)

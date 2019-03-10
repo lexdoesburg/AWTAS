@@ -41,7 +41,7 @@ This way was the quickest way to work best with the fortran code currently - can
 the class for each observation point and then combine the required information from each obs point to be passed to fortran.
 """
 class ObservationPoints:
-    def __init__(self, radial_location=[], property=[], num_data=[], times=[], observations=[]):
+    def __init__(self, radial_location=[], property=[], num_data=[], times=[], observations=[], errors=None):
         if type(radial_location) is float:
             radial_location = [radial_location]
         if type(property) is str:
@@ -52,7 +52,12 @@ class ObservationPoints:
             times = [times]
         if type(observations) is np.ndarray:
             observations = [observations]
-        assert len(radial_location) == len(property) == len(num_data) == len(times) == len(observations), 'Trying to add multiple observation points but insufficent information supplied.'
+        if type(errors) in [int, float]:
+            errors = [errors] * len(num_data)
+        elif errors is None:
+            errors = [1] * len(num_data)
+            
+        assert len(radial_location) == len(property) == len(num_data) == len(times) == len(observations) == len(errors), 'Trying to add multiple observation points but insufficent information supplied.'
         
         if property:
             self.property = [_observation_properties[p] for p in property]
@@ -65,6 +70,7 @@ class ObservationPoints:
         self.property = np.fromiter(self.property, dtype=np.int32)
         self.times = times
         self.observations = observations
+        self.errors = errors
         self.modelled_values = []
 
         self.units = {
@@ -72,24 +78,41 @@ class ObservationPoints:
         }
 
     
-    def add_observation_points(self, radial_location, property, num_data, times, observations):
+    def add_observation_points(self, radial_location, property, num_data, times, observations, errors=None):
         """
         Add observation point(s). Either takes three lists each in identical order, or three individual values.
         """
         if type(radial_location) is list and type(property) is list and type(num_data) is list and type(times) is list and type(observations) is list:
             assert len(radial_location) == len(property) == len(num_data) == len(times) == len(observations), 'Trying to add multiple observation points but insufficent information supplied.'
+            if errors is not None:
+                if type(errors) is list:
+                    assert len(errors) == len(radial_location)
+                    self.errors.extend(errors)
+                else:
+                    errors = [errors] * len(radial_location)
+                    self.errors.extend(errors)
+            else:
+                errors = [1] * len(radial_location)
+                self.errors.extend(errors)
             np.append(self.radial_location, radial_location)
             np.append(self.property, [_observation_properties[property_type] for property_type in property])
             np.append(self.num_data, num_data)
             self.times.extend(times)
             self.observations.extend(observations)
-        elif type(radial_location) is float and type(property) is str and type(num_data) is int:
+        elif type(radial_location) in [float, int] and type(property) is str and type(num_data) is int:
+            if errors is not None:
+                if type(errors) in [int, float]:
+                    self.errors.append(errors)
+            else:
+                errors = 1
+                self.errors.append(errors)
             np.append(self.radial_location, radial_location)
             np.append(self.property, _observation_properties[property])
             np.append(self.num_data, num_data)
             assert len(times) == num_data == len(observations), 'Given {} observation times and {} observation values when expecting {}.'.format(len(times), len(observations), num_data)
             self.times.append(times)
             self.observations.append(observations)
+            
     
     def store_modelled_values(self, modelled_values):
         current_index = 0
@@ -98,6 +121,13 @@ class ObservationPoints:
             self.modelled_values.append(np.fromiter(modelled_values[current_index:next_index], dtype=float))
             current_index = next_index
 
+    def _store_observation(self, observation):
+        current_index = 0
+        self.observations = []
+        for i in range(self.num_observation_points):
+            next_index = current_index + self.num_data[i]
+            self.observations.append(np.fromiter(observation[current_index:next_index], dtype=float))
+            current_index = next_index
 
 # Type of flow that is occurring (mapping readable names to the fortran equivalent flags)
 _pump_schemes = {
@@ -129,13 +159,6 @@ class Pump:
         assert len(flow_rates) == len(flow_times), 'Flow rate and flow time array lengths do not match.'
         self.num_pump_times = len(flow_rates)
 
-        # if injection_well: 
-        #     self.injection_well = 1
-        #     self.injection_enthalpy = injection_enthalpy
-        # else:
-        #     self.injection_well = 0
-        #     self.injection_enthalpy = 0.0
-
         # If a pump can only be production or injection we can infer the pump type based on the sign of the flow rates (-ve for production, +ve for injection)
         try:
             min_flow = np.min(self.flow_rates[np.nonzero(self.flow_rates)])
@@ -164,7 +187,7 @@ class Pump:
         self.units = {
             'Mass flux' : 'kg/s',
             'Flow time' : 's',
-            'Injection Enthalpy' : 'J',
+            'Injection Enthalpy' : 'J/kg',
             'Cutoff Pressure' : 'Pa',
             'Production Index' : 'TODO:'
         }
@@ -221,7 +244,7 @@ class Data():
     """
     This is a class which defines the data structure which contains (eventually extended for use in all model types).
     """
-    def __init__(self, model_type, filename=None, time=None, observation=None, parameters_list=None, pump_info=None, observation_points=None, grid_info=None, error=None):
+    def __init__(self, model_type, filename=None, time=None, observation=None, parameters_list=None, pump_info=None, observation_points=None, grid_info=None, error=1):
         self.model_type = model_type.lower()
         assert self.model_type_valid(), 'Input model type is invalid try one of {} instead.'.format(_model_parameters.keys())
         self.approximation = None # array of approximated pressure data
@@ -230,7 +253,7 @@ class Data():
         self.observation_points = observation_points
         self.grid_info = grid_info
         self.initial_x = None # String that states if initial x is temperature or vapour saturation (for use within the GUI)
-
+        
         if self.model_type is not 'theis' and self.observation_points:
             # if self.observation_points.num_observation_points == 1:
             #     self.time = self.observation_points.times
@@ -238,9 +261,12 @@ class Data():
             # else: # Otherwise multiple observation points.
             self.time = np.concatenate(self.observation_points.times)
             self.observation = np.concatenate(self.observation_points.observations)
+            self.update_errors()
         else:
             self.time = time # array of time data
             self.observation = observation # array of observed pressure data
+            self.error = error # Estimated error in the readings # Move the error to observation points (each could have different errors)
+
 
         if model_type == 'radial1d' and observation_points:
             self.total_num_data = sum(observation_points.num_data)
@@ -252,12 +278,18 @@ class Data():
         if parameters_list:
             self._fill_parameter_dictionaries(parameters_list)
         
-        self.error = error # Estimated error in the readings # Move the error to observation points (each could have different errors
 
         # If a filename is given read the data in
         if filename:
             self.read_file(filename)
     
+    def update_errors(self):
+        errors = []
+        for i in range(self.observation_points.num_observation_points):
+            obs_point_error = [self.observation_points.errors[i]] * self.observation_points.num_data[i]
+            errors.extend(obs_point_error)
+        self.error = np.fromiter(errors, dtype=float)
+        print(self.error)
 
     def _initialise_parameter_dictionaries(self):
         reservoir_conditions = {}
@@ -314,10 +346,10 @@ class Data():
                 try:
                     self.error = float(info_values[0])
                     if self.error <= 1e-6:
-                        self.error = None
+                        self.error = 1
                 except ValueError:
                     # If the error can't be converted to a float then don't store any error value
-                    self.error = None
+                    self.error = 1
                 print('Read error value = {}'.format(self.error))
                 file.readline() # Skip blank line
 
@@ -343,6 +375,7 @@ class Data():
             obs_point_num_data = []
             obs_point_times = []
             obs_point_observations = []
+            obs_point_errors = []
             with open(filename, 'r') as file:
                 for counter, line in enumerate(file):
                 # for line in file:
@@ -410,6 +443,7 @@ class Data():
                             pump_rates.append(flow_info[1])
                         self.pump_info = Pump(pumping_scheme=pumping_scheme,flow_rates=pump_rates, flow_times=pump_times, deliverability=deliverability, production_index=production_index, cutoff_pressure=cutoff_pressure, injection_enthalpy=injection_enthalpy)
                     elif 'OBSERVATION POINT' in line:
+                        error_supplied = False
                         labels = file.readline()
                         labels = labels.rstrip().split(',') # Convert string to list of strings
                         values = file.readline()
@@ -422,6 +456,12 @@ class Data():
                             elif label == 'Number of Observations':
                                 num_data = int(value)
                                 obs_point_num_data.append(num_data)
+                            elif label == 'Error Standard Deviation':
+                                error_supplied = True
+                                error = float(value)
+                                obs_point_errors.append(error)
+                        if not error_supplied:
+                            obs_point_errors.append(1)
                         file.readline()
                         file.readline()
                         times = np.ndarray(shape=num_data, dtype=float)
@@ -434,10 +474,11 @@ class Data():
                         obs_point_times.append(times)
                         obs_point_observations.append(observations)
 
-            self.observation_points = ObservationPoints(radial_location=obs_point_locations, property=obs_point_properties, num_data=obs_point_num_data, times=obs_point_times, observations=obs_point_observations)                
+            self.observation_points = ObservationPoints(radial_location=obs_point_locations, property=obs_point_properties, num_data=obs_point_num_data, times=obs_point_times, observations=obs_point_observations, errors=obs_point_errors)                
             self.time = np.concatenate(self.observation_points.times)
             self.observation = np.concatenate(self.observation_points.observations)
             self.total_num_data = len(self.time)
+            self.update_errors()
 
     def set_known_parameters(self, parameters):
         """
@@ -484,6 +525,8 @@ class Data():
 
     def set_observation(self, observation):
         self.observation = observation
+        if self.model_type == 'radial1d':
+            self.observation_points._store_observation(observation)
 
 
     def set_approximation(self, approximation):
@@ -535,12 +578,10 @@ class Data():
         """
         if self.observation is not None:
             np.random.seed(0) # Set random seed to 0 for consistency in testing
-            # magnitude = 10**(np.floor(np.log10(np.average(p))))
             noise = np.random.randn(self.observation.shape[0])
-            # noise = (sd*(noise/np.std(noise)))*magnitude
             noise = sd * (noise/np.std(noise))
             self.observation += noise
-            self.observation_points.observations = [self.observation]
+            self.observation_points._store_observation(self.observation)
 
 
     def write_output_file(self, filename):
@@ -571,6 +612,8 @@ class Data():
                     for j in range(self.observation_points.num_data[i]):
                         file.write('{},{}\n'.format(self.observation_points.times[i][j],
                                                     self.observation_points.modelled_values[i][j]))
+                    if i != self.observation_points.num_observation_points - 1: # Write a new line between each observation point
+                        file.write('\n')
 
 
     def generate_datafile(self, filename, variables=None):
@@ -579,7 +622,7 @@ class Data():
             # Old code
             with open(filename, 'w') as file:
                 # Write known errors and variable values
-                info_labels = 'SD of Error,'
+                info_labels = 'Error Standard Deviation,'
                 if self.error:
                     info_values = '{},'.format(self.error)
                 else:
@@ -615,45 +658,11 @@ class Data():
                 file.write(parameter_labels)
                 file.write(parameter_values)
                 file.write('\n')
-                # if variables:
-                #     for i, (variable, value) in enumerate(variables.items()):
-
-                #         if i != len(variables) - 1:
-                #             file.write('{} : {}, '.format(variable, value))
-                #         else:
-                #             file.write('{} : {}'.format(variable, value))
-                #             if self.error:
-                #                 file.write(', Known standard deviation of error : {} [Pa]\n'.format(self.error))
-                #             else:
-                #                 file.write('\n')
-                # else:
-                #     if self.error:
-                #         file.write('Variable values unknown, Known standard deviation of error : {} [Pa]\n'.format(self.error))
-                #     else:
-                #         file.write('\n')
                 
                 # Write the time of observation and observed pressure readings:
                 file.write('Time [s],Pressure Observation [Pa]\n')
                 for i in range(len(self.time)):
                     file.write('{},{}\n'.format(self.time[i], self.observation[i]))
-                # for parameter in _model_parameters[self.model_type]:
-                #     if parameter != _model_parameters[self.model_type][-1]:
-                #         file.write('{},'.format(parameter))
-                #     else:
-                #         file.write('{}\n'.format(parameter))
-                # for parameter in _model_parameters[self.model_type]:
-                #     if parameter != _model_parameters[self.model_type][-1]:
-                #         file.write('{},'.format(self.parameters[parameter]['Value']))
-                #     else:
-                #         file.write('{}\n'.format(self.parameters[parameter]['Value']))
-                #         if variables:
-                #             file.write('Known Porosity : {}, Known Permeability : {}, '.format(variables[0], variables[1]))
-                #             if self.error:
-                #                 file.write('Standard Deviation of Errors : {}\n'.format(self.error))
-                #             else:
-                #                 file.write('Standard Deviation of Errors : Unknown\n')
-                #         else:
-                #             file.write('\n')
         else: 
             # New code for homogeneous porous (radial 1d) and later models
             with open(filename, 'w') as file:
@@ -728,10 +737,17 @@ class Data():
                 for i in range(self.observation_points.num_observation_points):
                     file.write('OBSERVATION POINT {}\n'.format(i+1))
                     # Hard-coded - could think of a better solution
-                    observation_point_labels = 'Property Observed,Radial Location [m],Number of Observations\n'
-                    observation_point_values = '{},{},{}\n'.format(_observation_property_from_flag[self.observation_points.property[i]],
+                    observation_point_labels = 'Property Observed,Radial Location [m],Number of Observations'
+                    observation_point_values = '{},{},{}'.format(_observation_property_from_flag[self.observation_points.property[i]],
                                                                 self.observation_points.radial_location[i],
                                                                 self.observation_points.num_data[i])
+                    if self.observation_points.errors[i] <= 1.0 + 1e-6:
+                        observation_point_labels += '\n'
+                        observation_point_values += '\n'
+                    else:       
+                        observation_point_labels += ',Error Standard Deviation\n'
+                        observation_point_values += ',{}\n'.format(self.observation_points.errors[i])
+                            
                     file.write(observation_point_labels)
                     file.write(observation_point_values)
                     file.write('\n')
