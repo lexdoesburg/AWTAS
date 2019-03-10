@@ -43,12 +43,12 @@ class PlotWidget(QWidget):
 
         # Import data button
         self.import_data_button = QPushButton('Import Data', self)
-        self.import_data_button.setToolTip('Import pressure measurements and time data')
+        self.import_data_button.setToolTip('Import observation and time data')
         self.import_data_button.clicked.connect(self.plot_data)
 
         # Fit model button
         self.fit_button = QPushButton('Fit Curve', self)
-        self.fit_button.setToolTip('Fit the permeability and porosity to match the data')
+        self.fit_button.setToolTip('Fit the target variables to best match the observation data')
         self.fit_button.clicked.connect(self.fit_data)
         self.fit_button.setEnabled(False)
 
@@ -59,7 +59,7 @@ class PlotWidget(QWidget):
         self.button_layout.addWidget(self.fit_button)
 
         # Initial guess check box
-        self.initial_guess_check_box = QCheckBox('Provide Initial Guess for Variables?')
+        self.initial_guess_check_box = QCheckBox('Provide initial guess for variables?')
         self.initial_guess_check_box.stateChanged.connect(self.show_initial_guess_widgets)
 
         # Initial guess group box
@@ -326,7 +326,7 @@ class PlottingCanvas(FigureCanvas):
         #     0 : {'Label' : 'Deliverability [Units TODO:]', 'Scale Factor' : 1 },
         #     1 : {'Label' : 'Pressure [Bar]', 'Scale Factor' : 1e-5 },
         #     2 : {'Label' : 'Temperature [°C]', 'Scale Factor' : 1 },
-        #     3 : {'Label' : 'Enthalpy [kJ]', 'Scale Factor' : 1e-3 }
+        #     3 : {'Label' : 'Enthalpy [kJ/kg]', 'Scale Factor' : 1e-3 }
         # }
         self.observation_scale = 1e-5 # Only currently useful for converting pressure from Pa to Bar
         self.figure = Figure()
@@ -398,6 +398,7 @@ class PlottingCanvas(FigureCanvas):
             for i in range(num_lines):
                 self.fitted_lines[i][0].remove()
             self.fitted_lines = []
+            self.draw()
 
 
     def plot_fit(self, data):

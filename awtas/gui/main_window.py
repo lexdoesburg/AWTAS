@@ -16,7 +16,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tab_widget)
 
         menu_bar = self.menuBar()
-        menu_bar.setNativeMenuBar(False)
+        # menu_bar.setNativeMenuBar(False)
         file_menu = menu_bar.addMenu('&File')
         
         # Import data action
