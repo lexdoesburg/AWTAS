@@ -167,7 +167,6 @@ contains
       P0,T0,COMP,COMT,AAA,QMM,XLAM,PRECH,HRECH,LayerThickness)
 
     if (IGOOD>0) then  ! Problems... reduce timestep:
-      ! print *, 'Reducing timestep due to IGOOD>0'
       ! Check if thermodynamic error occurred during a small time step.
       if (dt < 1.d-2) then ! Could change 1.d-2 to be more meaningful such as a fraction of the time between the last measured time and the next measured time
         NumThermoErrors = NumThermoErrors + 1
@@ -191,12 +190,10 @@ contains
     call UPDATE(M,IPH,P,T,SV,X,XX,EPS)
 
     !     Check for convergence:
-    ! print *, time, ntimesteps, NumIterations
     if (RMAX>=RTOL) then
 
       IT=IT+1
       if (IT.GT.IMAX) then
-        ! print *, 'Reducing timestep due to IT > IMAX'
         call ReduceTimestep(time,dt,FlowIndex,QQMM,HIN,ResetTimeStepSize)
         NumTimeReductions = NumTimeReductions + 1
         GO TO 10
@@ -230,12 +227,11 @@ contains
 
   call updatemodelprogress(NumModelRuns,dt,100, analysisstopped)
   ExecutionFlag = 0 ! Successful execution
+  
   !   Deallocate the main local arrays:
   12 call DestroyGridArrays
   call DestroyInterpolationArrays
   deallocate(DoneDataPoints)
-
-  print *, 'Execution: ', ExecutionFlag
 
   return
     

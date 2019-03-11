@@ -30,12 +30,12 @@ def radial1d(double Porosity, double Permeability, double LayerThickness,
         ndarray[double] Time, ndarray[double] ObsPointRadialLocation, ndarray[int] ObsPointNumData, ndarray[int] ObsPointProperty,
         int Deliverability = 0, double ProductionIndex = 0.0, double CutoffPressure = 0.0, int NumGridBlocks=100, int NumConstantGridBlocks=20,
         double ConstantGridBlockSize=0.01, double GridBlockGrowthFactor=1.2):
-
-    import time
+    """
+    Cython wrapper of the fortran homogeneous porous simulator.
+    """
     cdef int StatusFlag
     cdef ndarray[double] ModelledValue = empty(TotalNumData)
 
-    start_time = time.time()
     c_radial1d(&Porosity, &Permeability, &LayerThickness,
                 &ActionWellRadius, &RockSpecificHeat, &RockHeatConductivity, &RockDensity,
                 &RockCompressibility, &InitialPressure, &InitialX, &InjectionWell,
@@ -44,6 +44,5 @@ def radial1d(double Porosity, double Permeability, double LayerThickness,
                 &Time[0], &ObsPointRadialLocation[0], &ObsPointNumData[0], &ObsPointProperty[0],
                 &Deliverability, &ProductionIndex, &CutoffPressure, &NumGridBlocks, &NumConstantGridBlocks,
                 &ConstantGridBlockSize, &GridBlockGrowthFactor, &ModelledValue[0], &StatusFlag)
-    end_time = time.time()
-    print('Radial1d wrapper time (from cython): {}'.format(end_time-start_time))
+
     return ModelledValue, StatusFlag

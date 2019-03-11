@@ -65,19 +65,6 @@ contains
     k=variable(1)   
     phi=variable(2) 
 
-    print *, 'Inside homogeneous porous'
-    ! print *, phi
-    ! print *, k
-    ! print *, LayerThickness
-    ! print *, ActionWellRadius
-    ! print *, CR
-    ! print *, COND
-    ! print *, RHOR
-    ! print *, Compressibility
-    ! print *, InitialPressure
-    ! print *, InitialX
-
-
     call SetupGrid(LayerThickness,ActionWellRadius)
     call AssignBlockProperties(k,phi,Skin,ActionWellRadius,RechargeCoef,Compressibility)
 	 
