@@ -5,16 +5,24 @@ from PyQt5.QtCore import pyqtSlot
 import awtas.gui.tab_widget as tab_widget
 
 class MainWindow(QMainWindow):
+    """
+    Main GUI window.
+    """
     def __init__(self):
         super().__init__()
         self.title = 'AWTAS'
         self.tab_widget = tab_widget.Tabs(self)
         self.init_UI()
         
+
     def init_UI(self):
+        """
+        Initialise the GUI.
+        """
         self.setWindowTitle(self.title)
         self.setCentralWidget(self.tab_widget)
 
+        # Create menu bar and file menu
         menu_bar = self.menuBar()
         # menu_bar.setNativeMenuBar(False)
         file_menu = menu_bar.addMenu('&File')
@@ -44,17 +52,29 @@ class MainWindow(QMainWindow):
         
         self.showMaximized() # self.show()
 
+
     def get_current_plot_widget(self):
+        """
+        Returns the current plotting widget object from the active tab.
+        """
         current_tab = self.tab_widget.tabs.currentIndex()
         current_plot_widget = self.tab_widget.tabs.widget(current_tab)
         return current_plot_widget
 
+
     @pyqtSlot()
     def import_data(self):
+        """
+        Imports data from file when file>import data or ctrl + L is pressed.
+        """
         current_plot_widget = self.get_current_plot_widget()
-        current_plot_widget.plot_data()
+        current_plot_widget.import_data_action()
+
 
     @pyqtSlot()
     def export_results(self):
+        """
+        Exports the results to a data file when file>export data or ctrl + S is pressed.
+        """
         current_plot_widget = self.get_current_plot_widget()
         current_plot_widget.produce_output_file()

@@ -12,15 +12,22 @@ import numpy as np
 import awtas.logic.data as data_class
 import awtas.logic.model as model
 
-import time
-
 class PlotWidget(QWidget):
+    """
+    The PlotWidget is essentially the main window when the GUI is run.
+
+    TODO: Modularise the plot widget into smaller widgets, such as the parameter sidebar. As currently
+    this class is defining several different widgets that could be in individual classes.
+    """
     def __init__(self, parent=None):
+        """
+        Initialise the widget.
+        """
         super(PlotWidget, self).__init__(parent)
         self.plotting_canvas = PlottingCanvas(self)
         self.plot_toolbar = NavigationToolbar(self.plotting_canvas, self)
-        self.current_model = 'Analytical Theis'
-        self.data = data_class.Data(model_type='theis') # Default model is Theis solution
+        self.current_model = 'Analytical Theis' # Default model is Theis solution
+        self.data = data_class.Data(model_type='theis')
         self.model = None
         self.data_imported = False
         self.parameters_imported = False
@@ -31,6 +38,9 @@ class PlotWidget(QWidget):
             
 
     def build_UI(self):
+        """
+        Build the overall widget from several subwidgets.
+        """
         # Choose model type combobox
         self.model_type_combobox = QComboBox(self)
         self.model_type_combobox.setToolTip('Change the type of model used')
@@ -44,7 +54,7 @@ class PlotWidget(QWidget):
         # Import data button
         self.import_data_button = QPushButton('Import Data', self)
         self.import_data_button.setToolTip('Import observation and time data')
-        self.import_data_button.clicked.connect(self.plot_data)
+        self.import_data_button.clicked.connect(self.import_data_action)
 
         # Fit model button
         self.fit_button = QPushButton('Fit Curve', self)
@@ -113,14 +123,20 @@ class PlotWidget(QWidget):
         # Set the widget layout
         self.setLayout(self.layout)
 
+
     def set_initial_guess(self):
+        """
+        Saves the text in the initial guess QLineEdit boxes into self.initial_variables
+        """
         initial_porosity = float(self.initial_guess_value_labels['Porosity'].text())
         initial_permeability = float(self.initial_guess_value_labels['Permeability'].text())
         self.initial_variables = [initial_porosity, initial_permeability]
-        print(self.initial_variables)
 
 
     def show_initial_guess_widgets(self, state):
+        """
+        Hide or show the initial guess groupbox depending on if the initial guess checkbox is checked.
+        """
         if state == Qt.Checked:
             self.initial_guess = True
             self.initial_guess_groupbox.setVisible(True)
@@ -146,7 +162,7 @@ class PlotWidget(QWidget):
         """
         Recursively removes all widgets and sub-layouts from a layout.
 
-        Code from https://stackoverflow.com/questions/22623151/python-how-to-unassign-layout-from-groupbox-in-pyqt answer by ekhumoro
+        Based on https://stackoverflow.com/questions/22623151/python-how-to-unassign-layout-from-groupbox-in-pyqt answer by ekhumoro
         """
         if layout is not None:
             while layout.count():
@@ -187,16 +203,23 @@ class PlotWidget(QWidget):
             
 
     def produce_output_file(self):
-        filename, _ = QFileDialog.getSaveFileName(self, 'Save file as', '', 'Data Files (*.txt *.csv *.dat)')
+        """
+        Save the modelled values and found variable values to a file.
+        """
+        filename, _ = QFileDialog.getSaveFileName(self, 'Save file as', '', 'Data Files (*.txt *.dat *.csv)')
         self.data.write_output_file(filename)
 
 
     @pyqtSlot()
-    def plot_data(self):
+    def import_data_action(self):
+        """
+        Data is imported from file and then plotted. The parameters sidebar is populated with the relevant information.
+        """
         self.clear_all_parameters()
         try:
             import_successful = self.import_data_from_file()
         except ValueError:
+            # Raise an error
             import_successful = False
             error_message = QMessageBox()
             error_message.setIcon(QMessageBox.Critical)
@@ -205,20 +228,28 @@ class PlotWidget(QWidget):
                 and that the data file is formatted correctly.')
             error_message.setWindowTitle('Import Error')
             error_message.exec_()
+        
         if import_successful:
+            # Plot data
             self.plotting_canvas.plot_observed_data(self.data)
+
             # Update the reservoir condition labels since the initial temperature/vapour saturation label will change depending on the newly imported data
             self.clear_layout(self.reservoir_conditions_groupbox_layout) # Clear layouts
             self.reservoir_condition_value_labels = self.populate_info_groupbox_layout(self.reservoir_conditions_groupbox_layout, 'Reservoir Conditions') # Repopulate layouts
             self.update_parameter_labels()
             self.data_imported = True
             self.parameters_imported = True
+
+            # Enable the fit curve button
             if self.parameters_imported and self.data_imported:
                 self.fit_button.setEnabled(True)
         
 
     def import_data_from_file(self):
-        filename, _ = QFileDialog.getOpenFileName(self, 'Load data file', '', 'Data Files (*.txt *.csv *.dat)')
+        """
+        Imports data from file.
+        """
+        filename, _ = QFileDialog.getOpenFileName(self, 'Load data file', '', 'Data Files (*.txt *.dat *.csv)')
         if filename:
             self.data.read_file(filename=filename)
             data_imported = True
@@ -229,16 +260,25 @@ class PlotWidget(QWidget):
 
     @pyqtSlot()
     def fit_data(self):
+        """
+        Runs the inverse modelling on the imported data and then plots the solution. The found variable values
+        are shown on the parameter sidebar.
+        """
         if self.data and self.data.fixed_parameters and self.data.reservoir_conditions:
             self.plotting_canvas.clear_fitted_lines()
             self.model = model.create_model(model_type=self.data.model_type, data=self.data)
+
+            # Perform the inverse modelling
             if self.initial_guess:
                 self.set_initial_guess()
-                self.model.find_model_parameters2(initial_guess=self.initial_variables, single_run=False)
+                self.model.find_model_parameters(initial_guess=self.initial_variables, verbose=False)
             else:
-                self.model.find_model_parameters2()
+                self.model.find_model_parameters(verbose=False)
 
+            # Plot result
             self.plotting_canvas.plot_fit(self.data)
+
+            # Populate the parameter side bar
             for (parameter, item) in self.data.variables.items():
                 if parameter == 'Porosity':
                     self.variable_value_labels[parameter].setText('{:.6f}'.format(item['Value']))
@@ -247,6 +287,7 @@ class PlotWidget(QWidget):
                 else:
                     self.variable_value_labels[parameter].setText('{}'.format(item['Value']))
         else:
+            # Raise error message if button is pressed without data being imported
             error_message = QMessageBox()
             error_message.setIcon(QMessageBox.Critical)
             error_message.setText('Error')
@@ -256,19 +297,20 @@ class PlotWidget(QWidget):
 
 
     def populate_info_groupbox_layout(self, groupbox_layout, parameter_type, values_editable=False):
+        """
+        Populates a groupbox layout with the correct parameter labels.
+        """
         parameters = {
             'Reservoir Conditions' : self.data.reservoir_conditions.items(),
             'Fixed Parameters' : self.data.fixed_parameters.items(),
             'Variables' : self.data.variables.items()
         }
-
-        # info_value_labels = []
         info_value_labels = {}
         
-
         for i, (parameter, info) in enumerate(parameters[parameter_type]):
             units = info['Units']
             parameter_label = parameter
+
             # Special case as initial x can either be temperature or vapour saturation
             if parameter == 'Initial X':
                 if self.data.initial_x:
@@ -278,26 +320,30 @@ class PlotWidget(QWidget):
                     parameter_label = 'Initial Temperature/Vapour Saturation'
                     units = 'Dimensionless'
 
+            # Create the label
             if units == 'Dimensionless':
                 label = '{param}: '.format(param=parameter_label)
             else:
                 label = '{param} [{unit}]: '.format(param=parameter_label, unit=units)
-
             groupbox_layout.addWidget(QLabel(label), i, 0)
+
+            # If the values should be editable creates a QLineEdit instead of a QLabel
             if values_editable:
                 value_label = QLineEdit()
                 lower_bound, upper_bound = data_class.parameter_bounds[parameter]
                 if (lower_bound + upper_bound)/2 < 1e-4:
-                    notation = 1
+                    notation = 1 # Scientific notation
                 else:
-                    notation = 0
+                    notation = 0 # Standard notation
+                
+                # Validate that the input is within the bounds of the parameter
                 value_validator = QDoubleValidator(lower_bound, upper_bound, 20)
                 value_validator.setNotation(notation)
                 value_label.setValidator(value_validator)
                 value_label.setToolTip('Enter a value between {} and {}'.format(lower_bound, upper_bound))
             else:
                 value_label = QLabel()
-            # info_value_labels.append(value_label)
+
             info_value_labels[parameter] = value_label
             groupbox_layout.addWidget(value_label, i, 1)
         
@@ -305,10 +351,9 @@ class PlotWidget(QWidget):
     
 
     def update_parameter_labels(self):
-        # for i, info in enumerate(self.data.fixed_parameters.values()):
-        #     self.fixed_parameter_value_labels[i].setText('{}'.format(info['Value']))
-        # for i, info in enumerate(self.data.reservoir_conditions.values()):
-        #     self.reservoir_condition_value_labels[i].setText('{:.2f}'.format(info['Value']))
+        """
+        Update the value labels with the relevant value.
+        """
         for (parameter, info) in self.data.fixed_parameters.items():
             self.fixed_parameter_value_labels[parameter].setText('{}'.format(info['Value']))
         for (parameter, info) in self.data.reservoir_conditions.items():
@@ -316,12 +361,22 @@ class PlotWidget(QWidget):
     
 
     def clear_all_parameters(self):
+        """
+        Clears all value labels.
+        """
         if self.parameters_imported:
             for label in list(self.reservoir_condition_value_labels.values()) + list(self.fixed_parameter_value_labels.values()) + list(self.variable_value_labels.values()):
                 label.setText('')
 
+
 class PlottingCanvas(FigureCanvas):
+    """
+    This is the canvas on which the plots are drawn.
+    """
     def __init__(self, parent=None):
+        """
+        Initialise.
+        """
         # self.observation_property_info = {
         #     0 : {'Label' : 'Deliverability [Units TODO:]', 'Scale Factor' : 1 },
         #     1 : {'Label' : 'Pressure [Bar]', 'Scale Factor' : 1e-5 },
@@ -338,6 +393,9 @@ class PlottingCanvas(FigureCanvas):
     
 
     def plot_observed_data(self, data):
+        """
+        Plots the observation data on the canvas.
+        """
         # Time bottleneck in here is in setting the layout of the plot (either using tight layout or draw).
         if self.figure.get_axes():
             self.figure.clear()
@@ -346,6 +404,7 @@ class PlottingCanvas(FigureCanvas):
         self.axes.yaxis.set_major_formatter(ScalarFormatter(useOffset=False))
 
         time_scale, x_label = self.get_time_axis_scale(data, log_scale=False)
+        
         # TODO: Update theis solution code so that it uses observation points
         # TODO: Allow plotting of only single observation points in the future
         if data.model_type == 'theis':
@@ -372,6 +431,9 @@ class PlottingCanvas(FigureCanvas):
     
 
     def get_time_axis_scale(self, data, log_scale=False):
+        """
+        Find a reasonable scale for the time axis.
+        """
         if log_scale:
             if data.time[-1] >= 50*24*3600: # Time series goes to at least 50 days
                 time_scale = 1/3600
@@ -380,19 +442,25 @@ class PlottingCanvas(FigureCanvas):
                 time_scale = 1
                 axis_label = 'Log Time [seconds]'
         else:
-            if data.time[-1] < 18000:
+            if data.time[-1] < 18000: # Time series is under 5 hours
                 time_scale = 1
                 axis_label = 'Time [seconds]'
-            elif 18000 <= data.time[-1] <= 432000:
+            elif 18000 <= data.time[-1] <= 432000: # Time series is between 5 and 120 hours
                 time_scale = 1/3600
                 axis_label = 'Time [hours]'
-            else:
+            else: # Time series is longer than 5 days
                 time_scale = 1/86400
                 axis_label = 'Time [days]'
         return time_scale, axis_label
 
 
     def clear_fitted_lines(self):
+        """
+        Remove the fitted approximation lines from the axes and redraw to update the plot.
+
+        TODO: Currently not working as expected. Lines are removed from axes object but the plot is not updated
+        to show that.
+        """
         if self.fitted_lines:
             num_lines = len(self.fitted_lines)
             for i in range(num_lines):
@@ -402,6 +470,9 @@ class PlottingCanvas(FigureCanvas):
 
 
     def plot_fit(self, data):
+        """
+        Plots the fitted approximation curves on the canvas.
+        """
         time_scale, _ = self.get_time_axis_scale(data, log_scale=False)
         if data.model_type == 'theis':
             # self.fitted_lines.append(self.axes.semilogx(np.log(data.time*time_scale), data.approximation*self.observation_scale, 'r-', label='Fitted Approximation'))
@@ -417,6 +488,7 @@ class PlottingCanvas(FigureCanvas):
                     # self.fitted_lines.append(self.axes.semilogx(np.log(data.observation_points.times[i]*time_scale), data.observation_points.modelled_values[i]*self.observation_scale, '-', label='Fitted Approximation {}'.format(i+1)))
                     self.fitted_lines.append(self.axes.plot(data.observation_points.times[i]*time_scale, data.observation_points.modelled_values[i]*self.observation_scale, '-', label='Fitted Approximation {}'.format(i+1)))
         
+        # Update the title and legend location before redrawing the plot
         title = '{} Well Observed vs Modelled Values'.format(data.get_well_type())
         self.axes.set_title(title)
         self.axes.legend(loc='best')
