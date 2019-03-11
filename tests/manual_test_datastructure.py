@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 
 import sys
 import os
@@ -10,6 +9,11 @@ sys.path.insert(0, awtas_main_dir)
 # To run without changing sys path use 'python -m tests.test_datastructure' in command line while in main AWTAS directory
 from awtas.logic import model
 from awtas.logic import data as datastructure
+
+"""
+This file was used to manually test the data structure. Excuse the mess.
+NOTE: Can't confirm if any of this code will still run as there have been many updates to the model and data classes since last used.
+"""
 
 # p0 = 3.6e6 # Pa
 # h = 100 # m
