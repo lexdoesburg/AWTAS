@@ -5,6 +5,8 @@ from Cython.Distutils import build_ext
 from numpy import get_include
 from os import system, sep
 
+# Code based on answer by IanH (https://stackoverflow.com/questions/22404060/fortran-cython-workflow)
+
 # # compile the fortran modules without linking (mac)
 # system('gfortran variable_types.f90 -c -o variable_types.o -O3 -fPIC -mmacosx-version-min=10.9')
 # system('gfortran variable_parameters.f90 -c -o variable_parameters.o -O3 -fPIC -mmacosx-version-min=10.9')

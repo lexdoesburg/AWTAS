@@ -5,10 +5,11 @@ import os
 from awtas.logic import model
 from awtas.logic import data
 
+# NOTE: Tests fail since data structure was updated - need to update tests.
+
 #----------------------------------
 #   To run this test: Type in command line interface
-#       [Windows]   python -m pytest -v -s H:\\Summer_Project\\AWTAS\\auto_test_theis.py
-#       [Mac]       python -m pytest -v -s /Users/lexdoesburg/Documents/Uni2018/Summer_Research/Summer_Project/AWTAS/tests/auto_test_theis.py
+#           python -m pytest -v -s <path to file>
 #----------------------------------
 
 test_file_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test_datafiles')

@@ -1,5 +1,5 @@
 """
-Running this script will start the GUI application
+Running this script will start the AWTAS GUI application.
 """
 if __name__ == '__main__':
     import sys

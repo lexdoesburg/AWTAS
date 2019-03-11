@@ -11,6 +11,8 @@ This script should be run through run_setup.py and run_setup.py should be run fr
 
 Alternatively this script can be run directly from the directory it is in using the following line in the command line interface:
       python setup.py build_ext --inplace
+
+Code based on answer by IanH (https://stackoverflow.com/questions/22404060/fortran-cython-workflow)
 """
 
 # Fortran source files
@@ -28,12 +30,13 @@ source_files = ['variable_types.f90',
                 'radial1d_wrapper.f90']
 
 # Gfortran compilation flags
+# NOTE: Remove '-mmacosx...' if trying on windows.
 compile_flags = ['-Ofast', '-fPIC', '-mmacosx-version-min=10.12'] # -Ofast can be interchanged for -O3 for slightly reduced performance.
 flags = ' '.join(compile_flags)
 file_prefixes = [file.split('.')[0] for file in source_files]
 object_files = [file_prefix + '.o' for file_prefix in file_prefixes]
 
-# compile the fortran modules (mac)
+# compile the fortran modules
 fortran_source_dir = os.path.join(os.getcwd(), 'fortran_src')
 
 for i, file in enumerate(source_files):
@@ -49,6 +52,7 @@ ext_modules = [Extension(# Module name
                          # library_dirs=['/Users/lexdoesburg/Documents/Uni2018/Summer_Research/Summer_Project/AWTAS/wrappers/radial1d/'],
                          libraries=['gfortran'],
                          # Other arguments and files to link
+                         # NOTE: Remove '+ [-mmacosx...]' if trying on windows.
                          extra_link_args=object_files + ['-mmacosx-version-min=10.12'])]
 
 setup(name = 'radial1d_wrapper',
